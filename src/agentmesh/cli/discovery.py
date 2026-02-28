@@ -94,6 +94,26 @@ def _should_skip(parts: tuple[str, ...]) -> bool:
     return any(p.startswith(".") or p in _SKIP_DIRS for p in parts)
 
 
+def _safe_rglob(root: Path, pattern: str):
+    """Walk directories safely, skipping any that raise OS errors.
+
+    This is the fallback when ``root.rglob()`` crashes due to Windows
+    MAX_PATH (260 chars) or broken OneDrive symlinks.
+    """
+    import os
+
+    suffix = pattern.lstrip("*")  # "*.py" -> ".py"
+    for dirpath, dirnames, filenames in os.walk(root, onerror=lambda _: None):
+        # Skip known junk directories in-place (prevents descent)
+        dirnames[:] = [d for d in dirnames if d not in _SKIP_DIRS and not d.startswith(".")]
+        for fname in sorted(filenames):
+            if fname.endswith(suffix):
+                try:
+                    yield Path(dirpath) / fname
+                except (OSError, ValueError):
+                    continue
+
+
 def collect_project_files(directory: Path) -> ProjectMetadata:
     """Walk directory and collect Python files + config files.
 
@@ -104,7 +124,16 @@ def collect_project_files(directory: Path) -> ProjectMetadata:
     count = 0
 
     # Collect Python files
-    for py_file in sorted(root.rglob("*.py")):
+    # Use a helper to safely walk — Windows can crash on paths > 260 chars
+    # (e.g. Android build dirs, OneDrive broken symlinks)
+    py_files: list[Path] = []
+    try:
+        py_files = sorted(root.rglob("*.py"))
+    except (FileNotFoundError, PermissionError, OSError):
+        # Fallback: manual walk that skips broken directories
+        py_files = list(_safe_rglob(root, "*.py"))
+
+    for py_file in py_files:
         rel_parts = py_file.relative_to(root).parts
         if _should_skip(rel_parts):
             continue
