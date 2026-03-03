@@ -164,6 +164,7 @@ def init(api_key: str | None, framework: str | None, endpoint: str) -> None:
         "version": "1.0",
         "tenant_id": tenant_id,
         "api_key_env": "AGENTMESH_API_KEY",
+        "api_key": api_key,
         "endpoint": endpoint,
         "framework": framework,
         "tools": {
@@ -209,7 +210,10 @@ def init(api_key: str | None, framework: str | None, endpoint: str) -> None:
         if "AGENTMESH_API_KEY" not in env_content:
             click.echo(click.style("  [hint]   ", fg="yellow") + f"Add to .env: AGENTMESH_API_KEY={api_key}")
     else:
-        click.echo(click.style("  [hint]   ", fg="yellow") + f"Set env var: export AGENTMESH_API_KEY={api_key}")
+        if os.name == "nt":
+            click.echo(click.style("  [hint]   ", fg="yellow") + f'Set env var: $env:AGENTMESH_API_KEY = "{api_key}"')
+        else:
+            click.echo(click.style("  [hint]   ", fg="yellow") + f"Set env var: export AGENTMESH_API_KEY={api_key}")
 
     # ---- Step 8: print next steps ----
     click.echo()

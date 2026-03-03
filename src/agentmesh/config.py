@@ -37,6 +37,7 @@ class AgentMeshConfig(BaseModel):
     version: str = "1.0"
     tenant_id: str
     api_key_env: str = "AGENTMESH_API_KEY"
+    api_key: str | None = None
     endpoint: str = "https://api.useagentmesh.com"
     framework: str = "generic"
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
@@ -65,14 +66,19 @@ class AgentMeshConfig(BaseModel):
         return cls.model_validate(data)
 
     def resolve_api_key(self) -> str:
-        """Resolve the API key from the configured environment variable."""
+        """Resolve the API key: env var first, then YAML-stored key."""
+        # Priority 1: environment variable (for CI/CD overrides)
         key = os.environ.get(self.api_key_env)
-        if not key:
-            raise ConfigError(
-                f"Environment variable {self.api_key_env} is not set.\n"
-                f"Set it with: export {self.api_key_env}=am_live_your_key_here"
-            )
-        return key
+        if key:
+            return key
+        # Priority 2: key stored in .agentmesh.yaml
+        if self.api_key:
+            return self.api_key
+        raise ConfigError(
+            f"API key not found. Set the environment variable {self.api_key_env} "
+            f"or re-run 'agentmesh init' to store it in your config.\n"
+            f"Set env var: export {self.api_key_env}=am_live_your_key_here"
+        )
 
     def to_yaml(self, path: str = ".agentmesh.yaml") -> None:
         """Serialize config to a YAML file."""
