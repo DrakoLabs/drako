@@ -6,16 +6,26 @@ Deterministic governance middleware for AI agents. No LLM in the evaluation loop
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-798%20passing-brightgreen.svg)]()
 [![License: BUSL-1.1](https://img.shields.io/badge/license-BUSL--1.1-blue.svg)](LICENSE)
+[![Policy Eval](https://img.shields.io/badge/policy%20eval-<2ms-brightgreen.svg)]()
 
 ---
 
 ## What It Does
 
-AgentMesh parses your Python agent code using AST, scores it against 34 deterministic rules, and generates an Agent Bill of Materials (BOM) — an inventory of every agent, tool, model, and prompt in your project. Output is SARIF 2.1.0 (GitHub Code Scanning), JSON, or a terminal report.
+AI agents call tools, spend money, delete files, and make 
+decisions — autonomously, at speed, without asking.
 
-No network calls. No LLM calls. Same code always produces the same score.
+**AgentMesh** is the governance layer between your agent and 
+everything it can touch. It scans your codebase to find 
+governance gaps before production does. And it enforces 
+policies on live agent traffic — blocking actions before 
+they execute, not just logging them after.
 
-A separate runtime platform (SaaS) exists for enforcing policies on live agent traffic in production.
+The scan is free, offline, and needs no account. The runtime 
+platform connects in one line and protects agents in production.
+
+No LLM in the evaluation loop. Every rule is deterministic. 
+Same code, same result, every time.
 
 ---
 
@@ -26,7 +36,7 @@ pip install useagentmesh
 agentmesh scan .
 ```
 
-Output:
+Output Example:
 
 ```
 ┌─ AgentMesh Scan ─────────────────────────────────────────┐
@@ -61,7 +71,6 @@ agentmesh scan --fail-on critical   # Exit 1 on any critical finding
 agentmesh scan --diff HEAD~1        # Only scan changed files
 agentmesh scan --details            # Full report with code snippets and fixes
 ```
-
 ---
 
 ## What the Scan Detects
@@ -89,7 +98,7 @@ agentmesh scan --details            # Full report with code snippets and fixes
 | MAG-001 | CRITICAL | No spend cap defined |
 | ID-001 | CRITICAL | Static credentials in agent code |
 
-Plus 20 more rules covering rate limits, input validation, circuit breakers, documentation, testing, credential sharing, framework hygiene, and CI/CD gates. [Full rule reference](https://docs.useagentmesh.com/rules).
+Plus 20 more rules covering rate limits, input validation, circuit breakers, documentation, testing, credential sharing, framework hygiene, and CI/CD gates. 
 
 **Scoring:**
 
@@ -171,25 +180,26 @@ For PR-only scans: `agentmesh scan . --diff origin/main`
 
 ## Runtime Platform
 
-The scan CLI is free and works offline. The AgentMesh Platform adds runtime enforcement for production deployments:
+The scan tells you what's wrong. The platform fixes it and keeps it fixed in production.
 
-- **DLP** — Presidio-based PII/PCI detection on tool call payloads before they reach downstream APIs
-- **EigenTrust** — Per-agent dynamic trust score (0-100), updated on every interaction, time-decayed
-- **Circuit Breaker** — Auto-suspends agents when trust score drops below threshold
-- **ODD Enforcement** — Operational Design Domain: permitted tools, operating hours, cost caps per agent. Modes: audit, enforce, escalate
-- **Magnitude Limits** — Pre-action validation: spend caps, data volume limits, blast radius constraints, compute guardrails
-- **Agent Identity** — Managed credential lifecycle: provisioning, auto-rotation with grace periods, revocation
-- **Audit Trail** — SHA-256 hash chain. Every action logged with cryptographic integrity
-- **Compliance Reports** — EU AI Act Art. 9, 11, 12, 14 mapping. Exportable for regulators
-
-Connect your project:
+| Capability | What it does |
+|------------|-------------|
+| **DLP** | Presidio-based PII/PCI detection on every tool call payload, before it reaches downstream APIs. CRITICAL PII → action rejected. |
+| **Trust Score** | Per-agent EigenTrust reputation (0–100), updated on every interaction, time-decayed. Agents earn or lose trust based on behavior. |
+| **Circuit Breaker** | Auto-suspends agents (or individual tools) when trust drops below threshold or failure rate spikes. Partial degradation, not full shutdown. |
+| **ODD Enforcement** | Operational Design Domain: define exactly which tools, APIs, data sources, and time windows each agent can operate in. Modes: audit, enforce, escalate. |
+| **Magnitude Limits** | Pre-action validation: spend caps per action/session/day, data volume limits, blast radius constraints, compute guardrails. Blocks before execution. |
+| **Agent Identity** | Managed credential lifecycle per agent: dynamic provisioning, automatic rotation with grace periods, instant revocation. No more shared static API keys across agents. |
+| **Audit Trail** | SHA-256 hash chain with Ed25519 signatures. Every action logged with cryptographic integrity. Tamper-evident, exportable, regulator-ready. |
+| **Compliance Reports** | EU AI Act Articles 9, 11, 12, 14 mapping. Generated from real scan data and runtime telemetry. Exportable PDF for auditors and regulators. |
 
 ```bash
 export AGENTMESH_API_KEY=am_live_...
 agentmesh init
 ```
 
-[useagentmesh.com](https://useagentmesh.com)
+
+* 🌐 **Landing Page**: [useagentmesh.com](https://useagentmesh.com)
 
 ---
 
@@ -203,14 +213,28 @@ agentmesh init
 
 AgentMesh does not use AI to audit AI. Policy evaluation is deterministic — same code always produces the same score.
 
-```
-Benchmarks (10,000 iterations, time.perf_counter_ns):
-  Single rule eval:     0.031ms P50  │  0.08ms P99
-  Full scan (34 rules): 1.84ms P50   │  3.2ms P99
-  Framework discovery:  CrewAI ~5ms  │  LangGraph ~7ms  │  AutoGen ~9ms
+---
+### Benchmark Results
 
-Governance overhead: <0.2% of a typical LLM API call (~800ms).
-```
+All measurements taken with `time.perf_counter_ns()`, 10,000 iterations after 1,000 warmup. [Methodology & reproduction →](sdk/benchmarks/README.md)
+
+**Policy Engine** (33 deterministic rules, zero LLMs):
+
+| Scenario | P50 | P99 |
+|---|---|---|
+| Single rule evaluation | **0.031ms** | 0.08ms |
+| Full scan (33 rules) | **1.84ms** | 3.2ms |
+| Batch (100 tool calls) | **1.79ms** | 2.8ms |
+
+> Governance overhead is **<0.2%** of a typical LLM call (~800ms).
+
+**AST Framework Discovery:**
+
+| Framework | Avg Latency |
+|---|---|
+| CrewAI | ~5ms |
+| LangGraph | ~7ms |
+| AutoGen | ~9ms |
 
 ---
 
