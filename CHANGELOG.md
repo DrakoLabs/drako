@@ -4,6 +4,17 @@ All notable changes to AgentMesh are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [2.0.0] - 2026-03-17
+
+### Changed
+- **Version bump to 2.0.0** — reflects production maturity and comprehensive governance coverage
+- CI: add `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` to publish workflow for Node.js 24 migration
+
+### Fixed
+- Publish workflow: suppress Node.js 20 deprecation warnings on GitHub Actions
+
+---
+
 ## [0.2.0] - 2026-03-16
 
 ### Added
