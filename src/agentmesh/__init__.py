@@ -1,6 +1,6 @@
 """AgentMesh SDK — The Trust Layer for AI Agents."""
 
-__version__ = "0.2.0"
+__version__ = "2.0.1"
 
 from agentmesh.client import AgentMeshClient
 from agentmesh.config import AgentMeshConfig

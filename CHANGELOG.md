@@ -4,6 +4,13 @@ All notable changes to AgentMesh are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [2.0.1] - 2026-03-17
+
+### Fixed
+- Sync `__version__` in `__init__.py` with `pyproject.toml` — CLI now reports correct version
+
+---
+
 ## [2.0.0] - 2026-03-17
 
 ### Changed
