@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\policies\multiagent.py
+# hypothesis_version: 6.151.9
+
+['->', '.py', 'CRITICAL', 'HIGH', 'MEDIUM', 'MULTI-001', 'MULTI-002', 'MULTI-003', 'MULTI-004', 'Operational', 'Security', 'execute', 'payment', 'read', 'tool_type', 'tools', 'write']

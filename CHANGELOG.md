@@ -1,25 +1,25 @@
 # Changelog
 
-All notable changes to AgentMesh are documented here.
+All notable changes to Drako are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [2.1.0] - 2026-03-18
 
 ### Added
-- **Autopilot Mode** — `agentmesh init` now generates smart defaults from scan results (audit-first). Governance levels: `--autopilot` (default), `--balanced`, `--strict`, `--manual`
-- **`agentmesh upgrade`** command — upgrade governance level in-place (`--balanced`, `--strict`)
-- **Proxy Mode** — out-of-process LLM API governance proxy. Intercepts every LLM call at the network layer with full governance pipeline (ODD, DLP, Magnitude, HITL). `agentmesh proxy start/stop/status`
-- **Policy Templates** — 6 industry-specific governance presets: `base`, `fintech`, `healthcare`, `eu-ai-act`, `startup`, `enterprise`. Template inheritance via `extends:` in config. `agentmesh templates list/show`
+- **Autopilot Mode** — `drako init` now generates smart defaults from scan results (audit-first). Governance levels: `--autopilot` (default), `--balanced`, `--strict`, `--manual`
+- **`drako upgrade`** command — upgrade governance level in-place (`--balanced`, `--strict`)
+- **Proxy Mode** — out-of-process LLM API governance proxy. Intercepts every LLM call at the network layer with full governance pipeline (ODD, DLP, Magnitude, HITL). `drako proxy start/stop/status`
+- **Policy Templates** — 6 industry-specific governance presets: `base`, `fintech`, `healthcare`, `eu-ai-act`, `startup`, `enterprise`. Template inheritance via `extends:` in config. `drako templates list/show`
 - **Property-Based Testing** — 28 Hypothesis tests covering scoring invariants, grade monotonicity, deep merge, ODD/DLP/Magnitude enforcement
-- **Helm Chart** — Kubernetes deployment for the governance proxy (`deploy/helm/agentmesh-proxy/`)
+- **Helm Chart** — Kubernetes deployment for the governance proxy (`deploy/helm/drako-proxy/`)
 - `governance_level` config field — `autopilot | balanced | strict | custom`
 - `extends` config field — template inheritance (e.g. `extends: fintech`)
 - `test_mode()` context manager and `MockHITLResolver` for testing governed agents in CI
 - Docker Compose file for proxy deployment
 
 ### Changed
-- `agentmesh init` default mode is now autopilot (was manual)
+- `drako init` default mode is now autopilot (was manual)
 - Config `load()` now resolves template inheritance automatically
 
 ---
@@ -47,8 +47,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ### Added
 - 26 new governance rules (60 total, up from 34)
 - New rule categories: Multi-Agent (MULTI-001→004), Hooks (HOOK-001→003), Context Versioning (CV-001→002), FinOps (FIN-001→003), Resilience (RES-001→002), A2A (A2A-001→003), Best Practices (BP-001→005)
-- `agentmesh scan --share` viral sharing with pre-written posts for LinkedIn, X, Bluesky
-- `agentmesh history`, `diff`, `rollback` commands for policy version management
+- `drako scan --share` viral sharing with pre-written posts for LinkedIn, X, Bluesky
+- `drako history`, `diff`, `rollback` commands for policy version management
 - `govern()` universal one-liner — auto-detects CrewAI, LangGraph, AutoGen
 - Per-tool interception: every tool call evaluated through the enforcement pipeline
 - Prompt Injection Detection (5 pattern categories, bidirectional)
@@ -68,13 +68,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - OTEL & SIEM export (OpenTelemetry, STIX 2.1, CEF)
 - MCP local server for Claude Desktop integration
 - AutoGen middleware support
-- `agentmesh serve` command for local MCP server
-- `agentmesh verify` command for configuration validation
+- `drako serve` command for local MCP server
+- `drako verify` command for configuration validation
 
 ### Changed
 - `govern()` now wraps individual tools (was session-level only)
-- Config-as-code: full governance configurable from `.agentmesh.yaml`
-- `agentmesh push` translates YAML to enforcement engine
+- Config-as-code: full governance configurable from `.drako.yaml`
+- `drako push` translates YAML to enforcement engine
 - Scoring updated for 13 rule categories (was 4)
 - Policy engine evaluates all 60 rules in <2ms (P50)
 
@@ -87,8 +87,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [0.1.8] - 2026-03-06
 
 ### Added
-- Compact output mode (`agentmesh scan --compact`)
-- Autofix dry-run (`agentmesh fix --dry-run`)
+- Compact output mode (`drako scan --compact`)
+- Autofix dry-run (`drako fix --dry-run`)
 - `--project` flag to specify project root
 - Governance badge URL generation for CI/CD
 - BUSL-1.1 license version update
@@ -107,11 +107,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [0.1.4] - 2026-03-03
 
 ### Added
-- API key YAML fallback — `api_key_env` field in `.agentmesh.yaml`
+- API key YAML fallback — `api_key_env` field in `.drako.yaml`
 - Cross-platform environment variable hint in scan output
 
 ### Fixed
-- `agentmesh scan` and `agentmesh init` command edge cases
+- `drako scan` and `drako init` command edge cases
 
 ## [0.1.2] - 2026-02-28
 
@@ -126,14 +126,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [0.1.1] - 2026-02-27
 
 ### Added
-- Initial release of AgentMesh SDK
+- Initial release of Drako SDK
 - 24 governance rules across 4 categories (Security, Governance, Compliance, Best Practices)
 - Agent BOM (Bill of Materials) — AST-based discovery of agents, tools, models, prompts
 - Framework support: CrewAI, LangGraph, AutoGen, LangChain, LlamaIndex, PydanticAI
-- CLI commands: `agentmesh scan`, `agentmesh init`
+- CLI commands: `drako scan`, `drako init`
 - Output formats: Terminal (Rich), JSON, SARIF 2.1.0
 - Governance scoring: A-F grades (0-100 scale)
 - GitHub Code Scanning integration via SARIF
 - Pre-commit hook support
 - Performance benchmarks (<2ms full scan P50)
-- PyPI package: `useagentmesh`
+- PyPI package: `drako`

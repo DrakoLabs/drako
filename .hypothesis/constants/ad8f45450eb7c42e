@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\middleware\base.py
+# hypothesis_version: 6.151.9
+
+['.agentmesh.yaml', 'BLOCKED', 'N/A', 'action', 'agent_id', 'allowed', 'blocked', 'blocking_policy', 'collective_intel_ioc', 'decision', 'did', 'payload_preview', 'policy_id', 'reason', 'reasoning', 'rejected', 'tool_args', 'tool_name', 'trust_score', 'unknown']

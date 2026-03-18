@@ -6,8 +6,8 @@ researcher = Agent(name="researcher", role="Research Agent")
 writer = Agent(name="writer", role="Writing Agent")
 reviewer = Agent(name="reviewer", role="Review Agent")
 
-# Topology monitoring is enabled via agentmesh observability
-from agentmesh import topology
+# Topology monitoring is enabled via drako observability
+from drako import topology
 
 topology.enable(
     conflict_detection=True,

@@ -9,8 +9,8 @@ try:
 except ImportError:
     Console = None
 
-from agentmesh.cli.discovery import collect_project_files, detect_frameworks
-from agentmesh.cli.bom import generate_bom
+from drako.cli.discovery import collect_project_files, detect_frameworks
+from drako.cli.bom import generate_bom
 
 def run_discovery_benchmark(project_dir: Path):
     if not project_dir.exists():

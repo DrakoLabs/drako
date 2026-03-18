@@ -1,6 +1,6 @@
-# AgentMesh Policy Rules Reference
+# Drako Policy Rules Reference
 
-AgentMesh enforces **60 deterministic rules** across 13 categories. Every rule runs offline, with no LLM in the evaluation loop. Same code, same result, every time.
+Drako enforces **60 deterministic rules** across 13 categories. Every rule runs offline, with no LLM in the evaluation loop. Same code, same result, every time.
 
 ## Scoring
 
@@ -287,7 +287,7 @@ No prompt injection detection library, middleware, or guardrail configured in th
 **Vulnerable:**
 ```python
 # ruleid: SEC-010
-# No guardrails, no agentmesh, no injection detection
+# No guardrails, no drako, no injection detection
 crew = Crew(agents=[researcher], tasks=[task])
 crew.kickoff()
 ```
@@ -295,7 +295,7 @@ crew.kickoff()
 **Correct:**
 ```python
 # ok: SEC-010
-from agentmesh import govern
+from drako import govern
 crew = govern(Crew(agents=[researcher], tasks=[task]))
 crew.kickoff()
 ```
@@ -320,7 +320,7 @@ def transfer_funds(amount: float, to_account: str) -> str:
 **Correct:**
 ```python
 # ok: SEC-011
-# Configure in .agentmesh.yaml:
+# Configure in .drako.yaml:
 # intent_verification:
 #   mode: enforce
 #   required_for:
@@ -349,7 +349,7 @@ crew.kickoff()
 **Correct:**
 ```python
 # ok: GOV-001
-from agentmesh import govern
+from drako import govern
 crew = govern(Crew(agents=[agent], tasks=[task]))
 # Every tool call is now logged with SHA-256 hash chain
 ```
@@ -359,7 +359,7 @@ crew = govern(Crew(agents=[agent], tasks=[task]))
 ### GOV-002: No policy enforcement middleware
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF GV-1.1, AgentMesh best practice
+**Standard:** NIST AI RMF GV-1.1, Drako best practice
 
 No governance middleware evaluating tool calls against policies. Without policy checks, agents operate without guardrails — any tool call passes unchecked.
 
@@ -373,7 +373,7 @@ crew.kickoff()
 **Correct:**
 ```python
 # ok: GOV-002
-from agentmesh import govern
+from drako import govern
 crew = govern(Crew(agents=[agent], tasks=[task]))
 ```
 
@@ -437,7 +437,7 @@ def delete_files(pattern: str) -> str:
 **Correct:**
 ```python
 # ok: GOV-004
-# Configure HITL in .agentmesh.yaml:
+# Configure HITL in .drako.yaml:
 # hitl:
 #   mode: enforce
 #   triggers:
@@ -449,7 +449,7 @@ def delete_files(pattern: str) -> str:
 ### GOV-005: No circuit breaker configured
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF MS-2.7, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.7, Drako best practice
 
 No circuit breaker to stop cascading failures. If a tool or downstream service fails repeatedly, the agent keeps retrying — amplifying the failure instead of containing it.
 
@@ -536,7 +536,7 @@ def fetch_data(url: str) -> str:
 ### GOV-008: No fallback for critical tool
 
 **Severity:** HIGH (-8 points, cap -40)
-**Standard:** NIST AI RMF MS-2.5, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.5, Drako best practice
 
 Critical tools (write, delete, send, pay, execute, deploy) without retry or fallback logic. If a critical tool fails, the agent has no recovery path.
 
@@ -579,7 +579,7 @@ def delete_database(table: str) -> str:
 **Correct:**
 ```python
 # ok: GOV-009
-# Configure HITL in .agentmesh.yaml:
+# Configure HITL in .drako.yaml:
 # hitl:
 #   mode: enforce
 #   triggers:
@@ -594,7 +594,7 @@ def delete_database(table: str) -> str:
 ### GOV-010: No escalation path defined
 
 **Severity:** HIGH (-8 points, cap -40)
-**Standard:** NIST AI RMF GV-1.5, AgentMesh best practice
+**Standard:** NIST AI RMF GV-1.5, Drako best practice
 
 No escalation mechanism for when agents encounter situations beyond their capability. Without escalation, agents either fail silently or make unsafe decisions.
 
@@ -608,7 +608,7 @@ crew = Crew(agents=[agent], tasks=[task])
 **Correct:**
 ```python
 # ok: GOV-010
-# Configure escalation in .agentmesh.yaml:
+# Configure escalation in .drako.yaml:
 # hitl:
 #   mode: enforce
 #   notification:
@@ -638,7 +638,7 @@ def transfer_funds(amount: float, to: str) -> str:
 **Correct:**
 ```python
 # ok: GOV-011
-# Configure in .agentmesh.yaml:
+# Configure in .drako.yaml:
 # intent_verification:
 #   mode: enforce
 #   anti_replay: true
@@ -666,7 +666,7 @@ crew.kickoff()  # No logging
 **Correct:**
 ```python
 # ok: COM-001
-from agentmesh import govern
+from drako import govern
 crew = govern(Crew(agents=[agent], tasks=[task]))
 # Automatic audit logging with hash-chained records
 ```
@@ -690,7 +690,7 @@ agent.run(task)
 **Correct:**
 ```python
 # ok: COM-002
-# Configure HITL in .agentmesh.yaml:
+# Configure HITL in .drako.yaml:
 # hitl:
 #   mode: enforce
 #   triggers:
@@ -751,20 +751,20 @@ Article 9 requires a risk management system. No `RISK_ASSESSMENT.md` or risk man
 ### COM-005: No Agent BOM / inventory maintained
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** EU AI Act Art. 11, AgentMesh best practice
+**Standard:** EU AI Act Art. 11, Drako best practice
 
-No `.agentmesh.yaml` or Agent Bill of Materials documenting agents, tools, models, and permissions. Without an inventory, governance is ad-hoc.
+No `.drako.yaml` or Agent Bill of Materials documenting agents, tools, models, and permissions. Without an inventory, governance is ad-hoc.
 
 **Vulnerable:**
 ```
 # ruleid: COM-005
-# No .agentmesh.yaml, no agent-bom.json
+# No .drako.yaml, no agent-bom.json
 ```
 
 **Correct:**
 ```bash
 # ok: COM-005
-agentmesh init  # Generates .agentmesh.yaml with full BOM
+drako init  # Generates .drako.yaml with full BOM
 ```
 
 ---
@@ -774,19 +774,19 @@ agentmesh init  # Generates .agentmesh.yaml with full BOM
 **Severity:** CRITICAL (-15 points, cap -60)
 **Standard:** EU AI Act Art. 14
 
-Tools with side effects (delete, write, send, pay, execute, deploy) exist but no HITL configuration in `.agentmesh.yaml`. Article 14 violation for high-risk AI systems.
+Tools with side effects (delete, write, send, pay, execute, deploy) exist but no HITL configuration in `.drako.yaml`. Article 14 violation for high-risk AI systems.
 
 **Vulnerable:**
 ```python
 # ruleid: COM-006
-# .agentmesh.yaml has no hitl: section
+# .drako.yaml has no hitl: section
 # But project has tools: send_email, delete_record, execute_query
 ```
 
 **Correct:**
 ```yaml
 # ok: COM-006
-# .agentmesh.yaml
+# .drako.yaml
 hitl:
   mode: enforce
   triggers:
@@ -802,9 +802,9 @@ hitl:
 ### ODD-001: No operational boundary definition
 
 **Severity:** CRITICAL (-15 points, cap -60)
-**Standard:** NIST AI RMF GV-1.1, AgentMesh best practice
+**Standard:** NIST AI RMF GV-1.1, Drako best practice
 
-No Operational Design Domain (ODD) defined. Agents operate without defined boundaries for where, when, and how they can act. ODD enforcement requires the AgentMesh platform.
+No Operational Design Domain (ODD) defined. Agents operate without defined boundaries for where, when, and how they can act. ODD enforcement requires the Drako platform.
 
 **Vulnerable:**
 ```python
@@ -816,7 +816,7 @@ agent = Agent(role="researcher", tools=[search, write, delete])
 **Correct:**
 ```yaml
 # ok: ODD-001
-# Define ODD via AgentMesh dashboard (Pro plan)
+# Define ODD via Drako dashboard (Pro plan)
 # Restrict: permitted tools, time windows, allowed data sources
 ```
 
@@ -845,7 +845,7 @@ agent = Agent(
     role="researcher",
     tools=[search, read_file]  # Only the tools this agent needs
 )
-# permitted_tools enforced via AgentMesh ODD
+# permitted_tools enforced via Drako ODD
 ```
 
 ---
@@ -853,7 +853,7 @@ agent = Agent(
 ### ODD-003: No spend cap
 
 **Severity:** HIGH (-8 points, cap -40)
-**Standard:** NIST AI RMF MS-2.7, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.7, Drako best practice
 
 No token or cost limits defined. A runaway agent can consume unlimited API tokens, generating unbounded costs.
 
@@ -871,7 +871,7 @@ agent = Agent(
     role="researcher",
     max_tokens=10000,  # Per-call token limit
 )
-# Budget enforcement via AgentMesh magnitude limits
+# Budget enforcement via Drako magnitude limits
 ```
 
 ---
@@ -897,7 +897,7 @@ agent = Agent(
     role="researcher",
     max_iterations=20,
 )
-# Or configure via AgentMesh ODD time constraints
+# Or configure via Drako ODD time constraints
 ```
 
 ---
@@ -907,7 +907,7 @@ agent = Agent(
 ### MAG-001: No spend cap defined
 
 **Severity:** CRITICAL (-15 points, cap -60)
-**Standard:** NIST AI RMF MS-2.7, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.7, Drako best practice
 
 No financial magnitude limits defined. Without spend caps, a compromised or runaway agent can make unlimited API calls, each costing money. Financial exposure is unbounded.
 
@@ -922,7 +922,7 @@ crew.kickoff()
 **Correct:**
 ```yaml
 # ok: MAG-001
-# .agentmesh.yaml
+# .drako.yaml
 finops:
   budgets:
     daily_usd: 50
@@ -977,7 +977,7 @@ def query_database(sql: str) -> str:
 **Correct:**
 ```yaml
 # ok: MAG-003
-# Define data sensitivity in AgentMesh magnitude config
+# Define data sensitivity in Drako magnitude config
 # Restrict which agents can access which data classification levels
 ```
 
@@ -1004,7 +1004,7 @@ auth_token = "ghp_abcdefghijklmnop"
 # ok: ID-001
 import os
 api_key = os.environ["OPENAI_API_KEY"]
-# Or use AgentMesh Identity Management for auto-rotating credentials
+# Or use Drako Identity Management for auto-rotating credentials
 ```
 
 ---
@@ -1012,7 +1012,7 @@ api_key = os.environ["OPENAI_API_KEY"]
 ### ID-002: No identity definition for agent
 
 **Severity:** HIGH (-8 points, cap -40)
-**Standard:** NIST AI RMF GV-1.3, AgentMesh best practice
+**Standard:** NIST AI RMF GV-1.3, Drako best practice
 
 No identity configuration for agents. Without unique identity, you cannot distinguish which agent performed an action in audit trails or enforce per-agent policies.
 
@@ -1026,7 +1026,7 @@ agent = Agent(role="researcher", tools=[search])
 **Correct:**
 ```yaml
 # ok: ID-002
-# Configure managed identities via AgentMesh dashboard
+# Configure managed identities via Drako dashboard
 # Each agent gets a unique DID with auto-rotating credentials
 ```
 
@@ -1066,7 +1066,7 @@ api_key = os.environ["AGENT_B_API_KEY"]
 ### MULTI-001: Multi-agent system without topology monitoring
 
 **Severity:** HIGH (-8 points, cap -40)
-**Standard:** NIST AI RMF MS-2.3, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.3, Drako best practice
 
 Multiple agents (2+) without topology monitoring. Without observability into agent interactions, you cannot detect cascading failures, circular dependencies, or resource conflicts.
 
@@ -1080,7 +1080,7 @@ crew = Crew(agents=[researcher, writer, reviewer], tasks=tasks)
 **Correct:**
 ```yaml
 # ok: MULTI-001
-# .agentmesh.yaml
+# .drako.yaml
 topology:
   enabled: true
   conflict_detection:
@@ -1135,7 +1135,7 @@ agent_b = Agent(role="writer_b", tools=[write_file])
 **Correct:**
 ```yaml
 # ok: MULTI-003
-# .agentmesh.yaml
+# .drako.yaml
 topology:
   enabled: true
   conflict_detection:
@@ -1147,7 +1147,7 @@ topology:
 ### MULTI-004: No chaos testing configured
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF MS-2.5, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.5, Drako best practice
 
 No chaos testing or fault injection configured. Without testing how agents behave under failure conditions, you cannot validate resilience or discover cascading failure paths.
 
@@ -1160,7 +1160,7 @@ No chaos testing or fault injection configured. Without testing how agents behav
 **Correct:**
 ```yaml
 # ok: MULTI-004
-# .agentmesh.yaml
+# .drako.yaml
 chaos:
   experiments:
     - name: tool-deny-search
@@ -1180,20 +1180,20 @@ chaos:
 ### HOOK-001: No pre-action validation hooks
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF GV-1.3, AgentMesh best practice
+**Standard:** NIST AI RMF GV-1.3, Drako best practice
 
-No pre-action hooks configured in `.agentmesh.yaml`. Pre-action hooks allow custom validation before tool execution — business rules, compliance checks, or rate limiting logic specific to your domain.
+No pre-action hooks configured in `.drako.yaml`. Pre-action hooks allow custom validation before tool execution — business rules, compliance checks, or rate limiting logic specific to your domain.
 
 **Vulnerable:**
 ```yaml
 # ruleid: HOOK-001
-# .agentmesh.yaml — no hooks section or no pre_action
+# .drako.yaml — no hooks section or no pre_action
 ```
 
 **Correct:**
 ```yaml
 # ok: HOOK-001
-# .agentmesh.yaml
+# .drako.yaml
 hooks:
   pre_action:
     - name: validate-business-rules
@@ -1208,14 +1208,14 @@ hooks:
 ### HOOK-002: No session-end gate (Stop hook)
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF GV-4.1, AgentMesh best practice
+**Standard:** NIST AI RMF GV-4.1, Drako best practice
 
 No `on_session_end` hook configured. Session-end gates ensure agents don't terminate without passing final checks (e.g., audit completeness, state persistence).
 
 **Vulnerable:**
 ```yaml
 # ruleid: HOOK-002
-# .agentmesh.yaml — no on_session_end hook
+# .drako.yaml — no on_session_end hook
 hooks:
   pre_action:
     - name: validate
@@ -1237,7 +1237,7 @@ hooks:
 ### HOOK-003: Hook without timeout configured
 
 **Severity:** LOW (-1 point, cap -10)
-**Standard:** CWE-400 (Resource Exhaustion), AgentMesh best practice
+**Standard:** CWE-400 (Resource Exhaustion), Drako best practice
 
 Hook scripts defined without `timeout_ms`. A hanging hook script can block the entire enforcement pipeline indefinitely.
 
@@ -1270,12 +1270,12 @@ hooks:
 **Severity:** HIGH (-8 points, cap -40)
 **Standard:** EU AI Act Art. 12, NIST AI RMF GV-4.1
 
-No AgentMesh platform connection for policy versioning. Without versioning, policy changes are untracked — you cannot audit which rules were active when an incident occurred.
+No Drako platform connection for policy versioning. Without versioning, policy changes are untracked — you cannot audit which rules were active when an incident occurred.
 
 **Vulnerable:**
 ```yaml
 # ruleid: CV-001
-# .agentmesh.yaml without endpoint or api_key_env
+# .drako.yaml without endpoint or api_key_env
 tenant_id: my-org
 # No platform connection — policies are local-only
 ```
@@ -1284,9 +1284,9 @@ tenant_id: my-org
 ```yaml
 # ok: CV-001
 tenant_id: my-org
-api_key_env: AGENTMESH_API_KEY
+api_key_env: DRAKO_API_KEY
 endpoint: https://api.useagentmesh.com
-# Run: agentmesh push — creates immutable policy snapshot
+# Run: drako push — creates immutable policy snapshot
 ```
 
 ---
@@ -1294,7 +1294,7 @@ endpoint: https://api.useagentmesh.com
 ### CV-002: Audit logs without policy version reference
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** EU AI Act Art. 12, AgentMesh best practice
+**Standard:** EU AI Act Art. 12, Drako best practice
 
 Audit logging is configured but no platform connection exists. Audit entries cannot reference which policy version was active at the time of the action.
 
@@ -1311,7 +1311,7 @@ audit:
 # ok: CV-002
 audit:
   enabled: true
-api_key_env: AGENTMESH_API_KEY
+api_key_env: DRAKO_API_KEY
 endpoint: https://api.useagentmesh.com
 ```
 
@@ -1322,7 +1322,7 @@ endpoint: https://api.useagentmesh.com
 ### FIN-001: No cost tracking on LLM calls
 
 **Severity:** HIGH (-8 points, cap -40)
-**Standard:** NIST AI RMF MS-2.7, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.7, Drako best practice
 
 LLM API calls detected but no cost tracking. Without tracking, you cannot report costs, detect anomalies, or enforce budgets.
 
@@ -1339,7 +1339,7 @@ response = client.chat.completions.create(
 **Correct:**
 ```yaml
 # ok: FIN-001
-# .agentmesh.yaml
+# .drako.yaml
 finops:
   tracking:
     enabled: true
@@ -1354,7 +1354,7 @@ finops:
 ### FIN-002: Single model for all tasks (no cost optimization)
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF MS-2.7, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.7, Drako best practice
 
 Only one LLM model referenced in the project. Using the same expensive model for simple tasks (summaries, formatting) wastes budget.
 
@@ -1380,7 +1380,7 @@ agent3 = Agent(llm="gpt-4o-mini")   # Summarization
 ### FIN-003: No response caching configured
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF MS-2.7, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.7, Drako best practice
 
 LLM calls detected but no caching. Identical or near-identical queries are sent to the LLM API repeatedly, wasting tokens and increasing latency.
 
@@ -1394,7 +1394,7 @@ response = client.chat.completions.create(model="gpt-4o", messages=messages)
 **Correct:**
 ```yaml
 # ok: FIN-003
-# .agentmesh.yaml
+# .drako.yaml
 finops:
   cache:
     enabled: true
@@ -1409,7 +1409,7 @@ finops:
 ### RES-001: No fallback defined for critical operations
 
 **Severity:** HIGH (-8 points, cap -40)
-**Standard:** NIST AI RMF MS-2.5, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.5, Drako best practice
 
 Critical tools (payment, write, execute) without fallback configuration. When a critical tool fails, there is no recovery path — the agent is stuck.
 
@@ -1424,7 +1424,7 @@ def process_payment(amount: float) -> str:
 **Correct:**
 ```yaml
 # ok: RES-001
-# .agentmesh.yaml
+# .drako.yaml
 fallback:
   mode: enforce
   tools:
@@ -1438,7 +1438,7 @@ fallback:
 ### RES-002: No state preservation on agent failure
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF MS-2.5, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.5, Drako best practice
 
 No checkpointing or state persistence. If an agent crashes mid-task, all progress is lost and the task must restart from scratch.
 
@@ -1478,7 +1478,7 @@ crew = Crew(agents=[agent_a, agent_b], tasks=tasks)
 **Correct:**
 ```yaml
 # ok: A2A-001
-# .agentmesh.yaml
+# .drako.yaml
 a2a:
   mode: enforce
   auth:
@@ -1506,7 +1506,7 @@ agent_b.process(result_from_a)  # No validation
 **Correct:**
 ```yaml
 # ok: A2A-002
-# .agentmesh.yaml
+# .drako.yaml
 a2a:
   mode: enforce
   worm_detection:
@@ -1536,7 +1536,7 @@ agent_b = Agent(memory=shared_memory)
 **Correct:**
 ```yaml
 # ok: A2A-003
-# .agentmesh.yaml
+# .drako.yaml
 a2a:
   mode: enforce
   channels:
@@ -1553,7 +1553,7 @@ a2a:
 ### BP-001: Framework outdated
 
 **Severity:** LOW (-1 point, cap -10)
-**Standard:** AgentMesh best practice
+**Standard:** Drako best practice
 
 AI agent framework is behind the latest major version. Outdated frameworks may have known vulnerabilities, missing features, or deprecated APIs.
 
@@ -1576,7 +1576,7 @@ crewai>=0.85.0
 ### BP-002: No tests for agents
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** NIST AI RMF MS-2.11, AgentMesh best practice
+**Standard:** NIST AI RMF MS-2.11, Drako best practice
 
 No test files found, or tests exist but don't reference agent names. Untested agents are ungoverned agents — you cannot validate behavior, detect regressions, or prove compliance.
 
@@ -1604,7 +1604,7 @@ def test_writer_handles_empty_input():
 ### BP-003: No retry/fallback in LLM calls
 
 **Severity:** LOW (-1 point, cap -10)
-**Standard:** AgentMesh best practice
+**Standard:** Drako best practice
 
 LLM models used but no retry or backoff logic. LLM APIs have transient failures (rate limits, timeouts). Without retry, a single transient error fails the entire task.
 
@@ -1629,7 +1629,7 @@ def call_llm(messages):
 ### BP-004: No timeout on tool executions
 
 **Severity:** MEDIUM (-3 points, cap -20)
-**Standard:** CWE-400 (Resource Exhaustion), AgentMesh best practice
+**Standard:** CWE-400 (Resource Exhaustion), Drako best practice
 
 No timeout configured for tool calls. A hanging tool can block the agent indefinitely, consuming resources and preventing task completion.
 
@@ -1654,7 +1654,7 @@ def fetch_data(url: str) -> str:
 ### BP-005: Too many tools on single agent
 
 **Severity:** LOW (-1 point, cap -10)
-**Standard:** AgentMesh best practice
+**Standard:** Drako best practice
 
 An agent has more than 10 tools registered. Too many tools increase the attack surface, make the agent harder to reason about, and lead to tool selection errors by the LLM.
 

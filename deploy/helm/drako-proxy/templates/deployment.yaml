@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "drako-proxy.fullname" . }}
+  labels:
+    {{- include "drako-proxy.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "drako-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "drako-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            - name: DRAKO_PROXY_PORT
+              value: {{ .Values.service.port | quote }}
+            - name: DRAKO_ENDPOINT
+              value: {{ .Values.config.endpoint | quote }}
+            - name: DRAKO_GOVERNANCE_LEVEL
+              value: {{ .Values.config.governanceLevel | quote }}
+            {{- if .Values.config.existingSecret }}
+            - name: DRAKO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.existingSecret }}
+                  key: {{ .Values.config.existingSecretKey }}
+            {{- else if .Values.config.apiKey }}
+            - name: DRAKO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "drako-proxy.fullname" . }}-secret
+                  key: DRAKO_API_KEY
+            {{- end }}
+          {{- if .Values.drakoConfig }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/.drako.yaml
+              subPath: .drako.yaml
+              readOnly: true
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.drakoConfig }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "drako-proxy.fullname" . }}-config
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,4 +1,4 @@
-"""Property-based tests for AgentMesh governance rules.
+"""Property-based tests for Drako governance rules.
 
 Uses Hypothesis to generate adversarial inputs and verify invariants.
 Run: pytest tests/test_properties.py -v --hypothesis-show-statistics
@@ -11,8 +11,8 @@ from dataclasses import dataclass
 
 from hypothesis import given, strategies as st, settings, assume
 
-from agentmesh.cli.policies.base import Finding
-from agentmesh.cli.scoring import calculate_score, score_to_grade, findings_summary
+from drako.cli.policies.base import Finding
+from drako.cli.scoring import calculate_score, score_to_grade, findings_summary
 
 
 # ===================================================================
@@ -197,7 +197,7 @@ def test_summary_total_equals_input_length(findings: list[Finding]):
 # PROPERTY: Template deep merge
 # ===================================================================
 
-from agentmesh.templates import deep_merge
+from drako.templates import deep_merge
 
 dict_st = st.fixed_dictionaries({
     "a": st.integers(),
@@ -249,7 +249,7 @@ def test_deep_merge_does_not_mutate(d: dict):
 # PROPERTY: ODD governance (proxy module)
 # ===================================================================
 
-from agentmesh.proxy.proxy_server import _check_odd
+from drako.proxy.proxy_server import _check_odd
 
 
 @given(
@@ -322,7 +322,7 @@ def test_odd_off_mode_never_rejects(agent: str, tool: str):
 # PROPERTY: Magnitude checks (proxy module)
 # ===================================================================
 
-from agentmesh.proxy.proxy_server import _check_magnitude
+from drako.proxy.proxy_server import _check_magnitude
 
 
 @given(max_actions=st.integers(min_value=1, max_value=100))
@@ -365,7 +365,7 @@ def test_magnitude_above_limit_rejected(max_actions: int):
 # PROPERTY: DLP checks (proxy module)
 # ===================================================================
 
-from agentmesh.proxy.proxy_server import _check_dlp
+from drako.proxy.proxy_server import _check_dlp
 
 
 @given(
@@ -408,8 +408,8 @@ def test_dlp_off_never_rejects(text: str):
 @given(level=st.sampled_from(["autopilot", "balanced", "strict", "custom"]))
 def test_governance_level_round_trips(level: str):
     """All valid governance levels must be accepted by the config model."""
-    from agentmesh.config import AgentMeshConfig
-    config = AgentMeshConfig(tenant_id="test", governance_level=level)
+    from drako.config import DrakoConfig
+    config = DrakoConfig(tenant_id="test", governance_level=level)
     assert config.governance_level == level
 
 
@@ -419,7 +419,7 @@ def test_governance_level_round_trips(level: str):
 
 def test_template_list_is_not_empty():
     """Template registry must have at least the base templates."""
-    from agentmesh.templates import list_templates
+    from drako.templates import list_templates
     templates = list_templates()
     names = [t["name"] for t in templates]
     assert "base" in names
@@ -431,7 +431,7 @@ def test_template_list_is_not_empty():
 
 def test_all_templates_load_without_error():
     """Every registered template must load successfully."""
-    from agentmesh.templates import list_templates, load_template
+    from drako.templates import list_templates, load_template
     for t in list_templates():
         data = load_template(t["name"])
         assert isinstance(data, dict)

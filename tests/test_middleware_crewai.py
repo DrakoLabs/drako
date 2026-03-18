@@ -9,9 +9,9 @@ import pytest
 import httpx
 import respx
 
-from agentmesh.client import AgentMeshClient
-from agentmesh.exceptions import PolicyViolationError
-from agentmesh.middleware.crewai import CrewAIComplianceMiddleware
+from drako.client import DrakoClient
+from drako.exceptions import PolicyViolationError
+from drako.middleware.crewai import CrewAIComplianceMiddleware
 
 
 # ---------------------------------------------------------------------------
@@ -53,7 +53,7 @@ class FakeCrew:
 class TestCrewAIMiddleware:
     @respx.mock
     def test_kickoff_verifies_agents(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         # Mock verify identity for each agent
         respx.post(f"{endpoint}/api/v1/agents/register").mock(
             return_value=httpx.Response(200, json={
@@ -78,7 +78,7 @@ class TestCrewAIMiddleware:
         ]
         crew = FakeCrew(agents=agents, tasks=tasks)
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
         mw = CrewAIComplianceMiddleware(crew=crew, client=client)
         result = mw.kickoff()
 
@@ -87,7 +87,7 @@ class TestCrewAIMiddleware:
 
     @respx.mock
     def test_kickoff_blocks_on_policy_violation(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         respx.post(f"{endpoint}/api/v1/agents/register").mock(
             return_value=httpx.Response(200, json={
                 "did": "did:mesh:ag_1",
@@ -105,7 +105,7 @@ class TestCrewAIMiddleware:
         tasks = [FakeTask("Dangerous action", agents[0])]
         crew = FakeCrew(agents=agents, tasks=tasks)
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
         mw = CrewAIComplianceMiddleware(crew=crew, client=client)
 
         with pytest.raises(PolicyViolationError):
@@ -113,7 +113,7 @@ class TestCrewAIMiddleware:
 
     @respx.mock
     def test_kickoff_records_audit_logs(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         respx.post(f"{endpoint}/api/v1/agents/register").mock(
             return_value=httpx.Response(200, json={"did": "did:mesh:ag_1", "trust_score": 0.9})
         )
@@ -128,7 +128,7 @@ class TestCrewAIMiddleware:
         task = FakeTask("Process data", agent)
         crew = FakeCrew(agents=[agent], tasks=[task])
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
         mw = CrewAIComplianceMiddleware(crew=crew, client=client)
         mw.kickoff()
 
@@ -136,13 +136,13 @@ class TestCrewAIMiddleware:
 
     @respx.mock
     def test_proxy_passthrough(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         agent = FakeAgent("a", "r")
         task = FakeTask("t", agent)
         crew = FakeCrew(agents=[agent], tasks=[task])
         crew.custom_attr = "custom_value"
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
         mw = CrewAIComplianceMiddleware(crew=crew, client=client, auto_verify=False, auto_policy=False, auto_audit=False)
 
         # __getattr__ should proxy to crew
@@ -151,12 +151,12 @@ class TestCrewAIMiddleware:
 
     @respx.mock
     def test_kickoff_without_auto_features(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         agent = FakeAgent("a", "r")
         task = FakeTask("t", agent)
         crew = FakeCrew(agents=[agent], tasks=[task])
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
         mw = CrewAIComplianceMiddleware(
             crew=crew, client=client,
             auto_verify=False, auto_policy=False, auto_audit=False,
@@ -169,7 +169,7 @@ class TestCrewAIMiddlewareAsync:
     @respx.mock
     @pytest.mark.asyncio
     async def test_akickoff(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         respx.post(f"{endpoint}/api/v1/agents/register").mock(
             return_value=httpx.Response(200, json={"did": "did:mesh:ag_a", "trust_score": 0.8})
         )
@@ -184,7 +184,7 @@ class TestCrewAIMiddlewareAsync:
         task = FakeTask("Async task", agent)
         crew = FakeCrew(agents=[agent], tasks=[task])
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
         mw = CrewAIComplianceMiddleware(crew=crew, client=client)
         result = await mw.akickoff()
 

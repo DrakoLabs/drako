@@ -13,8 +13,8 @@ import pytest
 import httpx
 import respx
 
-from agentmesh.client import AgentMeshClient
-from agentmesh.middleware.crewai import CrewAIComplianceMiddleware
+from drako.client import DrakoClient
+from drako.middleware.crewai import CrewAIComplianceMiddleware
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ class FakeCrew:
 # Helpers
 # ---------------------------------------------------------------------------
 
-ENDPOINT = "https://api.agentmesh.test"
+ENDPOINT = "https://api.drako.test"
 
 
 def _mock_all_endpoints(
@@ -94,7 +94,7 @@ def _mock_all_endpoints(
 
 
 def _build_middleware(crew: FakeCrew, fail_closed: bool = False) -> CrewAIComplianceMiddleware:
-    client = AgentMeshClient(api_key="am_live_test", endpoint=ENDPOINT)
+    client = DrakoClient(api_key="am_live_test", endpoint=ENDPOINT)
     return CrewAIComplianceMiddleware(
         crew=crew,
         client=client,
@@ -111,7 +111,7 @@ class TestPerToolWrapping:
 
     @respx.mock
     def test_govern_wraps_tool_run(self):
-        """After kickoff, each tool._run should have _agentmesh_wrapped flag."""
+        """After kickoff, each tool._run should have _drako_wrapped flag."""
         _mock_all_endpoints()
 
         search = FakeTool("search")
@@ -122,8 +122,8 @@ class TestPerToolWrapping:
         mw = _build_middleware(crew)
         mw.kickoff()
 
-        assert getattr(search._run, "_agentmesh_wrapped", False)
-        assert getattr(write._run, "_agentmesh_wrapped", False)
+        assert getattr(search._run, "_drako_wrapped", False)
+        assert getattr(write._run, "_drako_wrapped", False)
 
     @respx.mock
     def test_governed_tool_calls_evaluate(self):
@@ -184,7 +184,7 @@ class TestPerToolWrapping:
 
         result = code_runner._run(code="print('hack')")
 
-        assert "[AgentMesh] Action blocked" in result
+        assert "[Drako] Action blocked" in result
         assert "permitted_tools" in result
 
     @respx.mock
@@ -267,7 +267,7 @@ class TestPerToolWrapping:
         result = tool._run(query="test")
 
         # Tool should be blocked (fail-closed)
-        assert "[AgentMesh] Action blocked" in result
+        assert "[Drako] Action blocked" in result
         assert "fail-closed" in result
         assert tool._call_count == 0
 
@@ -278,7 +278,7 @@ class TestPerToolWrapping:
         agent = FakeAgent("agent1", "role1", tools=[tool])
         crew = FakeCrew(agents=[agent])
 
-        client = AgentMeshClient(api_key="am_live_test", endpoint=ENDPOINT)
+        client = DrakoClient(api_key="am_live_test", endpoint=ENDPOINT)
         mw = CrewAIComplianceMiddleware(
             crew=crew, client=client,
             auto_verify=False, auto_policy=False, auto_audit=False,
@@ -286,7 +286,7 @@ class TestPerToolWrapping:
         mw.kickoff()
 
         # Tools should NOT have the wrapped flag
-        assert not getattr(tool._run, "_agentmesh_wrapped", False)
+        assert not getattr(tool._run, "_drako_wrapped", False)
 
     @respx.mock
     def test_governed_tool_sends_payload_preview(self):
@@ -327,9 +327,9 @@ class TestPerToolWrapping:
         mw = _build_middleware(crew)
         mw.kickoff()
 
-        assert getattr(tool_a._run, "_agentmesh_wrapped", False)
-        assert getattr(tool_b._run, "_agentmesh_wrapped", False)
-        assert getattr(tool_c._run, "_agentmesh_wrapped", False)
+        assert getattr(tool_a._run, "_drako_wrapped", False)
+        assert getattr(tool_b._run, "_drako_wrapped", False)
+        assert getattr(tool_c._run, "_drako_wrapped", False)
 
     @respx.mock
     def test_double_govern_no_double_wrap(self):

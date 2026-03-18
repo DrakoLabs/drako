@@ -1,0 +1,38 @@
+# Drako Policy Template: Recommended Defaults
+# The baseline configuration for any project.
+# All other templates extend this.
+
+governance_level: autopilot
+
+policies:
+  odd:
+    enforcement_mode: audit
+    default_policy: allow
+
+  magnitude:
+    max_spend_per_action_usd: 10.00
+    max_spend_per_session_usd: 50.00
+    max_records_per_action: 100
+
+  dlp:
+    mode: audit
+
+  hitl:
+    mode: audit
+    triggers:
+      tool_types: [write, execute, payment]
+    timeout_action: allow
+    approval_timeout_minutes: 30
+
+  intent_verification:
+    mode: "off"
+
+  circuit_breaker:
+    agent_level:
+      failure_threshold: 5
+      time_window_seconds: 60
+      recovery_timeout_seconds: 30
+
+  audit:
+    enabled: true
+    retention_days: 7

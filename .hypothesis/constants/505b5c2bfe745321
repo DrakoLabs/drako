@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\config.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.92, 168, 300, 500, 5000, '*', '.agentmesh.yaml', '1.0', 'AGENTMESH_API_KEY', 'allow', 'audit', 'circuit_breaker_open', 'circular_dependency', 'custom', 'did_exchange', 'escalate_human', 'execute', 'extends', 'from', 'generic', 'gpt-4o', 'off', 'payment', 'read', 'reject', 'resource_contention', 'to', 'tool_deny', 'w', 'write']

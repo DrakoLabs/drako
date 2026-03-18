@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\formats\json_fmt.py
+# hypothesis_version: 6.151.9
+
+['1.0.0', 'CRITICAL', 'HIGH', 'LOW', 'MEDIUM', 'agent_bom', 'agentmesh', 'agents', 'category', 'class_name', 'code_snippet', 'confidence', 'critical', 'file_path', 'files_scanned', 'findings', 'fix_snippet', 'framework', 'frameworks', 'grade', 'has_code_execution', 'has_network_access', 'high', 'line_number', 'low', 'mcp_servers', 'medium', 'message', 'model', 'models', 'name', 'path', 'permissions', 'policy_id', 'project', 'prompts_count', 'scan_duration_ms', 'scanner', 'score', 'severity', 'summary', 'title', 'tools', 'total', 'version']

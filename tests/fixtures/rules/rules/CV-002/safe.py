@@ -1,10 +1,10 @@
 # ok: CV-002
 # Audit logging WITH platform connection — entries include policy_snapshot_id
-# .agentmesh.yaml:
+# .drako.yaml:
 #   audit:
 #     enabled: true
 #     log_level: verbose
-#   api_key_env: AGENTMESH_API_KEY
+#   api_key_env: DRAKO_API_KEY
 #   endpoint: https://api.useagentmesh.com
 from crewai import Agent
 

@@ -4,7 +4,7 @@ from typing import TypedDict
 
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential
-from agentmesh import with_langgraph_compliance
+from drako import with_langgraph_compliance
 
 
 class AgentState(TypedDict):
@@ -48,4 +48,4 @@ compiled = graph.compile()
 
 # ok: GOV-001
 # ok: GOV-002
-app = with_langgraph_compliance(compiled, config_path=".agentmesh.yaml")
+app = with_langgraph_compliance(compiled, config_path=".drako.yaml")

@@ -2,11 +2,11 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.discovery import collect_project_files, detect_frameworks
-from agentmesh.cli.bom import generate_bom
-from agentmesh.cli.policies import evaluate_all_policies
-from agentmesh.cli.scoring import calculate_score, score_to_grade
-from agentmesh.cli.report import render_report_to_string
+from drako.cli.discovery import collect_project_files, detect_frameworks
+from drako.cli.bom import generate_bom
+from drako.cli.policies import evaluate_all_policies
+from drako.cli.scoring import calculate_score, score_to_grade
+from drako.cli.report import render_report_to_string
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -30,7 +30,7 @@ class TestRenderReport:
             scan_duration_ms=1234,
         )
 
-        assert "AgentMesh Scan" in output
+        assert "Drako Scan" in output
         assert "Agent BOM" in output
         assert "GOVERNANCE SCORE" in output
         assert str(score) in output
@@ -56,7 +56,7 @@ class TestRenderReport:
             details=True,
         )
 
-        assert "AgentMesh Scan Report" in output
+        assert "Drako Scan Report" in output
         assert "AGENT BOM" in output
         assert "GOVERNANCE SCORE" in output
         assert str(score) in output
@@ -80,13 +80,13 @@ class TestRenderReport:
             scan_duration_ms=500,
         )
 
-        assert "AgentMesh Scan" in output
+        assert "Drako Scan" in output
         assert str(score) in output
 
     def test_report_no_crash_empty(self):
         """Report should not crash with minimal data."""
-        from agentmesh.cli.bom import AgentBOM
-        from agentmesh.cli.discovery import ProjectMetadata
+        from drako.cli.bom import AgentBOM
+        from drako.cli.discovery import ProjectMetadata
 
         output = render_report_to_string(
             bom=AgentBOM(),

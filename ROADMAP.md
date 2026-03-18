@@ -1,6 +1,6 @@
 # Roadmap
 
-AgentMesh ships governance for Python AI agents today. Here's where we're going.
+Drako ships governance for Python AI agents today. Here's where we're going.
 
 ## Q2 2026 (April - June)
 
@@ -8,11 +8,11 @@ AgentMesh ships governance for Python AI agents today. Here's where we're going.
 
 **MCP Tool Manifest Scanner** — Dedicated scanner for MCP server manifests. Detect excessive permissions, unauthenticated endpoints, and missing rate limits in MCP tool definitions before your agent connects to them.
 
-**Plugin system for custom rules** — Write governance rules in Python, register them with AgentMesh, and they run alongside the built-in 60. Your org's domain-specific policies enforced with the same engine.
+**Plugin system for custom rules** — Write governance rules in Python, register them with Drako, and they run alongside the built-in 60. Your org's domain-specific policies enforced with the same engine.
 
 ## Q3 2026 (July - September)
 
-**SOC 2 Type II audit packages** — Pre-built evidence packages generated from AgentMesh audit trails, policy snapshots, and HITL logs. Mapped to SOC 2 trust service criteria. Exportable for your auditor.
+**SOC 2 Type II audit packages** — Pre-built evidence packages generated from Drako audit trails, policy snapshots, and HITL logs. Mapped to SOC 2 trust service criteria. Exportable for your auditor.
 
 **Agent BOM as OWASP standard** — Contributing the Agent Bill of Materials format to OWASP as a proposed standard for AI agent component inventory. Like SBOM but for agents.
 
@@ -28,4 +28,4 @@ AgentMesh ships governance for Python AI agents today. Here's where we're going.
 
 ---
 
-Building in public. Priorities shift based on what users need. If something here matters to you, [open an issue](https://github.com/angelnicolasc/agentmesh/issues) or email hello@useagentmesh.com.
+Building in public. Priorities shift based on what users need. If something here matters to you, [open an issue](https://github.com/angelnicolasc/drako/issues) or email hello@useagentmesh.com.

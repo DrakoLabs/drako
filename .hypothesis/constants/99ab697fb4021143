@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\policies\bestpractices.py
+# hypothesis_version: 6.151.9
+
+[', ', '.', '.py', '0.1', '0.11', '0.3', '0.5', '0.85', 'BP-001', 'BP-002', 'BP-003', 'BP-004', 'BP-005', 'Best Practices', 'Framework outdated', 'LOW', 'MEDIUM', 'No tests for agents', '_test.py', 'asyncio.timeout', 'asyncio.wait_for', 'autogen', 'backoff', 'crewai', 'deadline', 'exponential_backoff', 'fallback', 'langchain', 'langgraph', 'llamaindex', 'max_retries', 'max_time', 'pydantic_ai', 'retry', 'retry_count', 'retrying', 'tenacity', 'test_', 'tests/', 'time_limit', 'timeout', 'timer', 'with_retry']

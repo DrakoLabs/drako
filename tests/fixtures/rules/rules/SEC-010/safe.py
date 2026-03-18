@@ -1,6 +1,6 @@
 # ok: SEC-010
 # Prompt injection defense is configured
-from agentmesh import with_compliance
+from drako import with_compliance
 from crewai import Agent
 
 agent = Agent(

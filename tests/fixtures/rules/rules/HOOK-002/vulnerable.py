@@ -1,6 +1,6 @@
 # ruleid: HOOK-002
 # Config exists with hooks but no session-end gate (on_session_end)
-# .agentmesh.yaml:
+# .drako.yaml:
 #   hooks:
 #     pre_action:
 #       - name: validate-input

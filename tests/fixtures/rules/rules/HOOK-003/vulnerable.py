@@ -1,10 +1,10 @@
 # ruleid: HOOK-003
 # Hook scripts defined without timeout_ms — runaway scripts could block pipeline
-# .agentmesh.yaml:
+# .drako.yaml:
 #   hooks:
 #     pre_action:
 #       - name: validate-schema
-#         script: .agentmesh/hooks/validate_schema.py
+#         script: .drako/hooks/validate_schema.py
 #         (missing timeout_ms)
 from crewai import Agent
 

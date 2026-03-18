@@ -1,8 +1,8 @@
 """Tests for the scoring module."""
 import pytest
 
-from agentmesh.cli.scoring import calculate_score, score_to_grade, findings_summary
-from agentmesh.cli.policies.base import Finding
+from drako.cli.scoring import calculate_score, score_to_grade, findings_summary
+from drako.cli.policies.base import Finding
 
 
 def _finding(severity: str) -> Finding:

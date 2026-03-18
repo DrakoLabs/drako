@@ -1,0 +1,41 @@
+# Drako Policy Template: Startup
+# Balanced for speed + safety. Move fast without breaking compliance.
+#
+# Usage:
+#   extends: startup
+#   (in your .drako.yaml)
+
+governance_level: balanced
+
+policies:
+  odd:
+    enforcement_mode: audit
+    default_policy: allow
+
+  magnitude:
+    max_spend_per_action_usd: 20.00
+    max_spend_per_session_usd: 100.00
+    max_records_per_action: 200
+
+  dlp:
+    mode: audit
+
+  hitl:
+    mode: audit
+    triggers:
+      tool_types: [payment, execute]
+    timeout_action: allow
+    approval_timeout_minutes: 60
+
+  intent_verification:
+    mode: "off"
+
+  circuit_breaker:
+    agent_level:
+      failure_threshold: 10
+      time_window_seconds: 120
+      recovery_timeout_seconds: 30
+
+  audit:
+    enabled: true
+    retention_days: 30

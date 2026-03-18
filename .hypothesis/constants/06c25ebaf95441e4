@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\policies\versioning.py
+# hypothesis_version: 6.151.9
+
+['.agentmesh', 'CV-001', 'CV-002', 'Context Versioning', 'HIGH', 'MEDIUM', 'api_key_env:', 'audit:', 'endpoint:']

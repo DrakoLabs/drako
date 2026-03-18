@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "useagentmesh"
+name = "drako"
 version = "2.1.0"
 description = "The Python Governance Platform for AI Agents — 60 policy rules, per-tool interception, HITL, FinOps, A2A."
 readme = "README.md"
 license = "BUSL-1.1"
 requires-python = ">=3.10"
 authors = [
-    { name = "AgentMesh", email = "hello@useagentmesh.com" },
+    { name = "Drako", email = "hello@useagentmesh.com" },
 ]
 keywords = ["ai-governance", "agent-security", "compliance", "eu-ai-act", "langraph", "crewai", "autogen", "dlp", "audit-trail", "mcp"]
 classifiers = [
@@ -47,16 +47,16 @@ dev = [
 ]
 
 [project.scripts]
-agentmesh = "agentmesh.cli.main:cli"
+drako = "drako.cli.main:cli"
 
 [project.urls]
 Homepage = "https://useagentmesh.com"
 Documentation = "https://docs.useagentmesh.com"
-Repository = "https://github.com/agentmesh/agentmesh-sdk"
-Issues = "https://github.com/agentmesh/agentmesh-sdk/issues"
+Repository = "https://github.com/agentmesh/drako-sdk"
+Issues = "https://github.com/agentmesh/drako-sdk/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agentmesh"]
+packages = ["src/drako"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,11 @@
+{{- if .Values.drakoConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "drako-proxy.fullname" . }}-config
+  labels:
+    {{- include "drako-proxy.labels" . | nindent 4 }}
+data:
+  .drako.yaml: |
+    {{- .Values.drakoConfig | nindent 4 }}
+{{- end }}

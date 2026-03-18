@@ -1,4 +1,4 @@
-"""Tests for `agentmesh init` CLI command."""
+"""Tests for `drako init` CLI command."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from agentmesh.cli.init_command import init
+from drako.cli.init_command import init
 
 
 @pytest.fixture()
@@ -76,7 +76,7 @@ class TestInitGeneratesFiles:
             result = runner.invoke(init, ["--api-key", "am_live_myorg_key123", "--framework", "crewai"])
 
         assert result.exit_code == 0
-        config_path = tmp_path / ".agentmesh.yaml"
+        config_path = tmp_path / ".drako.yaml"
         assert config_path.exists()
 
         config = yaml.safe_load(config_path.read_text())
@@ -98,7 +98,7 @@ class TestInitGeneratesFiles:
             result = runner.invoke(init, ["--api-key", "am_live_t_s"])
 
         assert result.exit_code == 0
-        config_path = tmp_path / ".agentmesh.yaml"
+        config_path = tmp_path / ".drako.yaml"
         assert config_path.exists()
 
         config = yaml.safe_load(config_path.read_text())
@@ -117,7 +117,7 @@ class TestInitGeneratesFiles:
             result = runner.invoke(init, ["--api-key", "am_live_t_s", "--manual"])
 
         assert result.exit_code == 0
-        config_path = tmp_path / ".agentmesh.yaml"
+        config_path = tmp_path / ".drako.yaml"
         assert config_path.exists()
 
         config = yaml.safe_load(config_path.read_text())
@@ -135,7 +135,7 @@ class TestInitGeneratesFiles:
             result = runner.invoke(init, ["--api-key", "am_live_t_s", "--balanced"])
 
         assert result.exit_code == 0
-        config = yaml.safe_load((tmp_path / ".agentmesh.yaml").read_text())
+        config = yaml.safe_load((tmp_path / ".drako.yaml").read_text())
         assert config["governance_level"] == "balanced"
         assert config["dlp"]["mode"] == "enforce"
 
@@ -151,7 +151,7 @@ class TestInitGeneratesFiles:
             result = runner.invoke(init, ["--api-key", "am_live_t_s", "--strict"])
 
         assert result.exit_code == 0
-        config = yaml.safe_load((tmp_path / ".agentmesh.yaml").read_text())
+        config = yaml.safe_load((tmp_path / ".drako.yaml").read_text())
         assert config["governance_level"] == "strict"
         assert config["dlp"]["mode"] == "enforce"
         assert config.get("intent_verification", {}).get("mode") == "enforce"
@@ -190,7 +190,7 @@ class TestInitAPIValidation:
 class TestInitOverwrite:
     def test_asks_before_overwrite(self, runner, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        (tmp_path / ".agentmesh.yaml").write_text("existing: true")
+        (tmp_path / ".drako.yaml").write_text("existing: true")
 
         import respx
         import httpx
@@ -203,7 +203,7 @@ class TestInitOverwrite:
 
         assert result.exit_code == 0
         # File should still have the original content
-        assert "existing" in (tmp_path / ".agentmesh.yaml").read_text()
+        assert "existing" in (tmp_path / ".drako.yaml").read_text()
 
 
 class TestInitEnvHint:
@@ -220,4 +220,4 @@ class TestInitEnvHint:
             result = runner.invoke(init, ["--api-key", "am_live_t_s", "--framework", "generic"])
 
         assert result.exit_code == 0
-        assert "AGENTMESH_API_KEY" in result.output
+        assert "DRAKO_API_KEY" in result.output

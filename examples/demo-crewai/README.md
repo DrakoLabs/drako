@@ -1,12 +1,12 @@
 # Demo: CrewAI with Governance Gaps
 
-This project contains **intentional** security and governance issues for testing AgentMesh scan.
+This project contains **intentional** security and governance issues for testing Drako scan.
 
 ## Run
 
 ```bash
-pip install useagentmesh
-agentmesh scan .
+pip install drako
+drako scan .
 ```
 
 ## Expected Findings

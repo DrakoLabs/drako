@@ -11,10 +11,10 @@ try:
 except ImportError:
     Console = None
 
-from agentmesh.cli.bom import AgentBOM, DetectedTool, DetectedAgent
-from agentmesh.cli.discovery import ProjectMetadata
-from agentmesh.cli.policies import evaluate_all_policies, ALL_POLICIES
-from agentmesh.cli.policies.governance import GOV003
+from drako.cli.bom import AgentBOM, DetectedTool, DetectedAgent
+from drako.cli.discovery import ProjectMetadata
+from drako.cli.policies import evaluate_all_policies, ALL_POLICIES
+from drako.cli.policies.governance import GOV003
 
 ITERATIONS = 10000
 WARMUP = 1000

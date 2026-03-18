@@ -8,5 +8,5 @@ agent = Agent(
     tools=["execute_sql", "file_write"],
 )
 
-# No .agentmesh.yaml with hooks.pre_action
+# No .drako.yaml with hooks.pre_action
 agent.run(task="Run maintenance queries")

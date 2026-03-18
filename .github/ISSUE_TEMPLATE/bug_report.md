@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Create a report to help us improve the AgentMesh framework
+about: Create a report to help us improve the Drako framework
 title: ''
 labels: bug
 assignees: ''
@@ -11,7 +11,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Initialize AgentMesh with '...'
+1. Initialize Drako with '...'
 2. Run scan command '...'
 3. See error
 
@@ -21,7 +21,7 @@ A clear and concise description of what you expected to happen.
 **Environment (please complete the following information):**
  - OS: [e.g. Ubuntu 22.04]
  - Python Version: [e.g. 3.11.4]
- - AgentMesh Version: [e.g. 0.1.0]
+ - Drako Version: [e.g. 0.1.0]
  - Target AI Framework: [e.g. CrewAI, LangGraph, AutoGen]
 
 **Additional context**

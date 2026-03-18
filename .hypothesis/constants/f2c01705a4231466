@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\bom.py
+# hypothesis_version: 6.151.9
+
+[100, 200, '.', '.py', 'Agent', 'AssistantAgent', 'ChatAgent', 'ConversableAgent', 'CrewAgent', 'GroupChatManager', 'Path', 'Popen', 'SystemMessage', 'Tool', 'UserProxyAgent', 'aiohttp', 'autogen', 'call', 'check_output', 'code_execution', 'compile', 'crewai', 'database', 'eval', 'exec', 'filesystem', 'httpx', 'instruction', 'instructions', 'lineno', 'llm', 'mcp.json', 'mcp://([^\\s\'\\"]+)', 'mkdir', 'model', 'mysql', 'name', 'network', 'open', 'os', 'pathlib', 'popen', 'postgresql', 'prompt', 'pymongo', 'read_bytes', 'read_text', 'redis', 'requests', 'rmdir', 'role', 'run', 'sqlalchemy', 'sqlite', 'subprocess', 'system', 'system_message', 'system_prompt', 'tool', 'tools', 'unknown', 'unlink', 'unnamed_tool', 'urllib', 'urllib3', 'write_bytes', 'write_text']

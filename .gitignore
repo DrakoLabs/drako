@@ -33,6 +33,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# AgentMesh
-.agentmesh.yaml
+# Drako
+.drako.yaml
 benchmarks/results/

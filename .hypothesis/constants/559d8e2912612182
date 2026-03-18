@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\policies\operational.py
+# hypothesis_version: 6.151.9
+
+[', ', '.py', 'CRITICAL', 'HIGH', 'MEDIUM', 'No spend cap', 'No time constraints', 'ODD-001', 'ODD-002', 'ODD-003', 'ODD-004', 'Operational', 'allowed_tools', 'approved_tools', 'available_tools', 'budget', 'cost_limit', 'deadline', 'iteration_limit', 'max_budget', 'max_cost', 'max_execution_time', 'max_iterations', 'max_output_tokens', 'max_retries', 'max_rounds', 'max_spend', 'max_steps', 'max_tokens', 'max_turns', 'permitted_tools', 'restrict_tools', 'spend_limit', 'step_limit', 'time_limit', 'timeout', 'token_budget', 'token_limit', 'tool_access_control', 'tool_allowlist', 'tool_filter', 'tool_whitelist', 'tools_allowed']

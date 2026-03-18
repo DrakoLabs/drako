@@ -2,8 +2,8 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.discovery import collect_project_files, detect_frameworks
-from agentmesh.cli.bom import (
+from drako.cli.discovery import collect_project_files, detect_frameworks
+from drako.cli.bom import (
     generate_bom,
     _extract_agents_ast,
     _extract_tools_ast,

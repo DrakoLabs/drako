@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea, compliance policy, or new framework support for AgentMesh
+about: Suggest an idea, compliance policy, or new framework support for Drako
 title: ''
 labels: enhancement
 assignees: ''

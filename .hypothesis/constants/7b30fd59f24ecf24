@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\policies\resilience.py
+# hypothesis_version: 6.151.9
+
+[', ', '.agentmesh', 'HIGH', 'MEDIUM', 'MemorySaver', 'RES-001', 'RES-002', 'Resilience', 'SqliteSaver', 'agent_state', 'backup_', 'checkpoint', 'checkpointer', 'execute', 'failover', 'fallback', 'fallback:', 'graceful_degradation', 'name', 'payment', 'persist_state', 'preserve_state', 'preserve_state:', 'read', 'retry_with', 'safe_default', 'save_state', 'state_snapshot', 'type', 'unknown', 'write']

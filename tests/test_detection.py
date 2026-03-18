@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from agentmesh.utils.detection import detect_framework
+from drako.utils.detection import detect_framework
 
 
 class TestDetectCrewAI:

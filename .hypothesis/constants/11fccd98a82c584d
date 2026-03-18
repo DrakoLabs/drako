@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\policies\finops.py
+# hypothesis_version: 6.151.9
+
+['.agentmesh', 'AzureChatOpenAI', 'ChatAnthropic', 'ChatOpenAI', 'FIN-001', 'FIN-002', 'FIN-003', 'FinOps', 'HIGH', 'MEDIUM', 'TokenCounter', 'agentmesh', 'anthropic', 'anthropic.messages', 'cache:', 'caching:', 'claude-3-haiku', 'claude-3-opus', 'claude-3-sonnet', 'claude-3.5-haiku', 'claude-3.5-sonnet', 'completion_tokens', 'cost', 'diskcache', 'finops', 'functools.cache', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro', 'get_openai_callback', 'gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini', 'joblib.Memory', 'litellm', 'litellm.acompletion', 'litellm.completion', 'lru_cache', 'openai', 'openai.chat', 'prompt_tokens', 'redis', 'token_count', 'total_tokens', 'usage']

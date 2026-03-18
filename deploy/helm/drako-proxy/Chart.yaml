@@ -1,0 +1,17 @@
+apiVersion: v2
+name: drako-proxy
+description: Drako governance proxy for AI agents
+type: application
+version: 1.0.0
+appVersion: "2.0.0"
+keywords:
+  - ai-governance
+  - agent-security
+  - proxy
+  - compliance
+home: https://useagentmesh.com
+sources:
+  - https://github.com/agentmesh/drako-sdk
+maintainers:
+  - name: Drako
+    email: hello@useagentmesh.com

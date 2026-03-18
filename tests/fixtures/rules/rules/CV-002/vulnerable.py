@@ -1,7 +1,7 @@
 # ruleid: CV-002
 # Audit logging configured but without platform connection —
 # audit entries will not reference the active policy version
-# .agentmesh.yaml:
+# .drako.yaml:
 #   audit:
 #     enabled: true
 #     log_level: verbose

@@ -2,9 +2,9 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata
-from agentmesh.cli.bom import generate_bom, AgentBOM
-from agentmesh.cli.policies.compliance import (
+from drako.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata
+from drako.cli.bom import generate_bom, AgentBOM
+from drako.cli.policies.compliance import (
     COM001, COM002, COM003, COM004, COM005,
 )
 
@@ -31,7 +31,7 @@ class TestCOM001:
         assert findings[0].policy_id == "COM-001"
 
     def test_has_logging(self):
-        files = {"main.py": 'from agentmesh import with_compliance\ncrew = with_compliance(my_crew)\n'}
+        files = {"main.py": 'from drako import with_compliance\ncrew = with_compliance(my_crew)\n'}
         metadata, bom = _make_metadata(files)
         findings = COM001().evaluate(bom, metadata)
         assert len(findings) == 0
@@ -47,7 +47,7 @@ class TestCOM005:
         assert len(findings) == 1
         assert findings[0].policy_id == "COM-005"
 
-    def test_has_agentmesh_yaml(self):
+    def test_has_drako_yaml(self):
         metadata = collect_project_files(FIXTURES / "langgraph_clean")
         metadata.frameworks = detect_frameworks(metadata)
         bom = generate_bom(metadata)

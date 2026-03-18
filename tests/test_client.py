@@ -1,4 +1,4 @@
-"""Tests for AgentMeshClient — HTTP calls, retry, error handling."""
+"""Tests for DrakoClient — HTTP calls, retry, error handling."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import pytest
 import httpx
 import respx
 
-from agentmesh.client import AgentMeshClient
-from agentmesh.exceptions import (
-    AgentMeshAPIError,
+from drako.client import DrakoClient
+from drako.exceptions import (
+    DrakoAPIError,
     AuthenticationError,
     PolicyViolationError,
     QuotaExceededError,
@@ -21,37 +21,37 @@ from agentmesh.exceptions import (
 
 class TestClientConstruction:
     def test_init_extracts_tenant_from_key(self):
-        c = AgentMeshClient(api_key="am_live_tenant42_secret")
+        c = DrakoClient(api_key="am_live_tenant42_secret")
         assert c._tenant_id == "tenant42"
 
     def test_init_uses_explicit_tenant(self):
-        c = AgentMeshClient(api_key="am_live_t_s", tenant_id="override")
+        c = DrakoClient(api_key="am_live_t_s", tenant_id="override")
         assert c._tenant_id == "override"
 
     def test_from_env(self, monkeypatch):
-        monkeypatch.setenv("AGENTMESH_API_KEY", "am_test_envtenant_key")
-        c = AgentMeshClient.from_env()
+        monkeypatch.setenv("DRAKO_API_KEY", "am_test_envtenant_key")
+        c = DrakoClient.from_env()
         assert c._tenant_id == "envtenant"
         assert c._endpoint == "https://api.useagentmesh.com"
 
     def test_from_env_custom_endpoint(self, monkeypatch):
-        monkeypatch.setenv("AGENTMESH_API_KEY", "am_test_t_k")
-        monkeypatch.setenv("AGENTMESH_ENDPOINT", "http://localhost:8000")
-        c = AgentMeshClient.from_env()
+        monkeypatch.setenv("DRAKO_API_KEY", "am_test_t_k")
+        monkeypatch.setenv("DRAKO_ENDPOINT", "http://localhost:8000")
+        c = DrakoClient.from_env()
         assert c._endpoint == "http://localhost:8000"
 
     def test_from_env_missing_key(self):
         with pytest.raises(AuthenticationError):
-            AgentMeshClient.from_env()
+            DrakoClient.from_env()
 
     def test_from_config(self, config_file):
-        c = AgentMeshClient.from_config(config_file)
+        c = DrakoClient.from_config(config_file)
         assert c._tenant_id == "testtenant"
 
     def test_headers(self, api_key):
-        c = AgentMeshClient(api_key=api_key)
+        c = DrakoClient(api_key=api_key)
         assert c._headers["Authorization"] == f"Bearer {api_key}"
-        assert "agentmesh-python" in c._headers["User-Agent"]
+        assert "drako-python" in c._headers["User-Agent"]
 
 
 # ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ class TestSyncCalls:
                 "status": "ACTIVE",
             })
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         result = c.verify_agent_identity_sync(agent_name="researcher", agent_role="data_analyst")
         assert result["did"] == "did:mesh:ag_123"
         assert result["trust_score"] == 0.85
@@ -82,7 +82,7 @@ class TestSyncCalls:
                 "policies_evaluated": 3,
             })
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         result = c.evaluate_policy_sync(action="read_data", agent_did="did:mesh:ag_1")
         assert result["decision"] == "ALLOWED"
 
@@ -96,7 +96,7 @@ class TestSyncCalls:
                 "chain_position": 1,
             })
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         result = c.audit_log_sync(action="data_read", agent_did="did:mesh:ag_1")
         assert result["log_id"] == "aud_001"
 
@@ -109,7 +109,7 @@ class TestSyncCalls:
                 "chain_head": "0xdef",
             })
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         result = c.verify_chain_sync()
         assert result["valid"] is True
         assert result["entries_checked"] == 100
@@ -123,7 +123,7 @@ class TestSyncCalls:
                 "plan": "free",
             })
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint, tenant_id=tenant_id)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint, tenant_id=tenant_id)
         result = c.check_quota_sync()
         assert result["plan"] == "free"
         assert result["used"] == 45
@@ -143,7 +143,7 @@ class TestAsyncCalls:
                 "trust_score": 0.9,
             })
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         result = await c.verify_agent_identity("async-agent", "tester")
         assert result["did"] == "did:mesh:ag_async"
         await c.close()
@@ -154,7 +154,7 @@ class TestAsyncCalls:
         respx.post(f"{endpoint}/api/v1/audit-logs").mock(
             return_value=httpx.Response(200, json={"log_id": "aud_async"})
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         result = await c.audit_log("test_action", "did:mesh:ag_1")
         assert result["log_id"] == "aud_async"
         await c.close()
@@ -165,7 +165,7 @@ class TestAsyncCalls:
         respx.get(f"{endpoint}/api/v1/stats").mock(
             return_value=httpx.Response(200, json={"ok": True})
         )
-        async with AgentMeshClient(api_key=api_key, endpoint=endpoint) as c:
+        async with DrakoClient(api_key=api_key, endpoint=endpoint) as c:
             result = await c.validate_key()
             assert result["ok"] is True
 
@@ -180,7 +180,7 @@ class TestErrorHandling:
         respx.get(f"{endpoint}/api/v1/stats").mock(
             return_value=httpx.Response(401, text="Unauthorized")
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         with pytest.raises(AuthenticationError) as exc_info:
             c.validate_key_sync()
         assert exc_info.value.status_code == 401
@@ -190,7 +190,7 @@ class TestErrorHandling:
         respx.get(f"{endpoint}/api/v1/billing/subscription").mock(
             return_value=httpx.Response(429, text="Rate limited")
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint, tenant_id=tenant_id)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint, tenant_id=tenant_id)
         with pytest.raises(QuotaExceededError):
             c.check_quota_sync()
 
@@ -202,7 +202,7 @@ class TestErrorHandling:
                 "policy_id": "pol_001",
             })
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         with pytest.raises(PolicyViolationError) as exc_info:
             c.evaluate_policy_sync(action="delete", agent_did="did:mesh:ag_1")
         assert exc_info.value.policy_id == "pol_001"
@@ -212,8 +212,8 @@ class TestErrorHandling:
         respx.get(f"{endpoint}/api/v1/stats").mock(
             return_value=httpx.Response(500, text="Internal Server Error")
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
-        with pytest.raises(AgentMeshAPIError) as exc_info:
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
+        with pytest.raises(DrakoAPIError) as exc_info:
             c.validate_key_sync()
         assert exc_info.value.status_code == 500
 
@@ -235,7 +235,7 @@ class TestRetry:
             return httpx.Response(200, json={"ok": True})
 
         respx.get(f"{endpoint}/api/v1/stats").mock(side_effect=_side_effect)
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
         result = c.validate_key_sync()
         assert result["ok"] is True
         assert call_count == 3
@@ -245,6 +245,6 @@ class TestRetry:
         respx.get(f"{endpoint}/api/v1/stats").mock(
             side_effect=httpx.ConnectError("Connection refused")
         )
-        c = AgentMeshClient(api_key=api_key, endpoint=endpoint)
-        with pytest.raises(AgentMeshAPIError, match="3 retries"):
+        c = DrakoClient(api_key=api_key, endpoint=endpoint)
+        with pytest.raises(DrakoAPIError, match="3 retries"):
             c.validate_key_sync()

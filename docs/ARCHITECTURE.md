@@ -1,6 +1,6 @@
 # Architecture
 
-AgentMesh has two layers: a **scan engine** (runs offline in the SDK) and a **runtime enforcement platform** (runs server-side in production). This document covers the public interfaces of both.
+Drako has two layers: a **scan engine** (runs offline in the SDK) and a **runtime enforcement platform** (runs server-side in production). This document covers the public interfaces of both.
 
 ---
 
@@ -9,9 +9,9 @@ AgentMesh has two layers: a **scan engine** (runs offline in the SDK) and a **ru
 Every tool call intercepted by `govern()` passes through these stages in order. Each stage can **ALLOW**, **DENY**, **MODIFY**, or **ESCALATE**. The pipeline short-circuits on first DENY.
 
 ```python
-"""AgentMesh Enforcement Pipeline — SDK side.
+"""Drako Enforcement Pipeline — SDK side.
 
-The SDK sends evaluation requests to the AgentMesh platform.
+The SDK sends evaluation requests to the Drako platform.
 The platform runs the full pipeline server-side and returns
 the decision. This ensures enforcement cannot be bypassed
 by modifying the SDK.
@@ -41,7 +41,7 @@ class StageResult:
 class EnforcementPipeline:
     """
     Executed on every tool call intercepted by govern().
-    The SDK sends evaluation requests to the AgentMesh platform.
+    The SDK sends evaluation requests to the Drako platform.
     The platform runs the full pipeline server-side and returns
     the decision.
     """
@@ -69,7 +69,7 @@ class EnforcementPipeline:
     ]
 ```
 
-**Why server-side?** The enforcement pipeline runs on the AgentMesh platform, not in the SDK. If enforcement ran client-side, any developer could bypass it by modifying the SDK. Server-side enforcement means the SDK is the integration layer — the platform is the policy engine.
+**Why server-side?** The enforcement pipeline runs on the Drako platform, not in the SDK. If enforcement ran client-side, any developer could bypass it by modifying the SDK. Server-side enforcement means the SDK is the integration layer — the platform is the policy engine.
 
 ---
 
@@ -79,7 +79,7 @@ The scan engine discovers agents, tools, models, and prompts by parsing Python s
 
 ### Framework Detection
 
-AgentMesh identifies the framework using a three-layer confidence system:
+Drako identifies the framework using a three-layer confidence system:
 
 | Layer | Source | Confidence | Example |
 |-------|--------|-----------|---------|
@@ -107,7 +107,7 @@ The scanner walks the project directory with these constraints:
 - **Max files:** 200 Python files per scan
 - **Max file size:** 100 KB per file
 - **Skipped directories:** `venv`, `.venv`, `node_modules`, `__pycache__`, `.git`, `dist`, `build`, `tests`, `test`, `fixtures`, and other common non-source directories
-- **Config files collected:** `requirements.txt`, `pyproject.toml`, `setup.py`, `setup.cfg`, `.agentmesh.yaml`, `crewai.yaml`, `mcp.json`
+- **Config files collected:** `requirements.txt`, `pyproject.toml`, `setup.py`, `setup.cfg`, `.drako.yaml`, `crewai.yaml`, `mcp.json`
 - **Windows-safe:** Uses `os.walk` fallback to handle MAX_PATH (260 chars) and broken OneDrive symlinks
 
 ### Agent Discovery

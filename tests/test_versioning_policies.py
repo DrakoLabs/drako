@@ -2,9 +2,9 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.discovery import ProjectMetadata
-from agentmesh.cli.bom import generate_bom, AgentBOM
-from agentmesh.cli.policies.versioning import CV001, CV002
+from drako.cli.discovery import ProjectMetadata
+from drako.cli.bom import generate_bom, AgentBOM
+from drako.cli.policies.versioning import CV001, CV002
 
 
 def _make_metadata(files: dict[str, str], config_files: dict[str, str] | None = None) -> tuple[ProjectMetadata, AgentBOM]:
@@ -33,7 +33,7 @@ class TestCV001:
     def test_config_without_endpoint(self):
         metadata, bom = _make_metadata(
             {"main.py": 'from crewai import Agent\n'},
-            config_files={".agentmesh.yaml": "version: '1.0'\ntenant_id: test\n"},
+            config_files={".drako.yaml": "version: '1.0'\ntenant_id: test\n"},
         )
         findings = CV001().evaluate(bom, metadata)
         assert len(findings) == 1
@@ -42,7 +42,7 @@ class TestCV001:
     def test_config_with_endpoint(self):
         metadata, bom = _make_metadata(
             {"main.py": 'from crewai import Agent\n'},
-            config_files={".agentmesh.yaml": "version: '1.0'\ntenant_id: test\nendpoint: https://api.useagentmesh.com\napi_key_env: AGENTMESH_API_KEY\n"},
+            config_files={".drako.yaml": "version: '1.0'\ntenant_id: test\nendpoint: https://api.useagentmesh.com\napi_key_env: DRAKO_API_KEY\n"},
         )
         findings = CV001().evaluate(bom, metadata)
         assert len(findings) == 0
@@ -54,7 +54,7 @@ class TestCV002:
     def test_audit_without_connection(self):
         metadata, bom = _make_metadata(
             {"main.py": 'print("hi")\n'},
-            config_files={".agentmesh.yaml": "version: '1.0'\naudit:\n  enabled: true\n"},
+            config_files={".drako.yaml": "version: '1.0'\naudit:\n  enabled: true\n"},
         )
         findings = CV002().evaluate(bom, metadata)
         assert len(findings) == 1
@@ -63,7 +63,7 @@ class TestCV002:
     def test_audit_with_connection(self):
         metadata, bom = _make_metadata(
             {"main.py": 'print("hi")\n'},
-            config_files={".agentmesh.yaml": "version: '1.0'\naudit:\n  enabled: true\napi_key_env: AGENTMESH_API_KEY\n"},
+            config_files={".drako.yaml": "version: '1.0'\naudit:\n  enabled: true\napi_key_env: DRAKO_API_KEY\n"},
         )
         findings = CV002().evaluate(bom, metadata)
         assert len(findings) == 0

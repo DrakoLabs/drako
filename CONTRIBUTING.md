@@ -1,10 +1,10 @@
-# Contributing to AgentMesh
+# Contributing to Drako
 
-Thank you for your interest in contributing to AgentMesh! We are building the foundational Trust Layer for AI Agents, and community contributions are essential to strengthening our governance platform.
+Thank you for your interest in contributing to Drako! We are building the foundational Trust Layer for AI Agents, and community contributions are essential to strengthening our governance platform.
 
 ## License
 
-By contributing to AgentMesh, you agree that your contributions will be licensed under the [Business Source License 1.1 (BUSL-1.1)](LICENSE). This means your code is source-available: anyone can view it and use it, but no one can offer a competing commercial hosted service based on it. After 4 years, each version converts to Apache 2.0.
+By contributing to Drako, you agree that your contributions will be licensed under the [Business Source License 1.1 (BUSL-1.1)](LICENSE). This means your code is source-available: anyone can view it and use it, but no one can offer a competing commercial hosted service based on it. After 4 years, each version converts to Apache 2.0.
 
 ## How to Contribute
 
@@ -17,8 +17,8 @@ By contributing to AgentMesh, you agree that your contributions will be licensed
 We recommend using Python 3.10+ and a virtual environment.
 
 ```bash
-git clone https://github.com/angelnicolasc/agentmesh.git
-cd agentmesh
+git clone https://github.com/angelnicolasc/drako.git
+cd drako
 python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -e ".[dev]"
@@ -43,7 +43,7 @@ pytest
 ## Adding New Policies
 
 If you are contributing a new policy to the Policy Engine:
-- Ensure the policy logic goes into `src/agentmesh/cli/policies/`.
+- Ensure the policy logic goes into `src/drako/cli/policies/`.
 - Include standard policy metadata (ID, severity, description).
 - Explain any EU AI Act mappings the policy fulfills.
 - Add corresponding unit tests.

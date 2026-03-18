@@ -1,3 +1,3 @@
 # ok: COM-005
-# Agent BOM exists via .agentmesh.yaml
+# Agent BOM exists via .drako.yaml
 x = 1

@@ -1,5 +1,5 @@
 # ok: HOOK-001
-# Pre-action hooks configured in .agentmesh.yaml
+# Pre-action hooks configured in .drako.yaml
 # hooks:
 #   pre_action:
 #     - name: block-dangerous-sql

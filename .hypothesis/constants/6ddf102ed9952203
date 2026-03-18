@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\formats\sarif.py
+# hypothesis_version: 6.151.9
+
+['$schema', '%SRCROOT%', '-', '0.1.0', '2.1.0', 'AgentMesh', 'CRITICAL', 'HIGH', 'LOW', 'MEDIUM', 'Suggested fix', 'artifactChanges', 'artifactLocation', 'defaultConfiguration', 'deletedRegion', 'description', 'driver', 'error', 'fixes', 'fullDescription', 'id', 'informationUri', 'insertedContent', 'level', 'locations', 'message', 'name', 'note', 'physicalLocation', 'properties', 'region', 'replacements', 'results', 'ruleId', 'ruleIndex', 'rules', 'runs', 'shortDescription', 'startLine', 'tags', 'text', 'tool', 'unknown', 'uri', 'uriBaseId', 'version', 'warning']

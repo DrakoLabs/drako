@@ -2,9 +2,9 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata
-from agentmesh.cli.bom import generate_bom, AgentBOM
-from agentmesh.cli.policies.governance import (
+from drako.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata
+from drako.cli.bom import generate_bom, AgentBOM
+from drako.cli.policies.governance import (
     GOV001, GOV002, GOV003, GOV004, GOV005, GOV006,
 )
 
@@ -31,7 +31,7 @@ class TestGOV001:
         assert findings[0].policy_id == "GOV-001"
 
     def test_has_audit_logging(self):
-        files = {"main.py": 'from agentmesh import with_compliance\ncrew = with_compliance(my_crew)\n'}
+        files = {"main.py": 'from drako import with_compliance\ncrew = with_compliance(my_crew)\n'}
         metadata, bom = _make_metadata(files)
         findings = GOV001().evaluate(bom, metadata)
         assert len(findings) == 0

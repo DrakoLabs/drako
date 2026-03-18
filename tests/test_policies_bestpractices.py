@@ -2,9 +2,9 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata, FrameworkInfo
-from agentmesh.cli.bom import generate_bom, AgentBOM, DetectedAgent
-from agentmesh.cli.policies.bestpractices import (
+from drako.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata, FrameworkInfo
+from drako.cli.bom import generate_bom, AgentBOM, DetectedAgent
+from drako.cli.policies.bestpractices import (
     BP001, BP002, BP003, BP004, BP005,
 )
 

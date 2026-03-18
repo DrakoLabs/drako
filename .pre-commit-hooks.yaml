@@ -1,17 +1,17 @@
-# AgentMesh pre-commit hook definition
+# Drako pre-commit hook definition
 #
 # Users add this to their .pre-commit-config.yaml:
 #
 #   repos:
-#     - repo: https://github.com/useagentmesh/agentmesh
+#     - repo: https://github.com/useagentmesh/drako
 #       rev: v0.1.0
 #       hooks:
-#         - id: agentmesh-scan
+#         - id: drako-scan
 
-- id: agentmesh-scan
-  name: AgentMesh Governance Scan
-  entry: agentmesh scan . --fail-on critical
+- id: drako-scan
+  name: Drako Governance Scan
+  entry: drako scan . --fail-on critical
   language: python
-  additional_dependencies: ["useagentmesh"]
+  additional_dependencies: ["drako"]
   pass_filenames: false
   always_run: true

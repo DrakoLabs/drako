@@ -1,4 +1,4 @@
 langgraph>=0.3.0
 langchain-core>=0.3.0
-agentmesh>=0.1.0
+drako>=0.1.0
 tenacity>=8.0.0

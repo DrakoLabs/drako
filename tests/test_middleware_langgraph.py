@@ -8,14 +8,14 @@ import pytest
 import httpx
 import respx
 
-from agentmesh.client import AgentMeshClient
-from agentmesh.middleware.langgraph import AgentMeshCheckpointer, with_langgraph_compliance
+from drako.client import DrakoClient
+from drako.middleware.langgraph import DrakoCheckpointer, with_langgraph_compliance
 
 
-class TestAgentMeshCheckpointer:
+class TestDrakoCheckpointer:
     @respx.mock
     def test_put_records_audit(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         respx.post(f"{endpoint}/api/v1/trust/evaluate").mock(
             return_value=httpx.Response(200, json={"decision": "ALLOWED"})
         )
@@ -23,8 +23,8 @@ class TestAgentMeshCheckpointer:
             return_value=httpx.Response(200, json={"log_id": "aud_lg"})
         )
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
-        cp = AgentMeshCheckpointer(client=client)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
+        cp = DrakoCheckpointer(client=client)
         cp.put(
             config={"configurable": {"thread_id": "t1"}},
             checkpoint={"ts": "2026-01-01T00:00:00Z"},
@@ -35,7 +35,7 @@ class TestAgentMeshCheckpointer:
 
     @respx.mock
     def test_put_delegates_to_inner(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         respx.post(f"{endpoint}/api/v1/trust/evaluate").mock(
             return_value=httpx.Response(200, json={"decision": "ALLOWED"})
         )
@@ -45,8 +45,8 @@ class TestAgentMeshCheckpointer:
 
         inner = type("MockCheckpointer", (), {"put": lambda self, *a, **kw: {"saved": True}})()
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
-        cp = AgentMeshCheckpointer(client=client, inner=inner)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
+        cp = DrakoCheckpointer(client=client, inner=inner)
         result = cp.put(
             config={"configurable": {}},
             checkpoint={"ts": "now"},
@@ -56,30 +56,30 @@ class TestAgentMeshCheckpointer:
 
     @respx.mock
     def test_get_delegates_to_inner(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         inner = type("MockCheckpointer", (), {"get": lambda self, config: {"checkpoint": "data"}})()
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
-        cp = AgentMeshCheckpointer(client=client, inner=inner)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
+        cp = DrakoCheckpointer(client=client, inner=inner)
         result = cp.get(config={})
         assert result == {"checkpoint": "data"}
 
     def test_get_without_inner_returns_none(self):
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint="https://api.agentmesh.test")
-        cp = AgentMeshCheckpointer(client=client, inner=None)
+        client = DrakoClient(api_key="am_live_t_s", endpoint="https://api.drako.test")
+        cp = DrakoCheckpointer(client=client, inner=None)
         assert cp.get({}) is None
 
     def test_list_without_inner_returns_empty(self):
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint="https://api.agentmesh.test")
-        cp = AgentMeshCheckpointer(client=client, inner=None)
+        client = DrakoClient(api_key="am_live_t_s", endpoint="https://api.drako.test")
+        cp = DrakoCheckpointer(client=client, inner=None)
         assert cp.list() == []
 
 
-class TestAgentMeshCheckpointerAsync:
+class TestDrakoCheckpointerAsync:
     @respx.mock
     @pytest.mark.asyncio
     async def test_aput_records_audit(self):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         respx.post(f"{endpoint}/api/v1/trust/evaluate").mock(
             return_value=httpx.Response(200, json={"decision": "ALLOWED"})
         )
@@ -87,8 +87,8 @@ class TestAgentMeshCheckpointerAsync:
             return_value=httpx.Response(200, json={"log_id": "aud_async"})
         )
 
-        client = AgentMeshClient(api_key="am_live_t_s", endpoint=endpoint)
-        cp = AgentMeshCheckpointer(client=client)
+        client = DrakoClient(api_key="am_live_t_s", endpoint=endpoint)
+        cp = DrakoCheckpointer(client=client)
         await cp.aput(
             config={},
             checkpoint={"ts": "now"},
@@ -101,7 +101,7 @@ class TestAgentMeshCheckpointerAsync:
 class TestLangGraphProxy:
     @respx.mock
     def test_invoke_injects_checkpointer(self, config_file):
-        endpoint = "https://api.agentmesh.test"
+        endpoint = "https://api.drako.test"
         respx.post(f"{endpoint}/api/v1/trust/evaluate").mock(
             return_value=httpx.Response(200, json={"decision": "ALLOWED"})
         )

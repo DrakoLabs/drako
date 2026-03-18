@@ -3,10 +3,10 @@ import json
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.scanner import run_scan
-from agentmesh.cli.formats.json_fmt import format_json
-from agentmesh.cli.formats.sarif import format_sarif
-from agentmesh.cli.formats.badge import generate_badge_svg
+from drako.cli.scanner import run_scan
+from drako.cli.formats.json_fmt import format_json
+from drako.cli.formats.sarif import format_sarif
+from drako.cli.formats.badge import generate_badge_svg
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

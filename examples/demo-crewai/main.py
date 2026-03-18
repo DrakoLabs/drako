@@ -1,11 +1,11 @@
 """Demo CrewAI project with intentional governance gaps.
 
-This project is designed for testing AgentMesh scan. It contains
+This project is designed for testing Drako scan. It contains
 deliberate security and governance issues to demonstrate findings.
 
 Expected scan score: ~35 (Grade F)
 
-Run: agentmesh scan .
+Run: drako scan .
 """
 
 import os

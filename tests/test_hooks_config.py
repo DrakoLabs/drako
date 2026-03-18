@@ -1,7 +1,7 @@
 """Tests for HooksConfig and HookEntryConfig Pydantic models."""
 import pytest
 
-from agentmesh.config import HookEntryConfig, HooksConfig, AgentMeshConfig
+from drako.config import HookEntryConfig, HooksConfig, DrakoConfig
 
 
 class TestHookEntryConfig:
@@ -26,10 +26,10 @@ class TestHookEntryConfig:
     def test_script_entry(self):
         entry = HookEntryConfig(
             name="validate_schema",
-            script=".agentmesh/hooks/validate.py",
+            script=".drako/hooks/validate.py",
             timeout_ms=10000,
         )
-        assert entry.script == ".agentmesh/hooks/validate.py"
+        assert entry.script == ".drako/hooks/validate.py"
         assert entry.timeout_ms == 10000
 
 
@@ -57,16 +57,16 @@ class TestHooksConfig:
         assert len(hooks.on_session_end) == 1
 
 
-class TestAgentMeshConfigHooks:
-    """Tests for hooks field in AgentMeshConfig."""
+class TestDrakoConfigHooks:
+    """Tests for hooks field in DrakoConfig."""
 
     def test_default_hooks_empty(self):
-        cfg = AgentMeshConfig(tenant_id="t-123")
+        cfg = DrakoConfig(tenant_id="t-123")
         assert isinstance(cfg.hooks, HooksConfig)
         assert cfg.hooks.pre_action == []
 
     def test_hooks_from_dict(self):
-        cfg = AgentMeshConfig(
+        cfg = DrakoConfig(
             tenant_id="t-123",
             hooks={
                 "pre_action": [{"name": "block", "condition": "True"}],

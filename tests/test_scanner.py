@@ -2,7 +2,7 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.scanner import run_scan
+from drako.cli.scanner import run_scan
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

@@ -1,0 +1,4 @@
+# file: C:\Users\angel\OneDrive\Escritorio\SEGURO\Optimizador de No-shows\Software Factory\agentmesh-backend\agentmesh-public\src\agentmesh\cli\scan_cache.py
+# hypothesis_version: 6.151.9
+
+[3600, '.', '.agentmesh', '.agentmesh/', '.gitignore', '.last_scan.json', 'CRITICAL', 'HIGH', 'LOW', 'MEDIUM', 'a', 'agents', 'critical', 'file_path', 'findings_summary', 'framework', 'framework_version', 'grade', 'has_code_execution', 'has_network_access', 'high', 'line_number', 'low', 'mcp_servers', 'medium', 'model', 'models', 'name', 'project_name', 'scanned_at', 'score', 'tools', 'total', 'utf-8']

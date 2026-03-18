@@ -2,7 +2,7 @@
 import pytest
 from pathlib import Path
 
-from agentmesh.cli.discovery import (
+from drako.cli.discovery import (
     collect_project_files,
     detect_frameworks,
     _parse_requirements_txt,
@@ -69,7 +69,7 @@ class TestCollectProjectFiles:
     def test_langgraph_clean(self):
         metadata = collect_project_files(FIXTURES / "langgraph_clean")
         assert len(metadata.python_files) >= 2
-        assert ".agentmesh.yaml" in metadata.config_files
+        assert ".drako.yaml" in metadata.config_files
 
     def test_dependencies_parsed(self):
         metadata = collect_project_files(FIXTURES / "crewai_basic")

@@ -1,16 +1,16 @@
-<h1 align="center">AgentMesh</h1>
+<h1 align="center">Drako</h1>
 <p align="center">
   The governance layer between your AI agents and everything they can touch.<br>
   <strong>Enforces policies on every action before it executes — deterministic, with no LLM in the loop.</strong>
 </p>
 <p align="center">
   <a href="https://pypi.org/project/useagentmesh/">
-    <img src="https://img.shields.io/pypi/v/useagentmesh?style=flat-square&color=3776AB&logo=pypi&logoColor=white" alt="PyPI">
+    <img src="https://img.shields.io/pypi/v/drako?style=flat-square&color=3776AB&logo=pypi&logoColor=white" alt="PyPI">
   </a>
   <a href="https://www.python.org/downloads/">
     <img src="https://img.shields.io/badge/python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=yellow" alt="Python 3.10+">
   </a>
-  <a href="https://github.com/angelnicolasc/agentmesh/actions">
+  <a href="https://github.com/angelnicolasc/drako/actions">
     <img src="https://img.shields.io/badge/tests-1002%20passing-2ea44f.svg?style=flat-square&logo=github-actions&logoColor=white" alt="Tests">
   </a>
   <img src="https://img.shields.io/badge/rules-60-6366F1.svg?style=flat-square" alt="Rules">
@@ -24,10 +24,10 @@
 
 AI agents call tools, spend money, delete files, and make decisions — autonomously, at speed, without asking.
 
-**AgentMesh** is the governance layer between your agent and everything it can touch. It scans your codebase to find governance gaps before production does. And it enforces policies on live agent traffic — blocking actions before they execute, not logging them after.
+**Drako** is the governance layer between your agent and everything it can touch. It scans your codebase to find governance gaps before production does. And it enforces policies on live agent traffic — blocking actions before they execute, not logging them after.
 
 ```bash
-pip install useagentmesh && agentmesh scan .
+pip install drako && drako scan .
 ```
 
 The scan is free, offline, and needs no account. The runtime platform connects in one line and protects agents in production.
@@ -39,12 +39,12 @@ No LLM in the evaluation loop. Every rule is deterministic. Same code, same resu
 ## Quick Start
 
 ```bash
-pip install useagentmesh
-agentmesh scan .
+pip install drako
+drako scan .
 ```
 
 ```
-┌─ AgentMesh Scan ─────────────────────────────────────────┐
+┌─ Drako Scan ─────────────────────────────────────────┐
 │ my-project  │  crewai 0.86.0  │  0.4s                    │
 └──────────────────────────────────────────────────────────┘
 
@@ -63,39 +63,39 @@ agentmesh scan .
   • SEC-005  Arbitrary code execution in tool         (tools/runner.py)
   • GOV-006  Agent can modify its own system prompt   (agents/writer.py)
 
-👉 agentmesh scan --details    Full findings with code snippets
-👉 agentmesh fix --dry-run     Preview auto-fixes
-👉 agentmesh scan --share      Share your score on social media
+👉 drako scan --details    Full findings with code snippets
+👉 drako fix --dry-run     Preview auto-fixes
+👉 drako scan --share      Share your score on social media
 ```
 
 Common flags:
 
 ```bash
-agentmesh scan --format sarif       # SARIF 2.1.0 for GitHub Code Scanning
-agentmesh scan --threshold 70       # Exit 1 if score < 70
-agentmesh scan --fail-on critical   # Exit 1 on any critical finding
-agentmesh scan --diff HEAD~1        # Only scan changed files
-agentmesh scan --details            # Full report with code snippets and fixes
-agentmesh history          # view policy snapshot history
-agentmesh diff v2 v3       # compare policy versions
-agentmesh rollback v2      # restore previous policy
-agentmesh scan . --share   # scan + generate shareable score card
+drako scan --format sarif       # SARIF 2.1.0 for GitHub Code Scanning
+drako scan --threshold 70       # Exit 1 if score < 70
+drako scan --fail-on critical   # Exit 1 on any critical finding
+drako scan --diff HEAD~1        # Only scan changed files
+drako scan --details            # Full report with code snippets and fixes
+drako history          # view policy snapshot history
+drako diff v2 v3       # compare policy versions
+drako rollback v2      # restore previous policy
+drako scan . --share   # scan + generate shareable score card
 ```
 
 ---
 
 ## Configure Everything From One File
 
-AgentMesh generates `.agentmesh.yaml` pre-populated with your real agents and tools. Edit it, push it, enforce it.
+Drako generates `.drako.yaml` pre-populated with your real agents and tools. Edit it, push it, enforce it.
 
 ```bash
-agentmesh scan .      # detects agents, tools, models
-agentmesh init        # generates .agentmesh.yaml with your real tools
-agentmesh push        # syncs policies to the enforcement engine
+drako scan .      # detects agents, tools, models
+drako init        # generates .drako.yaml with your real tools
+drako push        # syncs policies to the enforcement engine
 ```
 
 ```yaml
-# .agentmesh.yaml — generated with YOUR tools pre-filled
+# .drako.yaml — generated with YOUR tools pre-filled
 agents:
   researcher:
     source: agents/researcher.py
@@ -184,7 +184,7 @@ policies:
 Then one line in your code:
 
 ```python
-from agentmesh import govern
+from drako import govern
 crew = govern(crew)    # every tool call passes through enforcement
 ```
 
@@ -284,7 +284,7 @@ Agent decides to act
 | **Agent Identity** | Managed credential lifecycle per agent: dynamic provisioning, automatic rotation with grace periods, instant revocation. DID-based. No more shared static API keys across agents. |
 | **Programmable Hooks** | Python scripts or YAML conditions that run at pre_action, post_action, on_error, on_session_end. Stop hooks can block session completion until checks pass. |
 | **Context Versioning** | Every config push creates an immutable SHA-256 snapshot. Audit logs reference the exact policy version active at the time. Diff, rollback, full change history. |
-| **FinOps** | Cost-per-outcome tracking, smart model routing (route simple tasks to cheaper models), semantic caching (skip LLM calls for repeated queries), budget alerts at 50/80/95%. Dashboard shows: "AgentMesh saved you $X this month." |
+| **FinOps** | Cost-per-outcome tracking, smart model routing (route simple tasks to cheaper models), semantic caching (skip LLM calls for repeated queries), budget alerts at 50/80/95%. Dashboard shows: "Drako saved you $X this month." |
 | **Deterministic Fallback** | When CB trips, operations don't die — they failover to deterministic code, a simpler agent, a human operator, or a retry queue. State is preserved. Business continuity, not just error handling. |
 | **Secure A2A** | Agent-to-agent communication routed through a governance gateway. Mutual authentication (DID exchange), channel policies (who talks to whom), prompt worm prevention (injection scan on inter-agent messages), propagation depth limits. |
 | **Multi-Agent Topology** | Live directed graph of agent interactions. Detects resource contention, contradictory actions, cascade amplification, circular dependencies. Fleet Health Score (0–100). |
@@ -310,8 +310,8 @@ Framework detection is automatic.
 ## CI/CD Integration
 
 ```yaml
-# .github/workflows/agentmesh.yml
-name: AgentMesh Governance
+# .github/workflows/drako.yml
+name: Drako Governance
 on: [push, pull_request]
 
 jobs:
@@ -321,9 +321,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install useagentmesh
-      - run: agentmesh scan . --format sarif > results.sarif
-      - run: agentmesh scan . --fail-on critical --threshold 70
+      - run: pip install drako
+      - run: drako scan . --format sarif > results.sarif
+      - run: drako scan . --fail-on critical --threshold 70
       - uses: github/codeql-action/upload-sarif@v3
         with: { sarif_file: results.sarif }
         if: always()
@@ -361,7 +361,7 @@ Governance overhead: **<0.2%** of a typical LLM call (~800ms).
 
 High-risk system rules take effect **August 2, 2026**.
 
-| Article | Requirement | How AgentMesh covers it |
+| Article | Requirement | How Drako covers it |
 |---------|-------------|------------------------|
 | Art. 9 | Risk management | Scan rules (COM-004), ODD enforcement, magnitude limits |
 | Art. 11 | Technical documentation | Agent BOM, compliance reports, context versioning |
@@ -377,14 +377,14 @@ Runtime platform generates exportable compliance reports for these articles.
 Zero-config governance. One command, smart defaults from your scan.
 
 ```bash
-agentmesh init                     # autopilot (default) — audit-first
-agentmesh init --balanced          # enforcement active with escape hatches
-agentmesh init --strict            # maximum governance for enterprise
-agentmesh init --manual            # full YAML with all sections
-agentmesh init --template fintech  # start from industry template
+drako init                     # autopilot (default) — audit-first
+drako init --balanced          # enforcement active with escape hatches
+drako init --strict            # maximum governance for enterprise
+drako init --manual            # full YAML with all sections
+drako init --template fintech  # start from industry template
 ```
 
-Autopilot analyzes your project and generates a `.agentmesh.yaml` pre-configured with:
+Autopilot analyzes your project and generates a `.drako.yaml` pre-configured with:
 
 - **ODD**: Each agent locked to its discovered tools
 - **DLP**: Audit mode (logging PII, not blocking yet)
@@ -395,8 +395,8 @@ Autopilot analyzes your project and generates a `.agentmesh.yaml` pre-configured
 Everything starts in audit mode. When you're ready for enforcement:
 
 ```bash
-agentmesh upgrade --balanced    # DLP enforce, ODD enforce, HITL reject on timeout
-agentmesh upgrade --strict      # + intent verification, cryptographic audit, magnitude enforce
+drako upgrade --balanced    # DLP enforce, ODD enforce, HITL reject on timeout
+drako upgrade --strict      # + intent verification, cryptographic audit, magnitude enforce
 ```
 
 ---
@@ -406,8 +406,8 @@ agentmesh upgrade --strict      # + intent verification, cryptographic audit, ma
 Out-of-process LLM API governance. Intercepts every LLM call at the network layer — no SDK changes needed.
 
 ```bash
-pip install useagentmesh[proxy]
-agentmesh proxy start --port 8080
+pip install drako[proxy]
+drako proxy start --port 8080
 ```
 
 Point your LLM client at `http://localhost:8080` instead of the provider API. Every request passes through the full governance pipeline (ODD, DLP, Magnitude, HITL) before reaching the upstream LLM.
@@ -415,30 +415,30 @@ Point your LLM client at `http://localhost:8080` instead of the provider API. Ev
 ```python
 import openai
 client = openai.OpenAI(base_url="http://localhost:8080/v1")
-# All calls now governed by .agentmesh.yaml policies
+# All calls now governed by .drako.yaml policies
 ```
 
 Docker and Kubernetes:
 
 ```bash
 # Docker
-docker compose -f docker-compose.agentmesh.yml up
+docker compose -f docker-compose.drako.yml up
 
 # Kubernetes (Helm)
-helm install agentmesh-proxy deploy/helm/agentmesh-proxy
+helm install drako-proxy deploy/helm/drako-proxy
 ```
 
 Response headers include governance metadata:
-- `X-AgentMesh-Proxy: true`
-- `X-AgentMesh-Latency-Ms: 2.3`
-- `X-AgentMesh-Cost-USD: 0.0042`
+- `X-Drako-Proxy: true`
+- `X-Drako-Latency-Ms: 2.3`
+- `X-Drako-Cost-USD: 0.0042`
 
 CLI management:
 
 ```bash
-agentmesh proxy start --port 8080 --daemon   # background mode
-agentmesh proxy status                        # check health
-agentmesh proxy stop                          # stop daemon
+drako proxy start --port 8080 --daemon   # background mode
+drako proxy status                        # check health
+drako proxy stop                          # stop daemon
 ```
 
 ---
@@ -448,9 +448,9 @@ agentmesh proxy stop                          # stop daemon
 Industry-specific governance presets. Start from a template, override what you need.
 
 ```bash
-agentmesh templates list              # show available templates
-agentmesh templates show fintech      # preview a template
-agentmesh init --template healthcare  # init with template
+drako templates list              # show available templates
+drako templates show fintech      # preview a template
+drako init --template healthcare  # init with template
 ```
 
 Available templates:
@@ -467,7 +467,7 @@ Available templates:
 Templates support inheritance via `extends:`:
 
 ```yaml
-# .agentmesh.yaml
+# .drako.yaml
 extends: fintech
 governance_level: balanced
 # Your overrides here — template provides the base
@@ -477,7 +477,7 @@ governance_level: balanced
 
 ## Roadmap
  
-AgentMesh today covers the full governance stack: static analysis,
+Drako today covers the full governance stack: static analysis,
 runtime enforcement, cryptographic audit, human oversight, cost
 control, collective threat intelligence, and multi-agent security.
  
@@ -485,7 +485,7 @@ What comes next:
  
 **Beyond Python** — governance for agents built in TypeScript,
 Go, and via REST. The enforcement pipeline, not the language,
-is the product. If it makes a tool call, AgentMesh governs it.
+is the product. If it makes a tool call, Drako governs it.
  
 **The compliance layer enterprises need** — SOC 2 Type II audit
 packages, ISO 42001 certification support, FedRAMP groundwork,
@@ -500,7 +500,7 @@ with full intent verification. Low-risk summarization → routes
 to the cheapest model with audit-only. The governance policy
 decides the model, not the developer.
  
-**Autonomous remediation** — when AgentMesh detects a governance
+**Autonomous remediation** — when Drako detects a governance
 gap, it doesn't just report it. It proposes a fix, runs it
 through the policy engine, and applies it with human approval.
 From "here's what's wrong" to "here's what we fixed" in one
@@ -508,7 +508,7 @@ pipeline.
  
 **Agent insurance scoring** — a quantified risk profile that
 maps directly to AI liability insurance underwriting. Your
-AgentMesh governance score, audit trail completeness, HITL
+Drako governance score, audit trail completeness, HITL
 coverage, and incident history become a standardized package
 that insurers can evaluate. The companies that can prove
 governance get coverage. The ones that can't, don't.
@@ -522,9 +522,9 @@ governance infrastructure, not just governance tools.
  
 ---
  
-**AgentMesh is actively developed and moving fast.** If you're
+**Drako is actively developed and moving fast.** If you're
 deploying AI agents to production,
-[watch the repo](https://github.com/angelnicolasc/agentmesh)
+[watch the repo](https://github.com/angelnicolasc/drako)
 — or better, run the scan and see what it finds.
 
 ---
@@ -539,24 +539,24 @@ BUSL-1.1. Free to use in production. Cannot offer governance capabilities as a c
 ## See It in Action
 
 ```bash
-git clone https://github.com/angelnicolasc/agentmesh.git
-cd agentmesh/examples/demo-crewai
-pip install useagentmesh
-agentmesh scan .
+git clone https://github.com/angelnicolasc/drako.git
+cd drako/examples/demo-crewai
+pip install drako
+drako scan .
 ```
 
-The demo project has intentional governance gaps and scores ~35 (Grade F). See what AgentMesh finds.
+The demo project has intentional governance gaps and scores ~35 (Grade F). See what Drako finds.
 
 ---
 
 ## Editor Support
 
-Add to `.vscode/settings.json` for autocomplete and validation on `.agentmesh.yaml`:
+Add to `.vscode/settings.json` for autocomplete and validation on `.drako.yaml`:
 
 ```json
 {
   "yaml.schemas": {
-    "https://raw.githubusercontent.com/angelnicolasc/agentmesh/main/schema/agentmesh-config.schema.json": ".agentmesh.yaml"
+    "https://raw.githubusercontent.com/angelnicolasc/drako/main/schema/drako-config.schema.json": ".drako.yaml"
   }
 }
 ```

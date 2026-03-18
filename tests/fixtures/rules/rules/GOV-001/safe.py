@@ -1,6 +1,6 @@
 # ok: GOV-001
 # Audit logging is configured via GovernanceMiddleware
-from agentmesh import GovernanceMiddleware
+from drako import GovernanceMiddleware
 from crewai import Agent
 
 middleware = GovernanceMiddleware(api_key="key")
