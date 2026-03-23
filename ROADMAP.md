@@ -4,6 +4,8 @@ Drako ships governance for Python AI agents today. Here's where we're going.
 
 ## Q2 2026 (April - June)
 
+**Full Dashboard Implementation** — A clean, intuitive, and organized dashboard that really helps you see what your agents are actually doing.
+
 **TypeScript SDK** — Same enforcement pipeline, new language. `govern()` for Vercel AI SDK, LangChain.js, and any agent that makes tool calls over HTTP. The policy engine is language-agnostic; the SDK is the integration layer.
 
 **MCP Tool Manifest Scanner** — Dedicated scanner for MCP server manifests. Detect excessive permissions, unauthenticated endpoints, and missing rate limits in MCP tool definitions before your agent connects to them.
@@ -28,4 +30,4 @@ Drako ships governance for Python AI agents today. Here's where we're going.
 
 ---
 
-Building in public. Priorities shift based on what users need. If something here matters to you, [open an issue](https://github.com/angelnicolasc/drako/issues) or email hello@useagentmesh.com.
+Building in public. Priorities shift based on what users need. If something here matters to you, [open an issue](https://github.com/angelnicolasc/drako/issues) or email hello@drako.com.
