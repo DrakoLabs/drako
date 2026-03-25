@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "drako"
-version = "2.2.1"
+version = "2.2.2"
 description = "The Python Governance Platform for AI Agents — 80 policy rules, per-tool interception, HITL, FinOps, A2A, vendor concentration, determinism."
 readme = "README.md"
 license = "BUSL-1.1"

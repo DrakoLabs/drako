@@ -4,6 +4,11 @@ All notable changes to Drako are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [2.2.2] - 2026-03-24
+
+### Fixed
+- Re-release of 2.2.1 (PyPI upload conflict resolved)
+
 ## [2.2.1] - 2026-03-23
 
 ### Fixed
