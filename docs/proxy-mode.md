@@ -277,19 +277,24 @@ See [`deploy/helm/`](../deploy/) for the `drako-proxy` Helm chart. The chart dep
 
 The proxy estimates cost from the `usage` field in each API response. Supported models:
 
+**OpenAI**
+
 | Model | Input ($/1K tokens) | Output ($/1K tokens) |
 |-------|--------------------|--------------------|
-| gpt-4o | $0.0025 | $0.01 |
-| gpt-4o-mini | $0.00015 | $0.0006 |
-| gpt-4-turbo | $0.01 | $0.03 |
-| gpt-4 | $0.03 | $0.06 |
-| gpt-3.5-turbo | $0.0005 | $0.0015 |
-| claude-3-opus | $0.015 | $0.075 |
-| claude-3-sonnet | $0.003 | $0.015 |
-| claude-3-haiku | $0.00025 | $0.00125 |
-| claude-3.5-sonnet | $0.003 | $0.015 |
-| claude-4-sonnet | $0.003 | $0.015 |
-| claude-4-opus | $0.015 | $0.075 |
+| gpt-5.4 | $0.0025 | $0.015 |
+| gpt-5.4-mini | $0.00075 | $0.0045 |
+| gpt-5.4-nano | $0.0002 | $0.00125 |
+| gpt-5.4-pro | $0.03 | $0.18 |
+
+**Anthropic**
+
+| Model | Input ($/1K tokens) | Output ($/1K tokens) |
+|-------|--------------------|--------------------|
+| claude-opus-4-6 | $0.005 | $0.025 |
+| claude-sonnet-4-6 | $0.003 | $0.015 |
+| claude-haiku-4-5 | $0.001 | $0.005 |
+
+_Precios actualizados a marzo 2026. Pueden cambiar. El proxy usa siempre el campo `usage` que devuelve el proveedor._
 
 Per-agent cumulative cost is tracked in memory for the session lifetime and visible at `GET /status`.
 
