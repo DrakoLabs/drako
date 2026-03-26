@@ -1,0 +1,54 @@
+name: 'Drako Governance Scan'
+description: 'Scan AI agent code for governance gaps. Posts findings as PR review comments.'
+author: 'angelnicolasc'
+branding:
+  icon: 'shield'
+  color: 'purple'
+
+inputs:
+  path:
+    description: 'Path to scan'
+    default: '.'
+  threshold:
+    description: 'Minimum governance score (exit 1 if below)'
+    required: false
+    default: '0'
+  fail-on:
+    description: 'Fail on severity level: critical, high, medium, low'
+    default: 'critical'
+  comment-on-pr:
+    description: 'Post findings as PR review comments'
+    default: 'true'
+  upload-sarif:
+    description: 'Upload SARIF to GitHub Code Scanning'
+    default: 'true'
+  benchmark:
+    description: 'Include benchmark comparison'
+    default: 'true'
+  baseline:
+    description: 'Use baseline (only report new findings)'
+    default: 'true'
+  github-token:
+    description: 'GitHub token for PR comments'
+    default: ${{ github.token }}
+
+outputs:
+  score:
+    description: 'Governance score (0-100)'
+  grade:
+    description: 'Letter grade (A-F)'
+  findings-count:
+    description: 'Total number of findings'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    INPUT_PATH: ${{ inputs.path }}
+    INPUT_THRESHOLD: ${{ inputs.threshold }}
+    INPUT_FAIL_ON: ${{ inputs.fail-on }}
+    INPUT_COMMENT_ON_PR: ${{ inputs.comment-on-pr }}
+    INPUT_UPLOAD_SARIF: ${{ inputs.upload-sarif }}
+    INPUT_BENCHMARK: ${{ inputs.benchmark }}
+    INPUT_BASELINE: ${{ inputs.baseline }}
+    INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
