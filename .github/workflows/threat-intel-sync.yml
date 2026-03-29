@@ -1,0 +1,94 @@
+name: Threat Intel Sync
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # Daily at 6 AM UTC
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Sync source: otx, abusech, or all"
+        required: false
+        type: string
+        default: "all"
+      dry_run:
+        description: "Dry run (preview without writing)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r tools/threat-intel-sync/requirements.txt
+
+      - name: Run threat intel sync
+        env:
+          OTX_API_KEY: ${{ secrets.OTX_API_KEY }}
+        run: |
+          ARGS="--source ${{ inputs.source || 'all' }}"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          python tools/threat-intel-sync/sync_all.py $ARGS
+
+      - name: Validate output advisories
+        run: |
+          python -c "
+          import yaml, sys
+          from pathlib import Path
+          output = Path('tools/threat-intel-sync/output')
+          errors = 0
+          for f in output.glob('*.yaml'):
+              try:
+                  data = yaml.safe_load(f.read_text())
+                  assert data and 'id' in data, f'{f.name}: missing id'
+                  assert 'title' in data, f'{f.name}: missing title'
+                  assert 'severity' in data, f'{f.name}: missing severity'
+                  assert 'ioc' in data, f'{f.name}: missing ioc'
+              except Exception as e:
+                  print(f'INVALID: {f.name}: {e}')
+                  errors += 1
+          if errors:
+              print(f'{errors} invalid advisories')
+              sys.exit(1)
+          print(f'All output advisories valid ({len(list(output.glob(\"*.yaml\")))} files)')
+          "
+
+      - name: Commit new advisories
+        if: inputs.dry_run != 'true'
+        run: |
+          git config user.name "angelnicolasc"
+          git config user.email "angelnicolasc@users.noreply.github.com"
+          git add tools/threat-intel-sync/output/ tools/threat-intel-sync/state.json
+          if git diff --staged --quiet; then
+            echo "No new advisories to commit"
+          else
+            git commit -m "chore: sync threat intel feeds ($(date +%Y-%m-%d))"
+            git push
+          fi
+
+      - name: Upload output artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: threat-intel-${{ github.run_id }}
+          path: tools/threat-intel-sync/output/
+          retention-days: 30
+          if-no-files-found: ignore

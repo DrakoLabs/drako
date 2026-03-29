@@ -1,0 +1,53 @@
+# Threat Intel Sync — Configuration
+# Feeds, quality gates, and output settings for automated advisory generation.
+
+otx:
+  base_url: "https://otx.alienvault.com/api/v1"
+  search_keywords:
+    - "LLM prompt injection"
+    - "AI agent attack"
+    - "machine learning security"
+    - "model supply chain"
+  quality_gate:
+    min_subscriber_count: 10
+    min_indicator_count: 1
+  ai_tags:
+    - "prompt injection"
+    - "llm"
+    - "ai agent"
+    - "langchain"
+    - "openai"
+    - "anthropic"
+    - "machine learning attack"
+    - "model poisoning"
+    - "ai supply chain"
+    - "agent hijacking"
+    - "tool abuse"
+  max_pulses_per_keyword: 20
+  max_total_pulses: 50
+  timeout_seconds: 15
+
+abusech:
+  urlhaus_api: "https://urlhaus-api.abuse.ch/v1"
+  ai_infrastructure_domains:
+    - "openai.com"
+    - "api.openai.com"
+    - "anthropic.com"
+    - "api.anthropic.com"
+    - "huggingface.co"
+    - "hf.co"
+    - "replicate.com"
+    - "api.replicate.com"
+    - "together.ai"
+    - "api.together.xyz"
+    - "cohere.ai"
+    - "api.cohere.ai"
+    - "stability.ai"
+  max_recent_urls: 100
+  timeout_seconds: 15
+
+output:
+  directory: "output"
+  id_prefix_otx: "DRAKO-ABSS-EXT"
+  id_prefix_abusech: "DRAKO-ABSS-EXT-AH"
+  max_advisories_per_run: 50
