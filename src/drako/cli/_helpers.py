@@ -36,8 +36,7 @@ def require_config(config_path: str | None) -> str:
 
     click.echo()
     click.secho("  No .drako.yaml found.", fg="yellow")
-    click.echo("  Run " + click.style("drako init", fg="cyan") + " to create one.")
-    click.echo("  Policy versioning requires a platform connection.")
+    click.echo("  Run " + click.style("drako init", fg="cyan") + " to set up Drako for this project.")
     click.echo()
     raise SystemExit(1)
 

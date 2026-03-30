@@ -131,6 +131,10 @@ def _render_findings_section(
             console.print()
 
 
+_DEFAULT_MAX_FINDINGS = 10
+_SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+
+
 def render_report(
     bom: AgentBOM,
     findings: list[Finding],
@@ -140,6 +144,7 @@ def render_report(
     scan_duration_ms: int,
     console: Console | None = None,
     details: bool = False,
+    verbose: bool = False,
     baselined_count: int = 0,
     resolved_count: int = 0,
     determinism_score: int | None = None,
@@ -258,16 +263,49 @@ def render_report(
     rec_findings = [f for f in findings if getattr(f, "finding_type", "vulnerability") == "recommendation"]
 
     # ---- Vulnerabilities by Severity ----
+    show_all_findings = details or verbose
     if vuln_findings:
         console.print(f"[bold]\u26a0\ufe0f  FINDINGS ({len(vuln_findings)}):[/bold]")
         console.print()
-        _render_findings_section(console, vuln_findings, details)
+        if show_all_findings:
+            _render_findings_section(console, vuln_findings, details)
+        else:
+            # Default: show top N sorted by severity
+            sorted_vulns = sorted(
+                vuln_findings,
+                key=lambda f: _SEVERITY_ORDER.get(f.severity, 99),
+            )
+            top_findings = sorted_vulns[:_DEFAULT_MAX_FINDINGS]
+            _render_findings_section(console, top_findings, details)
+            remaining = len(vuln_findings) - _DEFAULT_MAX_FINDINGS
+            if remaining > 0:
+                console.print(
+                    f"  [dim]... and {remaining} more finding{'s' if remaining != 1 else ''}[/dim]"
+                )
+                console.print(
+                    "  [dim]Run: [cyan]drako scan --details[/cyan] to see all[/dim]"
+                )
+                console.print()
 
     # ---- Recommendations by Severity ----
     if rec_findings:
         console.print(f"[bold]\U0001f4a1 RECOMMENDATIONS ({len(rec_findings)}):[/bold]")
         console.print()
-        _render_findings_section(console, rec_findings, details)
+        if show_all_findings:
+            _render_findings_section(console, rec_findings, details)
+        else:
+            sorted_recs = sorted(
+                rec_findings,
+                key=lambda f: _SEVERITY_ORDER.get(f.severity, 99),
+            )
+            top_recs = sorted_recs[:_DEFAULT_MAX_FINDINGS]
+            _render_findings_section(console, top_recs, details)
+            remaining_recs = len(rec_findings) - _DEFAULT_MAX_FINDINGS
+            if remaining_recs > 0:
+                console.print(
+                    f"  [dim]... and {remaining_recs} more recommendation{'s' if remaining_recs != 1 else ''}[/dim]"
+                )
+                console.print()
 
     # ---- Summary ----
     vuln_counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
@@ -334,15 +372,10 @@ def render_report(
         console.print()
 
     # ---- CTA ----
-    console.print(
-        "\U0001f4a1 [bold]Improve your score:[/bold]"
-    )
-    console.print(
-        "   [cyan]pip install drako[/cyan]"
-    )
-    console.print(
-        "   [cyan]drako init[/cyan]   # Add governance middleware to your project"
-    )
+    console.print("[bold]Next steps:[/bold]")
+    console.print("   [cyan]drako init[/cyan]            Set up governance for this project")
+    console.print("   [cyan]drako scan --details[/cyan]  See impact and fix suggestions")
+    console.print("   [cyan]drako scan --baseline[/cyan] Acknowledge existing issues")
     console.print()
 
 
@@ -354,6 +387,7 @@ def render_report_to_string(
     metadata: ProjectMetadata,
     scan_duration_ms: int,
     details: bool = False,
+    verbose: bool = False,
     baselined_count: int = 0,
     resolved_count: int = 0,
     determinism_score: int | None = None,
@@ -366,7 +400,7 @@ def render_report_to_string(
     console = Console(file=buf, force_terminal=True, width=100)
     render_report(
         bom, findings, score, grade, metadata, scan_duration_ms,
-        console=console, details=details,
+        console=console, details=details, verbose=verbose,
         baselined_count=baselined_count, resolved_count=resolved_count,
         determinism_score=determinism_score, determinism_grade=determinism_grade,
         matched_advisories=matched_advisories, reachability=reachability,
@@ -406,8 +440,7 @@ def render_benchmark_panel(
 
     # ---- Percentile ----
     lines.append(
-        f"Better than {benchmark.percentile}% of "
-        f"{benchmark.projects_in_benchmark} scanned AI agent projects\n",
+        f"Better than {benchmark.percentile}% of scanned projects (benchmark dataset)\n",
     )
 
     # ---- Framework comparison ----
@@ -454,6 +487,12 @@ def render_benchmark_panel(
         style = f"bold {g_color}" if g == grade else g_color
         lines.append(f"{g}: ", style=style)
         lines.append(f"{bar} {pct}%\n", style=style)
+
+    lines.append("\n")
+    lines.append(
+        "Note: Benchmark uses an aggregate dataset. Contribute: drako scan . --share",
+        style="dim italic",
+    )
 
     console.print(Panel(
         lines,

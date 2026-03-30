@@ -17,9 +17,9 @@ import click
 @click.command("simulate")
 @click.option(
     "--policy",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False),
-    help="Path to the .drako.yaml policy file to simulate.",
+    default=None,
+    type=click.Path(dir_okay=False),
+    help="Path to .drako.yaml policy file (default: auto-detect in current directory).",
 )
 @click.option(
     "--hours",
@@ -50,7 +50,7 @@ import click
     help="Output format.",
 )
 def simulate(
-    policy: str,
+    policy: str | None,
     hours: int,
     api_key: str | None,
     endpoint: str,
@@ -64,8 +64,29 @@ def simulate(
     """
     import httpx
 
-    # ---- Read the policy file ----
+    # ---- Resolve the policy file ----
+    if policy is None:
+        from drako.cli._helpers import find_config
+
+        found = find_config()
+        if found is None:
+            click.echo()
+            click.secho("  No .drako.yaml found.", fg="yellow")
+            click.echo(
+                "  Run " + click.style("drako init", fg="cyan") + " to create one."
+            )
+            click.echo(
+                "  Or:  "
+                + click.style("drako simulate --policy path/to/.drako.yaml", fg="cyan")
+            )
+            click.echo()
+            sys.exit(1)
+        policy = str(found)
+
     policy_path = Path(policy)
+    if not policy_path.exists():
+        click.secho(f"  [error]  Policy file not found: {policy}", fg="red")
+        sys.exit(1)
     try:
         policy_yaml = policy_path.read_text(encoding="utf-8")
     except OSError as exc:

@@ -278,7 +278,11 @@ def _generate_manual_yaml(
     # Build ODD section (commented)
     tool_names = [t["name"] for t in tools]
     odd_section = textwrap.dedent("""\
-        # ODD (Operational Boundaries)              [requires Pro]
+        # === Operational Domain Definition (ODD) ===
+        # Define what each agent is allowed to do.
+        # List the tools each agent can use and set rate limits.
+        # Docs: https://docs.getdrako.com/config/odd
+        #                                           [requires Pro]
         # odd:
         #   enforcement_mode: enforce
         #   agents:
@@ -290,7 +294,11 @@ def _generate_manual_yaml(
     """)
 
     magnitude_section = textwrap.dedent("""\
-        # MAGNITUDE LIMITS                          [requires Pro]
+        # === Magnitude Limits ===
+        # Cap spend, tokens, and data volume per action/session.
+        # Prevents runaway costs and data exfiltration.
+        # Docs: https://docs.getdrako.com/config/magnitude
+        #                                           [requires Pro]
         # magnitude:
         #   max_spend_per_action_usd: 10.00
         #   max_spend_per_session_usd: 50.00
@@ -300,14 +308,20 @@ def _generate_manual_yaml(
     """)
 
     dlp_section = textwrap.dedent("""\
-        # DLP (Data Loss Prevention)
+        # === Data Loss Prevention (DLP) ===
+        # Scan outbound data for PII/secrets before it leaves your system.
+        # mode: audit (log only) | enforce (block) | off
+        # Docs: https://docs.getdrako.com/config/dlp
         dlp:
-          mode: audit        # audit | enforce | off
+          mode: audit
 
     """)
 
     cb_section = textwrap.dedent("""\
-        # CIRCUIT BREAKER
+        # === Circuit Breaker ===
+        # Automatically stop an agent after repeated failures.
+        # Prevents cascading errors and runaway loops.
+        # Docs: https://docs.getdrako.com/config/circuit-breaker
         circuit_breaker:
           agent_level:
             failure_threshold: 10
@@ -317,7 +331,11 @@ def _generate_manual_yaml(
     """)
 
     injection_section = textwrap.dedent("""\
-        # PROMPT INJECTION DETECTION                [requires Pro]
+        # === Prompt Injection Detection ===
+        # Detect and block prompt injection attacks in agent inputs.
+        # sensitivity: low | medium | high
+        # Docs: https://docs.getdrako.com/config/injection
+        #                                           [requires Pro]
         # injection_detection:
         #   mode: enforce
         #   sensitivity: medium
@@ -325,14 +343,20 @@ def _generate_manual_yaml(
     """)
 
     audit_section = textwrap.dedent("""\
-        # AUDIT TRAIL
+        # === Audit Trail ===
+        # Log every agent action for compliance and debugging.
+        # Docs: https://docs.getdrako.com/config/audit
         audit:
           enabled: true
 
     """)
 
     hitl_section = textwrap.dedent("""\
-        # HITL (Human-in-the-Loop)                  [requires Pro]
+        # === Human-in-the-Loop (HITL) ===
+        # Require human approval before high-risk actions.
+        # Configure which tool types trigger approval and timeout behavior.
+        # Docs: https://docs.getdrako.com/config/hitl
+        #                                           [requires Pro]
         # hitl:
         #   mode: enforce
         #   triggers:
@@ -343,7 +367,10 @@ def _generate_manual_yaml(
     """)
 
     ci_section = textwrap.dedent("""\
-        # CI/CD                                     [requires Starter]
+        # === CI/CD Gate ===
+        # Fail CI builds if governance score drops below threshold.
+        # Docs: https://docs.getdrako.com/config/ci
+        #                                           [requires Starter]
         # ci:
         #   threshold: 70
         #   fail_on: [critical, high]
@@ -515,35 +542,46 @@ def init(api_key: str | None, framework: str | None, endpoint: str,
             api_key = env_key
             click.echo(click.style("  [auth]   ", fg="green") + "Using API key from DRAKO_API_KEY env var")
         else:
-            click.echo("  Get a free API key at: " + click.style("https://app.getdrako.com/signup", fg="cyan", underline=True))
-            api_key = click.prompt("  Enter your API key", hide_input=False)
+            click.echo("  Get a free API key at: " + click.style("https://getdrako.com/signup", fg="cyan", underline=True))
+            click.echo("  Or press Enter to skip and configure offline.\n")
+            api_key = click.prompt("  API key (optional)", default="", show_default=False)
 
     # ---- Step 4: validate API key ----
-    click.echo(click.style("  [auth]   ", fg="green") + "Validating API key...")
     tenant_plan = "free"
-    try:
-        import httpx
+    if api_key and api_key.strip():
+        api_key = api_key.strip()
+        click.echo(click.style("  [auth]   ", fg="green") + "Validating API key...")
+        try:
+            import httpx
 
-        with httpx.Client(timeout=10.0) as http:
-            resp = http.get(
-                f"{endpoint.rstrip('/')}/api/v1/stats",
-                headers={"Authorization": f"Bearer {api_key}"},
-            )
-        if resp.status_code == 401:
-            click.secho("  [error]  Invalid API key. Get one at https://app.getdrako.com/signup", fg="red")
-            raise SystemExit(1)
-        if resp.status_code >= 400:
-            click.secho(f"  [warn]   Could not validate key (HTTP {resp.status_code}). Continuing anyway.", fg="yellow")
-        else:
-            data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
-            tenant_plan = data.get("plan", "free")
-            click.echo(click.style("  [auth]   ", fg="green") + f"Key validated | Plan: {tenant_plan.capitalize()}")
-    except (Exception,):
-        click.secho("  [warn]   Could not reach backend. Continuing in offline mode.", fg="yellow")
+            with httpx.Client(timeout=10.0) as http:
+                resp = http.get(
+                    f"{endpoint.rstrip('/')}/api/v1/stats",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                )
+            if resp.status_code == 401:
+                click.secho("  [warn]   Invalid API key. Generating offline config.", fg="yellow")
+                click.echo("           You can add it later in .drako.yaml\n")
+                api_key = ""
+            elif resp.status_code >= 400:
+                click.secho(f"  [warn]   Could not validate key (HTTP {resp.status_code}). Continuing anyway.", fg="yellow")
+            else:
+                data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+                tenant_plan = data.get("plan", "free")
+                click.echo(click.style("  [auth]   ", fg="green") + f"Key validated | Plan: {tenant_plan.capitalize()}")
+        except Exception:
+            click.secho("  [warn]   Could not reach backend. Continuing in offline mode.", fg="yellow")
+    else:
+        api_key = ""
+        click.echo(click.style("  [skip]   ", fg="yellow") + "No API key — generating offline config.")
+        click.echo("           Runtime enforcement requires a key. Scan works without one.\n")
 
     # Extract tenant_id from key
-    parts = api_key.split("_")
-    tenant_id = parts[2] if len(parts) >= 3 else "default"
+    if api_key:
+        parts = api_key.split("_")
+        tenant_id = parts[2] if len(parts) >= 3 else "default"
+    else:
+        tenant_id = "default"
 
     # ---- Step 5: check for existing config ----
     config_path = Path(_CONFIG_FILENAME)
@@ -636,16 +674,19 @@ def init(api_key: str | None, framework: str | None, endpoint: str,
     ensure_gitignore_cache(".")
 
     # ---- Step 8: suggest .env for API key ----
-    env_path = Path(".env")
-    if env_path.exists():
-        env_content = env_path.read_text(encoding="utf-8")
-        if "DRAKO_API_KEY" not in env_content:
-            click.echo(click.style("  [hint]   ", fg="yellow") + f"Add to .env: DRAKO_API_KEY={api_key}")
-    else:
-        if os.name == "nt":
-            click.echo(click.style("  [hint]   ", fg="yellow") + f'Set env var: $env:DRAKO_API_KEY = "{api_key}"')
+    if api_key:
+        env_path = Path(".env")
+        if env_path.exists():
+            env_content = env_path.read_text(encoding="utf-8")
+            if "DRAKO_API_KEY" not in env_content:
+                click.echo(click.style("  [hint]   ", fg="yellow") + f"Add to .env: DRAKO_API_KEY={api_key}")
         else:
-            click.echo(click.style("  [hint]   ", fg="yellow") + f"Set env var: export DRAKO_API_KEY={api_key}")
+            if os.name == "nt":
+                click.echo(click.style("  [hint]   ", fg="yellow") + f'Set env var: $env:DRAKO_API_KEY = "{api_key}"')
+            else:
+                click.echo(click.style("  [hint]   ", fg="yellow") + f"Set env var: export DRAKO_API_KEY={api_key}")
+    else:
+        click.echo(click.style("  [hint]   ", fg="yellow") + "Add your API key later: https://getdrako.com/signup")
 
     # ---- Step 9: print summary and next steps ----
     click.echo()
