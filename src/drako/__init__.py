@@ -1,6 +1,6 @@
 """Drako SDK — The Trust Layer for AI Agents."""
 
-__version__ = "2.5.0"
+__version__ = "2.5.1"
 
 from drako.client import DrakoClient
 from drako.config import DrakoConfig

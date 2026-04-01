@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "drako"
-version = "2.5.0"
+version = "2.5.1"
 description = "The Python Governance Platform for AI Agents — compliance middleware for LangGraph, CrewAI, AutoGen"
 readme = "README.md"
 license = "MIT"

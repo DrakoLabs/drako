@@ -10,12 +10,12 @@ import json
 import sys
 from typing import Any
 
+from drako import __version__ as _SERVER_VERSION
 from drako.client import DrakoClient
 from drako.utils.logger import log
 
 _PROTOCOL_VERSION = "2024-11-05"
 _SERVER_NAME = "drako-local"
-_SERVER_VERSION = "0.1.0"
 
 # MCP tool definitions exposed by this local server
 _TOOLS = [
