@@ -351,6 +351,15 @@ jobs:
 
 ---
 
+## Ecosystem Ratings
+
+Drako scans popular frameworks, MCP servers, and open-source projects — and publishes the results.
+
+- 🏆 [**Framework Security Ratings**](https://getdrako.com/ratings) — Governance grades for CrewAI, LangGraph, AutoGen, Semantic Kernel, PydanticAI, Google ADK, OpenAI Agents SDK
+- 🔌 [**MCP Server Directory**](https://getdrako.com/mcp-directory) — Permission scope, input validation, and governance assessment for popular MCP servers
+- 📊 [**AI Agent Governance Index**](https://getdrako.com/governance-index) — Aggregate governance stats from 100 open-source AI agent projects (the data behind `--benchmark`)
+
+---
 ## Supported Frameworks
 
 | Framework | Detection | Specific Rules |
