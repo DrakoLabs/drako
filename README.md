@@ -14,7 +14,7 @@
   <a href="https://www.python.org/downloads/">
     <img src="https://img.shields.io/badge/python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=yellow" alt="Python 3.10+">
   </a>
-  <a href="https://github.com/angelnicolasc/drako/actions">
+  <a href="https://github.com/drakolabs/drako/actions">
     <img src="https://img.shields.io/badge/tests-1489%20passing-2ea44f.svg?style=flat-square&logo=github-actions&logoColor=white" alt="Tests">
   </a>
   <img src="https://img.shields.io/badge/rules-97-6366F1.svg?style=flat-square" alt="Rules">
@@ -344,20 +344,10 @@ jobs:
 
 ```yaml
 # .pre-commit-config.yaml
-- repo: https://github.com/angelnicolasc/drako
+- repo: https://github.com/DrakoLabs/Drako
   hooks:
     - id: drako-scan
 ```
-
----
-
-## Ecosystem Ratings (Coming soon)
-
-Drako scans popular frameworks, MCP servers, and open-source projects — and publishes the results.
-
-- 🏆 [**Framework Security Ratings**](https://getdrako.com/ratings) — Governance grades for CrewAI, LangGraph, AutoGen, Semantic Kernel, PydanticAI, Google ADK, OpenAI Agents SDK
-- 🔌 [**MCP Server Directory**](https://getdrako.com/mcp-directory) — Permission scope, input validation, and governance assessment for popular MCP servers
-- 📊 [**AI Agent Governance Index**](https://getdrako.com/governance-index) — Aggregate governance stats from 100 open-source AI agent projects (the data behind `--benchmark`)
 
 ---
 
@@ -440,7 +430,7 @@ governance_level: balanced
 ## See It in Action
 
 ```bash
-git clone https://github.com/angelnicolasc/drako.git
+git clone https://github.com/drakolabs/drako.git
 cd drako/examples/demo-crewai
 pip install drako
 drako scan .
@@ -457,7 +447,7 @@ The demo project has intentional governance gaps and scores ~35 (Grade F). See w
 
 **Drako is actively developed and moving fast.** If you're
 deploying AI agents to production,
-[watch the repo](https://github.com/angelnicolasc/drako)
+[watch the repo](https://github.com/drakolabs/drako)
 — or better, run the scan and see what it finds.
 📄 [Full roadmap →](ROADMAP.md)
 
