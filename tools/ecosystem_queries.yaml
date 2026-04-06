@@ -1,0 +1,25 @@
+frameworks:
+  crewai:
+    query: '"from crewai" language:python'
+    min_stars: 50
+    limit: 15
+  langgraph:
+    query: '"from langgraph" language:python'
+    min_stars: 50
+    limit: 15
+  autogen:
+    query: '"import autogen" language:python'
+    min_stars: 50
+    limit: 15
+  semantic_kernel:
+    query: '"from semantic_kernel" language:python'
+    min_stars: 30
+    limit: 10
+  pydantic_ai:
+    query: '"from pydantic_ai" language:python'
+    min_stars: 30
+    limit: 10
+  llama_index:
+    query: '"from llama_index" language:python'
+    min_stars: 50
+    limit: 10
