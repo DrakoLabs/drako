@@ -1,12 +1,22 @@
-<h1 align="center">Drako 🐉</h1>
-<p align="center">
-  <strong>Scan before you ship. Govern after you deploy.</strong>
-</p>
-<p align="center">
-  Scans your codebase, scores your governance posture, flags what's reachable,<br>
-  connects findings to known advisories. Free, offline, no account required.<br>
-  Full runtime enforcement when you're ready.
-</p>
+<div align="center">
+<a href="https://getdrako.com/">
+<img width="1500" height="276" alt="drako1" src=".github/assets/drako1.jpg" />
+</a> </div>
+
+<h3 align="center">
+  AI Agent Security & Governance Platform 🐉
+</h3>
+<div align="center">
+  <strong>The governance platform for AI agents that doesn't use AI to decide.</strong>
+  <br>
+  Scans your codebase, scores your governance posture, flags what's reachable, connects findings to known advisories.
+  Free, offline, no account required.
+  <br />
+ <strong>Full runtime enforcement when you're ready.</strong>
+  <br /><br />
+  Also scans the AI agents installed in <a href="#desktop-agent-scanning">Claude, Cursor, VS Code, and Windsurf.</a>
+</div>
+<br />
 <p align="center">
   <a href="https://pypi.org/project/drako/">
     <img src="https://img.shields.io/pypi/v/drako?style=flat-square&color=3776AB&logo=pypi&logoColor=white" alt="PyPI">
@@ -33,7 +43,7 @@ pip install drako && drako scan .
 ## Scan for Free
 
 <p align="center">
-  <img src=".github/assets/drakoscanner.svg" alt="Drako – AI Agent Security & Governance" width="100%">
+  <img src=".github/assets/drakoscanner.svg" alt="Drako – AI Agent Security & Governance" width="100%" style="max-width: 900px;">
 </p>
 
 Two scores, two audiences. **Governance** speaks to security teams — are your agents safe?
@@ -67,7 +77,7 @@ drako bom .
 ```
 
 <p align="center">
-  <img src=".github/assets/agentbom.svg" alt="Drako – AI Agent Security & Governance" width="100%">
+  <img src=".github/assets/agentbom.svg" alt="Drako – AI Agent Security & Governance" width="100%" style="max-width: 900px;">
 </p>
 
 Output formats: `--format text` (default) · `json` · `markdown`
