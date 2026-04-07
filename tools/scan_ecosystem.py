@@ -17,6 +17,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
+import shutil
 import sys
 import tempfile
 import time
@@ -26,6 +28,13 @@ from pathlib import Path
 import click
 import httpx
 import yaml
+
+# Minimum number of .py files that must import the framework for a repo
+# to be considered "relevant" to that framework and included in the
+# published ecosystem index.
+MIN_FRAMEWORK_FILES = 3
+
+_QUOTED_RE = re.compile(r'"([^"]+)"')
 
 # ---------------------------------------------------------------------------
 # Reuse governance-index modules via sys.path
@@ -171,6 +180,57 @@ def discover_by_code_search(
 
 
 # ---------------------------------------------------------------------------
+# Framework relevance analysis
+# ---------------------------------------------------------------------------
+
+def extract_patterns_from_queries(queries: list[str]) -> list[str]:
+    """Extract quoted substrings from GitHub code-search queries.
+
+    ``'"from crewai import" language:python'`` -> ``["from crewai import"]``
+    Multiple quoted phrases per query are all returned.
+    """
+    patterns: list[str] = []
+    for q in queries:
+        patterns.extend(_QUOTED_RE.findall(q))
+    return patterns
+
+
+def analyze_framework_usage(
+    repo_dir: Path,
+    patterns: list[str],
+) -> tuple[int, int, int]:
+    """Count .py files that import the framework and their LOC.
+
+    Returns:
+        (framework_file_count, framework_loc, repo_total_loc)
+
+    ``framework_file_count`` is the number of .py files whose raw
+    content contains any of the ``patterns`` as a substring.  LOC is
+    measured as ``content.count("\\n") + 1`` — cheap and good enough
+    for ordering and reporting.  Unreadable files are skipped.
+    """
+    framework_files = 0
+    framework_loc = 0
+    repo_total_loc = 0
+
+    if not repo_dir.exists():
+        return (0, 0, 0)
+
+    for py in repo_dir.rglob("*.py"):
+        try:
+            content = py.read_text(encoding="utf-8", errors="ignore")
+        except (OSError, UnicodeDecodeError):
+            continue
+        loc = content.count("\n") + 1
+        repo_total_loc += loc
+        if patterns and any(p in content for p in patterns):
+            framework_files += 1
+            framework_loc += loc
+
+    return framework_files, framework_loc, repo_total_loc
+
+
+# ---------------------------------------------------------------------------
 # Output generation
 # ---------------------------------------------------------------------------
 
@@ -182,12 +242,18 @@ def _anonymize(repo_name: str) -> str:
 def generate_ecosystem_index(
     completed: dict[str, RepoScanResult],
     fw_map: dict[str, str],
+    usage_stats: dict[str, tuple[int, int, int]],
+    reason: str | None = None,
 ) -> dict[str, object]:
     """Build the ecosystem_index.json structure.
 
     Args:
-        completed: All scan results keyed by repo full_name.
+        completed: Scan results keyed by repo full_name.
         fw_map: Mapping of repo full_name -> framework name (from discovery).
+        usage_stats: Map of repo full_name -> (framework_file_count,
+            framework_loc, repo_total_loc).
+        reason: Optional ``exclusion_reason`` added to every project entry.
+            Used for the excluded index.
 
     Returns:
         JSON-serializable dict.
@@ -203,7 +269,8 @@ def generate_ecosystem_index(
             fw = fw_map.get(repo_name, "unknown")
         fw_groups.setdefault(fw, []).append(result)
 
-        projects.append({
+        fc, floc, total_loc = usage_stats.get(repo_name, (0, 0, 0))
+        entry: dict[str, object] = {
             "id": _anonymize(repo_name),
             "framework": fw,
             "governance_score": result.score,
@@ -211,7 +278,13 @@ def generate_ecosystem_index(
             "agents": result.agents,
             "tools": result.tools,
             "findings_by_severity": result.findings_by_severity,
-        })
+            "framework_file_count": fc,
+            "framework_loc": floc,
+            "repo_total_loc": total_loc,
+        }
+        if reason:
+            entry["exclusion_reason"] = reason
+        projects.append(entry)
 
     for fw, results in fw_groups.items():
         scores = [r.score for r in results]
@@ -232,10 +305,14 @@ def generate_ecosystem_index(
     }
 
 
-def save_ecosystem_index(index: dict[str, object], output_dir: Path) -> Path:
-    """Atomically write ecosystem_index.json."""
+def save_ecosystem_index(
+    index: dict[str, object],
+    output_dir: Path,
+    filename: str = "ecosystem_index.json",
+) -> Path:
+    """Atomically write the given index JSON to ``output_dir/filename``."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    out_path = output_dir / "ecosystem_index.json"
+    out_path = output_dir / filename
 
     fd, tmp_path = tempfile.mkstemp(dir=str(output_dir), suffix=".tmp")
     try:
@@ -304,12 +381,24 @@ def main(
     """Curated Ecosystem Scanner — scan repos by framework."""
     out = Path(output_dir)
     work = Path("work")
+    # Nuke any stale clone directories from prior runs.  On Windows,
+    # shutil.rmtree(..., ignore_errors=True) inside cleanup_repo can
+    # leave empty stubs that scan_runner mistakes for "already cloned",
+    # which causes drako to scan nothing and return default high scores.
+    if work.exists():
+        shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True, exist_ok=True)
 
     # --- Load config ---
     with open(config_path, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     frameworks_cfg: dict[str, dict[str, object]] = cfg["frameworks"]
+
+    # Derive per-framework substring patterns from the code-search queries
+    patterns_by_fw: dict[str, list[str]] = {
+        fw: extract_patterns_from_queries([str(q) for q in fw_cfg["queries"]])  # type: ignore[arg-type]
+        for fw, fw_cfg in frameworks_cfg.items()
+    }
 
     # --- Phase 1: Discovery ---
     click.echo("Phase 1: Discovering repos via code search...")
@@ -332,6 +421,7 @@ def main(
 
     # --- Phase 2: Load checkpoint ---
     completed: dict[str, RepoScanResult] = {}
+    usage_stats: dict[str, tuple[int, int, int]] = {}
     if resume:
         checkpoint = load_checkpoint(out)
         if checkpoint is not None:
@@ -361,11 +451,19 @@ def main(
                     scan_duration_ms=result.scan_duration_ms,
                 )
 
+            # Framework relevance: count .py files importing the framework
+            # BEFORE cleanup wipes the clone directory.
+            fw_for_repo = fw_map.get(repo.full_name, "unknown")
+            patterns = patterns_by_fw.get(fw_for_repo, [])
+            repo_dir = work / repo.full_name.replace("/", "__")
+            usage_stats[repo.full_name] = analyze_framework_usage(repo_dir, patterns)
+
             completed[repo.full_name] = result
             grade_colors = {"A": "green", "B": "bright_green", "C": "yellow", "D": "red", "F": "red"}
             color = grade_colors.get(result.grade, "white")
+            fc = usage_stats[repo.full_name][0]
             click.echo(" ", nl=False)
-            click.secho(f"{result.score}/100 [{result.grade}]", fg=color)
+            click.secho(f"{result.score}/100 [{result.grade}] fw_files={fc}", fg=color)
 
             if not keep_clones:
                 cleanup_repo(repo, work)
@@ -382,26 +480,72 @@ def main(
         click.secho("No repos could be scanned.", fg="red")
         sys.exit(1)
 
-    # --- Phase 4: Generate output ---
+    # --- Phase 4: Partition by framework relevance ---
+    kept: dict[str, RepoScanResult] = {}
+    excluded: dict[str, RepoScanResult] = {}
+    for name, r in completed.items():
+        fc = usage_stats.get(name, (0, 0, 0))[0]
+        if fc >= MIN_FRAMEWORK_FILES:
+            kept[name] = r
+        else:
+            excluded[name] = r
+
+    click.echo(
+        f"  Relevance filter (>= {MIN_FRAMEWORK_FILES} framework files): "
+        f"kept={len(kept)}, excluded={len(excluded)}"
+    )
+
+    # --- Phase 5: Generate outputs ---
     click.echo("Phase 3: Generating ecosystem index...")
-    index = generate_ecosystem_index(completed, fw_map)
-    index_path = save_ecosystem_index(index, out)
+    index = generate_ecosystem_index(kept, fw_map, usage_stats)
+    index_path = save_ecosystem_index(index, out, filename="ecosystem_index.json")
     click.echo(f"  Output: {index_path}")
+
+    if excluded:
+        excluded_index = generate_ecosystem_index(
+            excluded, fw_map, usage_stats,
+            reason="insufficient_framework_usage",
+        )
+        excluded_path = save_ecosystem_index(
+            excluded_index, out, filename="ecosystem_index_excluded.json"
+        )
+        click.echo(f"  Output: {excluded_path}")
 
     # --- Summary ---
     click.echo()
-    click.echo("=== Summary ===")
-    by_fw = index.get("by_framework", {})
-    assert isinstance(by_fw, dict)
-    for fw_name, stats in sorted(by_fw.items()):
-        assert isinstance(stats, dict)
+    click.echo("=== Framework Summary (kept only) ===")
+    all_fws = sorted(set(fw_map.get(n, "unknown") for n in completed))
+    for fw_name in all_fws:
+        k_list = [r for n, r in kept.items() if fw_map.get(n) == fw_name]
+        e_count = sum(1 for n in excluded if fw_map.get(n) == fw_name)
+        if k_list:
+            avg_k = round(sum(r.score for r in k_list) / len(k_list), 1)
+        else:
+            avg_k = 0.0
         click.echo(
-            f"  {fw_name}: {stats['count']} repos, "
-            f"avg governance {stats['avg_governance']}/100, "
-            f"grades {stats['grade_distribution']}"
+            f"  {fw_name:18s} kept={len(k_list):2d}  excluded={e_count:2d}  avg={avg_k}"
         )
-    avg = round(sum(r.score for r in completed.values()) / len(completed), 1)
-    click.echo(f"\n  Overall: {len(completed)} projects, average governance score: {avg}/100")
+
+    click.echo("\n=== Top / Bottom per framework (kept only) ===")
+    for fw_name in all_fws:
+        repos_in_fw = [(n, r) for n, r in kept.items() if fw_map.get(n) == fw_name]
+        if not repos_in_fw:
+            click.echo(f"  {fw_name}: (no kept repos)")
+            continue
+        repos_in_fw.sort(key=lambda x: x[1].score, reverse=True)
+        top_name, top_r = repos_in_fw[0]
+        bot_name, bot_r = repos_in_fw[-1]
+        top_fc = usage_stats[top_name][0]
+        bot_fc = usage_stats[bot_name][0]
+        click.echo(f"  {fw_name}")
+        click.echo(f"    top:    {top_name:55s} {top_r.score:3d}  (framework_files={top_fc})")
+        click.echo(f"    bottom: {bot_name:55s} {bot_r.score:3d}  (framework_files={bot_fc})")
+
+    click.echo("\n=== Totals ===")
+    click.echo(f"  Total kept:     {len(kept)}")
+    click.echo(f"  Total excluded: {len(excluded)}")
+    click.echo(f"  Total scanned:  {len(completed)}")
+    click.echo(f"  Total unique repos discovered: {len(all_repos)}")
 
     # Discovered vs scanned vs failed per framework
     click.echo("\n=== Scan Success/Failure ===")
@@ -415,7 +559,6 @@ def main(
         s = scanned_per_fw.get(fw_name, 0)
         f = d - s
         click.echo(f"  {fw_name:18s} {d:3d} discovered  ->  {s:3d} scanned, {f:3d} failed")
-    click.echo(f"\n  Total unique repos discovered: {len(all_repos)}")
 
 
 if __name__ == "__main__":

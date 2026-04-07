@@ -1,89 +1,57 @@
 {
-  "generated_at": "2026-04-07T12:31:11.238118+00:00",
-  "total_scanned": 53,
+  "generated_at": "2026-04-07T13:54:05.302915+00:00",
+  "total_scanned": 37,
   "by_framework": {
     "crewai": {
-      "count": 4,
-      "avg_governance": 24.8,
+      "count": 2,
+      "avg_governance": 31.5,
       "grade_distribution": {
-        "F": 4
+        "F": 2
       }
     },
     "langgraph": {
-      "count": 6,
-      "avg_governance": 61.3,
+      "count": 3,
+      "avg_governance": 38.0,
       "grade_distribution": {
-        "A": 3,
-        "F": 1,
-        "D": 2
+        "F": 2,
+        "D": 1
       }
     },
     "autogen": {
-      "count": 12,
-      "avg_governance": 45.6,
+      "count": 9,
+      "avg_governance": 15.0,
       "grade_distribution": {
-        "A": 5,
-        "F": 6,
+        "F": 7,
+        "C": 1,
         "D": 1
       }
     },
     "semantic_kernel": {
-      "count": 10,
-      "avg_governance": 61.6,
+      "count": 9,
+      "avg_governance": 30.7,
       "grade_distribution": {
-        "F": 3,
-        "A": 6,
-        "D": 1
+        "F": 4,
+        "D": 5
       }
     },
     "pydantic_ai": {
-      "count": 10,
-      "avg_governance": 16.0,
+      "count": 6,
+      "avg_governance": 3.8,
       "grade_distribution": {
-        "F": 9,
-        "A": 1
+        "F": 6
       }
     },
     "llama_index": {
-      "count": 11,
-      "avg_governance": 45.0,
+      "count": 8,
+      "avg_governance": 41.9,
       "grade_distribution": {
-        "C": 1,
-        "F": 6,
-        "A": 2,
-        "D": 2
+        "C": 2,
+        "F": 3,
+        "D": 3
       }
     }
   },
   "projects": [
-    {
-      "id": "a852d156",
-      "framework": "crewai",
-      "governance_score": 5,
-      "grade": "F",
-      "agents": 14,
-      "tools": 3,
-      "findings_by_severity": {
-        "MEDIUM": 24,
-        "HIGH": 68,
-        "CRITICAL": 3,
-        "LOW": 31
-      }
-    },
-    {
-      "id": "0450a87f",
-      "framework": "crewai",
-      "governance_score": 31,
-      "grade": "F",
-      "agents": 3,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 21,
-        "MEDIUM": 9,
-        "LOW": 7,
-        "CRITICAL": 2
-      }
-    },
     {
       "id": "879b133f",
       "framework": "crewai",
@@ -96,7 +64,10 @@
         "HIGH": 26,
         "LOW": 8,
         "CRITICAL": 2
-      }
+      },
+      "framework_file_count": 4,
+      "framework_loc": 359,
+      "repo_total_loc": 429
     },
     {
       "id": "3a417a9f",
@@ -110,70 +81,43 @@
         "CRITICAL": 1,
         "HIGH": 17,
         "LOW": 7
-      }
+      },
+      "framework_file_count": 4,
+      "framework_loc": 278,
+      "repo_total_loc": 294
     },
     {
       "id": "53dfe97e",
       "framework": "langgraph",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
-    },
-    {
-      "id": "006eafeb",
-      "framework": "langgraph",
-      "governance_score": 0,
+      "governance_score": 34,
       "grade": "F",
-      "agents": 0,
-      "tools": 4,
+      "agents": 1,
+      "tools": 2,
       "findings_by_severity": {
-        "HIGH": 25,
-        "CRITICAL": 8,
-        "MEDIUM": 10,
-        "LOW": 7
-      }
+        "CRITICAL": 3,
+        "HIGH": 81,
+        "MEDIUM": 29,
+        "LOW": 38
+      },
+      "framework_file_count": 6,
+      "framework_loc": 483,
+      "repo_total_loc": 1447
     },
     {
       "id": "7bdbc989",
       "framework": "langgraph",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 35,
+      "grade": "F",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
-    },
-    {
-      "id": "4f20181a",
-      "framework": "langgraph",
-      "governance_score": 47,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 10,
-        "MEDIUM": 8,
-        "LOW": 4
-      }
-    },
-    {
-      "id": "3d8444d6",
-      "framework": "langgraph",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "HIGH": 32,
+        "MEDIUM": 6,
+        "LOW": 13
+      },
+      "framework_file_count": 4,
+      "framework_loc": 698,
+      "repo_total_loc": 1084
     },
     {
       "id": "c69d1fac",
@@ -187,19 +131,10 @@
         "HIGH": 7,
         "MEDIUM": 6,
         "LOW": 3
-      }
-    },
-    {
-      "id": "a35f85d0",
-      "framework": "autogen",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+      },
+      "framework_file_count": 3,
+      "framework_loc": 540,
+      "repo_total_loc": 541
     },
     {
       "id": "cbae342a",
@@ -213,45 +148,44 @@
         "MEDIUM": 24,
         "CRITICAL": 5,
         "LOW": 13
-      }
-    },
-    {
-      "id": "0578a1f4",
-      "framework": "autogen",
-      "governance_score": 37,
-      "grade": "F",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 1,
-        "HIGH": 16,
-        "MEDIUM": 7,
-        "LOW": 7
-      }
+      },
+      "framework_file_count": 9,
+      "framework_loc": 1605,
+      "repo_total_loc": 2466
     },
     {
       "id": "fc0d9be0",
       "framework": "autogen",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
+      "governance_score": 13,
+      "grade": "F",
+      "agents": 5,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "HIGH": 21,
+        "MEDIUM": 10,
+        "LOW": 7,
+        "CRITICAL": 3
+      },
+      "framework_file_count": 3,
+      "framework_loc": 324,
+      "repo_total_loc": 325
     },
     {
-      "id": "88cd631d",
+      "id": "ce3dba04",
       "framework": "autogen",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
+      "governance_score": 0,
+      "grade": "F",
+      "agents": 13,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "CRITICAL": 6,
+        "HIGH": 16,
+        "MEDIUM": 8,
+        "LOW": 4
+      },
+      "framework_file_count": 5,
+      "framework_loc": 919,
+      "repo_total_loc": 3184
     },
     {
       "id": "7779c697",
@@ -265,19 +199,26 @@
         "MEDIUM": 10,
         "LOW": 5,
         "CRITICAL": 29
-      }
+      },
+      "framework_file_count": 3,
+      "framework_loc": 330,
+      "repo_total_loc": 330
     },
     {
       "id": "9e2ad6d8",
       "framework": "autogen",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 72,
+      "grade": "C",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "HIGH": 4,
+        "MEDIUM": 6,
+        "LOW": 1
+      },
+      "framework_file_count": 3,
+      "framework_loc": 278,
+      "repo_total_loc": 352
     },
     {
       "id": "5b4a5a43",
@@ -291,7 +232,10 @@
         "MEDIUM": 8,
         "CRITICAL": 8,
         "LOW": 14
-      }
+      },
+      "framework_file_count": 6,
+      "framework_loc": 2073,
+      "repo_total_loc": 2505
     },
     {
       "id": "226f68e5",
@@ -304,19 +248,10 @@
         "HIGH": 102,
         "MEDIUM": 14,
         "LOW": 31
-      }
-    },
-    {
-      "id": "4f7b3353",
-      "framework": "autogen",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+      },
+      "framework_file_count": 8,
+      "framework_loc": 859,
+      "repo_total_loc": 2049
     },
     {
       "id": "ee0d29dc",
@@ -330,7 +265,10 @@
         "CRITICAL": 19,
         "MEDIUM": 37,
         "LOW": 80
-      }
+      },
+      "framework_file_count": 4,
+      "framework_loc": 423,
+      "repo_total_loc": 4998
     },
     {
       "id": "fe0ec240",
@@ -344,33 +282,27 @@
         "HIGH": 96,
         "MEDIUM": 86,
         "LOW": 9
-      }
-    },
-    {
-      "id": "9bbb887c",
-      "framework": "semantic_kernel",
-      "governance_score": 11,
-      "grade": "F",
-      "agents": 3,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 5,
-        "HIGH": 244,
-        "MEDIUM": 14,
-        "LOW": 122
-      }
+      },
+      "framework_file_count": 3,
+      "framework_loc": 888,
+      "repo_total_loc": 14746
     },
     {
       "id": "116a54d6",
       "framework": "semantic_kernel",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
+      "governance_score": 1,
+      "grade": "F",
+      "agents": 2,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "CRITICAL": 5,
+        "HIGH": 55,
+        "MEDIUM": 15,
+        "LOW": 13
+      },
+      "framework_file_count": 22,
+      "framework_loc": 4502,
+      "repo_total_loc": 8816
     },
     {
       "id": "71ebf1fb",
@@ -384,7 +316,10 @@
         "HIGH": 61,
         "MEDIUM": 19,
         "LOW": 28
-      }
+      },
+      "framework_file_count": 18,
+      "framework_loc": 3185,
+      "repo_total_loc": 15449
     },
     {
       "id": "dc2691c9",
@@ -398,43 +333,74 @@
         "CRITICAL": 19,
         "HIGH": 60,
         "LOW": 18
-      }
+      },
+      "framework_file_count": 9,
+      "framework_loc": 1681,
+      "repo_total_loc": 2848
     },
     {
       "id": "9610021b",
       "framework": "semantic_kernel",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 33,
+      "grade": "F",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "HIGH": 27,
+        "MEDIUM": 11,
+        "LOW": 6
+      },
+      "framework_file_count": 5,
+      "framework_loc": 493,
+      "repo_total_loc": 1140
+    },
+    {
+      "id": "60bc7657",
+      "framework": "semantic_kernel",
+      "governance_score": 43,
+      "grade": "D",
+      "agents": 0,
+      "tools": 0,
+      "findings_by_severity": {
+        "HIGH": 18,
+        "MEDIUM": 8,
+        "LOW": 7
+      },
+      "framework_file_count": 3,
+      "framework_loc": 324,
+      "repo_total_loc": 975
     },
     {
       "id": "b5b25553",
       "framework": "semantic_kernel",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 42,
+      "grade": "D",
       "agents": 0,
-      "tools": 0,
+      "tools": 2,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "MEDIUM": 22,
+        "HIGH": 51,
+        "LOW": 24
+      },
+      "framework_file_count": 5,
+      "framework_loc": 170,
+      "repo_total_loc": 2113
     },
     {
       "id": "883a4cd1",
       "framework": "semantic_kernel",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 52,
+      "grade": "D",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "HIGH": 25,
+        "MEDIUM": 15,
+        "LOW": 12
+      },
+      "framework_file_count": 9,
+      "framework_loc": 938,
+      "repo_total_loc": 938
     },
     {
       "id": "430e9506",
@@ -447,73 +413,43 @@
         "HIGH": 116,
         "MEDIUM": 27,
         "LOW": 56
-      }
-    },
-    {
-      "id": "a8be4a19",
-      "framework": "semantic_kernel",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+      },
+      "framework_file_count": 32,
+      "framework_loc": 1463,
+      "repo_total_loc": 1572
     },
     {
       "id": "d825f08c",
       "framework": "semantic_kernel",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 52,
+      "grade": "D",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "HIGH": 8,
+        "MEDIUM": 6,
+        "LOW": 1
+      },
+      "framework_file_count": 5,
+      "framework_loc": 367,
+      "repo_total_loc": 367
     },
     {
-      "id": "cbf30b00",
+      "id": "9be4a3a6",
       "framework": "pydantic_ai",
       "governance_score": 0,
       "grade": "F",
-      "agents": 50,
-      "tools": 5,
-      "findings_by_severity": {
-        "HIGH": 422,
-        "CRITICAL": 37,
-        "MEDIUM": 75,
-        "LOW": 201
-      }
-    },
-    {
-      "id": "0b169f2d",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 9,
+      "agents": 1,
       "tools": 0,
       "findings_by_severity": {
-        "CRITICAL": 24,
-        "HIGH": 210,
-        "MEDIUM": 30,
-        "LOW": 94
-      }
-    },
-    {
-      "id": "9b622c05",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 6,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 15,
-        "HIGH": 171,
-        "MEDIUM": 61,
-        "LOW": 76
-      }
+        "CRITICAL": 20,
+        "HIGH": 409,
+        "MEDIUM": 51,
+        "LOW": 196
+      },
+      "framework_file_count": 18,
+      "framework_loc": 1649,
+      "repo_total_loc": 141100
     },
     {
       "id": "37e821c5",
@@ -527,89 +463,78 @@
         "MEDIUM": 33,
         "CRITICAL": 16,
         "LOW": 88
-      }
+      },
+      "framework_file_count": 121,
+      "framework_loc": 40018,
+      "repo_total_loc": 120457
     },
     {
-      "id": "e0f8804d",
+      "id": "4af67efd",
       "framework": "pydantic_ai",
-      "governance_score": 92,
-      "grade": "A",
-      "agents": 0,
-      "tools": 0,
+      "governance_score": 0,
+      "grade": "F",
+      "agents": 115,
+      "tools": 46,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "CRITICAL": 162,
+        "HIGH": 1015,
+        "MEDIUM": 158,
+        "LOW": 488
+      },
+      "framework_file_count": 20,
+      "framework_loc": 2344,
+      "repo_total_loc": 29449
     },
     {
-      "id": "9cd34a27",
+      "id": "217adf17",
       "framework": "pydantic_ai",
-      "governance_score": 11,
+      "governance_score": 23,
       "grade": "F",
       "agents": 1,
-      "tools": 0,
+      "tools": 1,
       "findings_by_severity": {
-        "HIGH": 56,
-        "MEDIUM": 35,
-        "CRITICAL": 4,
-        "LOW": 3
-      }
+        "CRITICAL": 2,
+        "HIGH": 25,
+        "MEDIUM": 13,
+        "LOW": 8
+      },
+      "framework_file_count": 3,
+      "framework_loc": 804,
+      "repo_total_loc": 11765
     },
     {
-      "id": "fa93cfd2",
+      "id": "2f322618",
       "framework": "pydantic_ai",
-      "governance_score": 33,
+      "governance_score": 0,
+      "grade": "F",
+      "agents": 3,
+      "tools": 3,
+      "findings_by_severity": {
+        "CRITICAL": 6,
+        "HIGH": 55,
+        "MEDIUM": 21,
+        "LOW": 20
+      },
+      "framework_file_count": 3,
+      "framework_loc": 173,
+      "repo_total_loc": 506
+    },
+    {
+      "id": "c246ea84",
+      "framework": "pydantic_ai",
+      "governance_score": 0,
       "grade": "F",
       "agents": 2,
       "tools": 0,
       "findings_by_severity": {
-        "CRITICAL": 3,
-        "HIGH": 149,
-        "MEDIUM": 34,
-        "LOW": 70
-      }
-    },
-    {
-      "id": "bdbf4517",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 15,
-      "tools": 1,
-      "findings_by_severity": {
-        "CRITICAL": 15,
-        "HIGH": 316,
-        "MEDIUM": 56,
-        "LOW": 148
-      }
-    },
-    {
-      "id": "72f990b5",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 11,
-      "tools": 15,
-      "findings_by_severity": {
+        "CRITICAL": 9,
         "HIGH": 195,
-        "CRITICAL": 22,
-        "MEDIUM": 35,
-        "LOW": 77
-      }
-    },
-    {
-      "id": "073ac840",
-      "framework": "pydantic_ai",
-      "governance_score": 24,
-      "grade": "F",
-      "agents": 1,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 2,
-        "HIGH": 37,
-        "MEDIUM": 11,
-        "LOW": 15
-      }
+        "MEDIUM": 31,
+        "LOW": 63
+      },
+      "framework_file_count": 35,
+      "framework_loc": 7747,
+      "repo_total_loc": 66047
     },
     {
       "id": "1be56c8e",
@@ -622,20 +547,10 @@
         "HIGH": 4,
         "MEDIUM": 6,
         "LOW": 3
-      }
-    },
-    {
-      "id": "15a676e9",
-      "framework": "llama_index",
-      "governance_score": 37,
-      "grade": "F",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 11,
-        "MEDIUM": 6,
-        "LOW": 1
-      }
+      },
+      "framework_file_count": 9,
+      "framework_loc": 1665,
+      "repo_total_loc": 2003
     },
     {
       "id": "a50a5c53",
@@ -649,21 +564,10 @@
         "MEDIUM": 22,
         "CRITICAL": 4,
         "LOW": 11
-      }
-    },
-    {
-      "id": "76c37ca1",
-      "framework": "llama_index",
-      "governance_score": 37,
-      "grade": "F",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 1,
-        "HIGH": 122,
-        "MEDIUM": 36,
-        "LOW": 58
-      }
+      },
+      "framework_file_count": 7,
+      "framework_loc": 831,
+      "repo_total_loc": 16719
     },
     {
       "id": "893bac46",
@@ -677,45 +581,42 @@
         "HIGH": 89,
         "MEDIUM": 36,
         "LOW": 39
-      }
+      },
+      "framework_file_count": 3,
+      "framework_loc": 415,
+      "repo_total_loc": 15988
     },
     {
       "id": "70a36a1a",
       "framework": "llama_index",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 69,
+      "grade": "C",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
+        "HIGH": 5,
+        "MEDIUM": 5,
+        "LOW": 1
+      },
+      "framework_file_count": 5,
+      "framework_loc": 234,
+      "repo_total_loc": 234
     },
     {
-      "id": "951f8526",
+      "id": "961330a8",
       "framework": "llama_index",
-      "governance_score": 92,
-      "grade": "A",
+      "governance_score": 57,
+      "grade": "D",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "MEDIUM": 4,
-        "HIGH": 1
-      }
-    },
-    {
-      "id": "a14ae764",
-      "framework": "llama_index",
-      "governance_score": 28,
-      "grade": "F",
-      "agents": 2,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 2,
-        "HIGH": 225,
-        "MEDIUM": 54,
-        "LOW": 102
-      }
+        "HIGH": 20,
+        "MEDIUM": 14,
+        "LOW": 10
+      },
+      "framework_file_count": 93,
+      "framework_loc": 1934,
+      "repo_total_loc": 2247
     },
     {
       "id": "d333cabe",
@@ -728,7 +629,10 @@
         "HIGH": 10,
         "MEDIUM": 6,
         "LOW": 4
-      }
+      },
+      "framework_file_count": 4,
+      "framework_loc": 219,
+      "repo_total_loc": 219
     },
     {
       "id": "f9d87d97",
@@ -741,7 +645,10 @@
         "HIGH": 14,
         "MEDIUM": 6,
         "LOW": 7
-      }
+      },
+      "framework_file_count": 4,
+      "framework_loc": 119,
+      "repo_total_loc": 119
     },
     {
       "id": "44575fb1",
@@ -755,7 +662,10 @@
         "HIGH": 30,
         "MEDIUM": 9,
         "LOW": 10
-      }
+      },
+      "framework_file_count": 14,
+      "framework_loc": 2583,
+      "repo_total_loc": 3699
     }
   ]
 }
