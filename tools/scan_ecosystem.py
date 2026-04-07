@@ -34,6 +34,15 @@ import yaml
 # published ecosystem index.
 MIN_FRAMEWORK_FILES = 3
 
+# Maximum age in days since last push for a repo to be considered "live".
+# Repos exceeding this threshold are excluded from scanning and from the
+# published index with reason "stale_repository".
+STALE_THRESHOLD_DAYS = 365
+
+# Frameworks with fewer kept repos than this are flagged as low-recall
+# in the final summary so queries or min_stars can be tuned.
+LOW_RECALL_THRESHOLD = 5
+
 _QUOTED_RE = re.compile(r'"([^"]+)"')
 
 # ---------------------------------------------------------------------------
@@ -57,6 +66,7 @@ _GITHUB_API = "https://api.github.com"
 def discover_by_code_search(
     token: str,
     config: dict[str, dict[str, object]],
+    pushed_at_map: dict[str, str] | None = None,
 ) -> dict[str, list[RepoInfo]]:
     """Discover repos per framework using GitHub Code Search API.
 
@@ -159,6 +169,9 @@ def discover_by_code_search(
                 if stars < min_stars:
                     continue
 
+                if pushed_at_map is not None:
+                    pushed_at_map[full_name] = str(repo_json.get("pushed_at", ""))
+
                 global_seen.add(full_name)
                 repos_for_fw.append(RepoInfo(
                     full_name=full_name,
@@ -182,6 +195,27 @@ def discover_by_code_search(
 # ---------------------------------------------------------------------------
 # Framework relevance analysis
 # ---------------------------------------------------------------------------
+
+def parse_pushed_at(value: str) -> datetime | None:
+    """Parse GitHub's ISO-8601 pushed_at timestamp (e.g. '2025-07-14T12:03:45Z').
+
+    Returns None for empty or unparseable values.
+    """
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def days_since_push(pushed_at: str, now: datetime) -> int | None:
+    """Days between ``now`` and the parsed pushed_at.  None if unparseable."""
+    dt = parse_pushed_at(pushed_at)
+    if dt is None:
+        return None
+    return (now - dt).days
+
 
 def extract_patterns_from_queries(queries: list[str]) -> list[str]:
     """Extract quoted substrings from GitHub code-search queries.
@@ -244,6 +278,7 @@ def generate_ecosystem_index(
     fw_map: dict[str, str],
     usage_stats: dict[str, tuple[int, int, int]],
     reason: str | None = None,
+    pushed_at_map: dict[str, str] | None = None,
 ) -> dict[str, object]:
     """Build the ecosystem_index.json structure.
 
@@ -282,6 +317,8 @@ def generate_ecosystem_index(
             "framework_loc": floc,
             "repo_total_loc": total_loc,
         }
+        if pushed_at_map is not None:
+            entry["last_commit_date"] = pushed_at_map.get(repo_name, "")
         if reason:
             entry["exclusion_reason"] = reason
         projects.append(entry)
@@ -402,7 +439,10 @@ def main(
 
     # --- Phase 1: Discovery ---
     click.echo("Phase 1: Discovering repos via code search...")
-    discovered = discover_by_code_search(token=token, config=frameworks_cfg)
+    pushed_at_map: dict[str, str] = {}
+    discovered = discover_by_code_search(
+        token=token, config=frameworks_cfg, pushed_at_map=pushed_at_map,
+    )
 
     total_discovered = sum(len(repos) for repos in discovered.values())
     click.echo(f"  Total discovered: {total_discovered} repos across {len(discovered)} frameworks")
@@ -419,6 +459,22 @@ def main(
             fw_map[repo.full_name] = fw_name
             all_repos.append(repo)
 
+    # --- Recency filter: split fresh vs stale BEFORE scanning ---
+    now = datetime.now(timezone.utc)
+    fresh_repos: list[RepoInfo] = []
+    stale_repos: list[tuple[RepoInfo, int | None]] = []
+    for r in all_repos:
+        pa = pushed_at_map.get(r.full_name, "")
+        d = days_since_push(pa, now)
+        if d is None or d > STALE_THRESHOLD_DAYS:
+            stale_repos.append((r, d))
+        else:
+            fresh_repos.append(r)
+    click.echo(
+        f"  Recency filter (<= {STALE_THRESHOLD_DAYS} days): "
+        f"fresh={len(fresh_repos)}, stale={len(stale_repos)}"
+    )
+
     # --- Phase 2: Load checkpoint ---
     completed: dict[str, RepoScanResult] = {}
     usage_stats: dict[str, tuple[int, int, int]] = {}
@@ -428,9 +484,9 @@ def main(
             completed, _ = checkpoint
             click.echo(f"  Resumed: {len(completed)} repos from checkpoint")
 
-    # --- Phase 3: Scan ---
-    pending = [r for r in all_repos if r.full_name not in completed]
-    click.echo(f"Phase 2: Scanning {len(all_repos)} repos ({len(pending)} pending, {len(completed)} cached)...")
+    # --- Phase 3: Scan (fresh repos only) ---
+    pending = [r for r in fresh_repos if r.full_name not in completed]
+    click.echo(f"Phase 2: Scanning {len(fresh_repos)} fresh repos ({len(pending)} pending, {len(completed)} cached)...")
 
     for i, repo in enumerate(pending, 1):
         fw = fw_map.get(repo.full_name, "?")
@@ -482,48 +538,83 @@ def main(
 
     # --- Phase 4: Partition by framework relevance ---
     kept: dict[str, RepoScanResult] = {}
-    excluded: dict[str, RepoScanResult] = {}
+    excluded_insufficient: dict[str, RepoScanResult] = {}
     for name, r in completed.items():
         fc = usage_stats.get(name, (0, 0, 0))[0]
         if fc >= MIN_FRAMEWORK_FILES:
             kept[name] = r
         else:
-            excluded[name] = r
+            excluded_insufficient[name] = r
 
     click.echo(
         f"  Relevance filter (>= {MIN_FRAMEWORK_FILES} framework files): "
-        f"kept={len(kept)}, excluded={len(excluded)}"
+        f"kept={len(kept)}, excluded={len(excluded_insufficient)}"
     )
 
     # --- Phase 5: Generate outputs ---
     click.echo("Phase 3: Generating ecosystem index...")
-    index = generate_ecosystem_index(kept, fw_map, usage_stats)
+    index = generate_ecosystem_index(
+        kept, fw_map, usage_stats, pushed_at_map=pushed_at_map,
+    )
     index_path = save_ecosystem_index(index, out, filename="ecosystem_index.json")
     click.echo(f"  Output: {index_path}")
 
-    if excluded:
-        excluded_index = generate_ecosystem_index(
-            excluded, fw_map, usage_stats,
-            reason="insufficient_framework_usage",
-        )
-        excluded_path = save_ecosystem_index(
-            excluded_index, out, filename="ecosystem_index_excluded.json"
-        )
-        click.echo(f"  Output: {excluded_path}")
+    # Build combined excluded JSON with two entry shapes:
+    #  - insufficient_framework_usage (scanned, has score)
+    #  - stale_repository             (not scanned, minimal fields)
+    insufficient_idx = generate_ecosystem_index(
+        excluded_insufficient, fw_map, usage_stats,
+        reason="insufficient_framework_usage",
+        pushed_at_map=pushed_at_map,
+    )
+    stale_entries: list[dict[str, object]] = []
+    for repo, d_old in stale_repos:
+        stale_entries.append({
+            "id": _anonymize(repo.full_name),
+            "framework": fw_map.get(repo.full_name, "unknown"),
+            "stars": repo.stars,
+            "last_commit_date": pushed_at_map.get(repo.full_name, ""),
+            "days_since_push": d_old,
+            "exclusion_reason": "stale_repository",
+        })
+
+    insufficient_projects = insufficient_idx.get("projects", [])
+    assert isinstance(insufficient_projects, list)
+    combined_excluded: dict[str, object] = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_excluded": len(insufficient_projects) + len(stale_entries),
+        "by_reason": {
+            "insufficient_framework_usage": len(insufficient_projects),
+            "stale_repository": len(stale_entries),
+        },
+        "projects": list(insufficient_projects) + stale_entries,
+    }
+    excluded_path = save_ecosystem_index(
+        combined_excluded, out, filename="ecosystem_index_excluded.json"
+    )
+    click.echo(f"  Output: {excluded_path}")
 
     # --- Summary ---
     click.echo()
     click.echo("=== Framework Summary (kept only) ===")
-    all_fws = sorted(set(fw_map.get(n, "unknown") for n in completed))
+    all_fws = sorted(set(fw_map.values()))
+    stale_per_fw: dict[str, int] = {}
+    for repo, _ in stale_repos:
+        fw = fw_map.get(repo.full_name, "unknown")
+        stale_per_fw[fw] = stale_per_fw.get(fw, 0) + 1
     for fw_name in all_fws:
         k_list = [r for n, r in kept.items() if fw_map.get(n) == fw_name]
-        e_count = sum(1 for n in excluded if fw_map.get(n) == fw_name)
+        e_ins = sum(1 for n in excluded_insufficient if fw_map.get(n) == fw_name)
+        e_stale = stale_per_fw.get(fw_name, 0)
+        e_total = e_ins + e_stale
         if k_list:
             avg_k = round(sum(r.score for r in k_list) / len(k_list), 1)
         else:
             avg_k = 0.0
         click.echo(
-            f"  {fw_name:18s} kept={len(k_list):2d}  excluded={e_count:2d}  avg={avg_k}"
+            f"  {fw_name:18s} kept={len(k_list):2d}  "
+            f"excluded={e_total:2d} (insufficient={e_ins}, stale={e_stale})  "
+            f"avg={avg_k}"
         )
 
     click.echo("\n=== Top / Bottom per framework (kept only) ===")
@@ -537,13 +628,25 @@ def main(
         bot_name, bot_r = repos_in_fw[-1]
         top_fc = usage_stats[top_name][0]
         bot_fc = usage_stats[bot_name][0]
+        top_date = (pushed_at_map.get(top_name, "") or "?")[:10]
+        bot_date = (pushed_at_map.get(bot_name, "") or "?")[:10]
         click.echo(f"  {fw_name}")
-        click.echo(f"    top:    {top_name:55s} {top_r.score:3d}  (framework_files={top_fc})")
-        click.echo(f"    bottom: {bot_name:55s} {bot_r.score:3d}  (framework_files={bot_fc})")
+        click.echo(
+            f"    top:    {top_name:55s} {top_r.score:3d}  "
+            f"fw_files={top_fc:3d}  {top_date}"
+        )
+        click.echo(
+            f"    bottom: {bot_name:55s} {bot_r.score:3d}  "
+            f"fw_files={bot_fc:3d}  {bot_date}"
+        )
 
     click.echo("\n=== Totals ===")
     click.echo(f"  Total kept:     {len(kept)}")
-    click.echo(f"  Total excluded: {len(excluded)}")
+    click.echo(
+        f"  Total excluded: {len(excluded_insufficient) + len(stale_repos)}"
+    )
+    click.echo(f"    - insufficient_framework_usage: {len(excluded_insufficient)}")
+    click.echo(f"    - stale_repository:             {len(stale_repos)}")
     click.echo(f"  Total scanned:  {len(completed)}")
     click.echo(f"  Total unique repos discovered: {len(all_repos)}")
 
@@ -557,8 +660,25 @@ def main(
     for fw_name in sorted(discovered_per_fw.keys()):
         d = discovered_per_fw[fw_name]
         s = scanned_per_fw.get(fw_name, 0)
-        f = d - s
-        click.echo(f"  {fw_name:18s} {d:3d} discovered  ->  {s:3d} scanned, {f:3d} failed")
+        stale_n = stale_per_fw.get(fw_name, 0)
+        f = d - s - stale_n
+        click.echo(
+            f"  {fw_name:18s} {d:3d} discovered  ->  "
+            f"{s:3d} scanned, {stale_n:3d} stale, {f:3d} failed"
+        )
+
+    # Low-recall warning
+    low_recall = [
+        fw for fw in all_fws
+        if len([n for n in kept if fw_map.get(n) == fw]) < LOW_RECALL_THRESHOLD
+    ]
+    if low_recall:
+        click.secho(
+            f"\n[WARN] Frameworks below {LOW_RECALL_THRESHOLD} kept repos "
+            f"(consider widening queries or lowering min_stars): "
+            f"{', '.join(low_recall)}",
+            fg="yellow",
+        )
 
 
 if __name__ == "__main__":

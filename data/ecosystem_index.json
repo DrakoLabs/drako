@@ -1,91 +1,48 @@
 {
-  "generated_at": "2026-04-07T13:54:05.302915+00:00",
-  "total_scanned": 37,
+  "generated_at": "2026-04-07T15:57:05.281517+00:00",
+  "total_scanned": 19,
   "by_framework": {
-    "crewai": {
-      "count": 2,
-      "avg_governance": 31.5,
-      "grade_distribution": {
-        "F": 2
-      }
-    },
     "langgraph": {
-      "count": 3,
-      "avg_governance": 38.0,
+      "count": 1,
+      "avg_governance": 34.0,
       "grade_distribution": {
-        "F": 2,
-        "D": 1
+        "F": 1
       }
     },
     "autogen": {
-      "count": 9,
-      "avg_governance": 15.0,
+      "count": 5,
+      "avg_governance": 0.0,
       "grade_distribution": {
-        "F": 7,
-        "C": 1,
-        "D": 1
+        "F": 5
       }
     },
     "semantic_kernel": {
-      "count": 9,
-      "avg_governance": 30.7,
+      "count": 5,
+      "avg_governance": 31.4,
       "grade_distribution": {
-        "F": 4,
-        "D": 5
+        "C": 1,
+        "F": 3,
+        "D": 1
       }
     },
     "pydantic_ai": {
-      "count": 6,
-      "avg_governance": 3.8,
+      "count": 3,
+      "avg_governance": 7.7,
       "grade_distribution": {
-        "F": 6
+        "F": 3
       }
     },
     "llama_index": {
-      "count": 8,
-      "avg_governance": 41.9,
+      "count": 5,
+      "avg_governance": 33.6,
       "grade_distribution": {
-        "C": 2,
         "F": 3,
-        "D": 3
+        "C": 1,
+        "D": 1
       }
     }
   },
   "projects": [
-    {
-      "id": "879b133f",
-      "framework": "crewai",
-      "governance_score": 29,
-      "grade": "F",
-      "agents": 6,
-      "tools": 2,
-      "findings_by_severity": {
-        "MEDIUM": 14,
-        "HIGH": 26,
-        "LOW": 8,
-        "CRITICAL": 2
-      },
-      "framework_file_count": 4,
-      "framework_loc": 359,
-      "repo_total_loc": 429
-    },
-    {
-      "id": "3a417a9f",
-      "framework": "crewai",
-      "governance_score": 34,
-      "grade": "F",
-      "agents": 0,
-      "tools": 1,
-      "findings_by_severity": {
-        "MEDIUM": 12,
-        "CRITICAL": 1,
-        "HIGH": 17,
-        "LOW": 7
-      },
-      "framework_file_count": 4,
-      "framework_loc": 278,
-      "repo_total_loc": 294
-    },
     {
       "id": "53dfe97e",
       "framework": "langgraph",
@@ -101,40 +58,8 @@
       },
       "framework_file_count": 6,
       "framework_loc": 483,
-      "repo_total_loc": 1447
-    },
-    {
-      "id": "7bdbc989",
-      "framework": "langgraph",
-      "governance_score": 35,
-      "grade": "F",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 32,
-        "MEDIUM": 6,
-        "LOW": 13
-      },
-      "framework_file_count": 4,
-      "framework_loc": 698,
-      "repo_total_loc": 1084
-    },
-    {
-      "id": "c69d1fac",
-      "framework": "langgraph",
-      "governance_score": 45,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 1,
-        "HIGH": 7,
-        "MEDIUM": 6,
-        "LOW": 3
-      },
-      "framework_file_count": 3,
-      "framework_loc": 540,
-      "repo_total_loc": 541
+      "repo_total_loc": 1447,
+      "last_commit_date": "2026-01-18T13:34:07Z"
     },
     {
       "id": "cbae342a",
@@ -151,24 +76,8 @@
       },
       "framework_file_count": 9,
       "framework_loc": 1605,
-      "repo_total_loc": 2466
-    },
-    {
-      "id": "fc0d9be0",
-      "framework": "autogen",
-      "governance_score": 13,
-      "grade": "F",
-      "agents": 5,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 21,
-        "MEDIUM": 10,
-        "LOW": 7,
-        "CRITICAL": 3
-      },
-      "framework_file_count": 3,
-      "framework_loc": 324,
-      "repo_total_loc": 325
+      "repo_total_loc": 2466,
+      "last_commit_date": "2026-04-07T04:36:35Z"
     },
     {
       "id": "ce3dba04",
@@ -185,73 +94,26 @@
       },
       "framework_file_count": 5,
       "framework_loc": 919,
-      "repo_total_loc": 3184
+      "repo_total_loc": 3184,
+      "last_commit_date": "2025-07-21T08:40:20Z"
     },
     {
-      "id": "7779c697",
+      "id": "db438da4",
       "framework": "autogen",
       "governance_score": 0,
       "grade": "F",
       "agents": 14,
-      "tools": 0,
+      "tools": 8,
       "findings_by_severity": {
-        "HIGH": 20,
-        "MEDIUM": 10,
-        "LOW": 5,
-        "CRITICAL": 29
+        "HIGH": 222,
+        "CRITICAL": 13,
+        "MEDIUM": 69,
+        "LOW": 101
       },
       "framework_file_count": 3,
-      "framework_loc": 330,
-      "repo_total_loc": 330
-    },
-    {
-      "id": "9e2ad6d8",
-      "framework": "autogen",
-      "governance_score": 72,
-      "grade": "C",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 4,
-        "MEDIUM": 6,
-        "LOW": 1
-      },
-      "framework_file_count": 3,
-      "framework_loc": 278,
-      "repo_total_loc": 352
-    },
-    {
-      "id": "5b4a5a43",
-      "framework": "autogen",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 17,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 41,
-        "MEDIUM": 8,
-        "CRITICAL": 8,
-        "LOW": 14
-      },
-      "framework_file_count": 6,
-      "framework_loc": 2073,
-      "repo_total_loc": 2505
-    },
-    {
-      "id": "226f68e5",
-      "framework": "autogen",
-      "governance_score": 50,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 102,
-        "MEDIUM": 14,
-        "LOW": 31
-      },
-      "framework_file_count": 8,
-      "framework_loc": 859,
-      "repo_total_loc": 2049
+      "framework_loc": 242,
+      "repo_total_loc": 10684,
+      "last_commit_date": "2025-08-08T14:58:12Z"
     },
     {
       "id": "ee0d29dc",
@@ -268,7 +130,8 @@
       },
       "framework_file_count": 4,
       "framework_loc": 423,
-      "repo_total_loc": 4998
+      "repo_total_loc": 4998,
+      "last_commit_date": "2025-07-26T12:27:53Z"
     },
     {
       "id": "fe0ec240",
@@ -285,41 +148,42 @@
       },
       "framework_file_count": 3,
       "framework_loc": 888,
-      "repo_total_loc": 14746
+      "repo_total_loc": 14746,
+      "last_commit_date": "2025-06-11T02:13:05Z"
     },
     {
-      "id": "116a54d6",
+      "id": "a4c79ff9",
       "framework": "semantic_kernel",
-      "governance_score": 1,
-      "grade": "F",
-      "agents": 2,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 5,
-        "HIGH": 55,
-        "MEDIUM": 15,
-        "LOW": 13
-      },
-      "framework_file_count": 22,
-      "framework_loc": 4502,
-      "repo_total_loc": 8816
-    },
-    {
-      "id": "71ebf1fb",
-      "framework": "semantic_kernel",
-      "governance_score": 3,
-      "grade": "F",
+      "governance_score": 61,
+      "grade": "C",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "CRITICAL": 4,
-        "HIGH": 61,
-        "MEDIUM": 19,
-        "LOW": 28
+        "HIGH": 6,
+        "MEDIUM": 7
       },
-      "framework_file_count": 18,
-      "framework_loc": 3185,
-      "repo_total_loc": 15449
+      "framework_file_count": 6,
+      "framework_loc": 479,
+      "repo_total_loc": 481,
+      "last_commit_date": "2026-03-18T14:20:05Z"
+    },
+    {
+      "id": "9bbb887c",
+      "framework": "semantic_kernel",
+      "governance_score": 11,
+      "grade": "F",
+      "agents": 3,
+      "tools": 0,
+      "findings_by_severity": {
+        "CRITICAL": 5,
+        "HIGH": 244,
+        "MEDIUM": 14,
+        "LOW": 122
+      },
+      "framework_file_count": 9,
+      "framework_loc": 16108,
+      "repo_total_loc": 156193,
+      "last_commit_date": "2026-03-28T02:09:08Z"
     },
     {
       "id": "dc2691c9",
@@ -336,7 +200,8 @@
       },
       "framework_file_count": 9,
       "framework_loc": 1681,
-      "repo_total_loc": 2848
+      "repo_total_loc": 2848,
+      "last_commit_date": "2026-02-11T13:46:47Z"
     },
     {
       "id": "9610021b",
@@ -352,71 +217,8 @@
       },
       "framework_file_count": 5,
       "framework_loc": 493,
-      "repo_total_loc": 1140
-    },
-    {
-      "id": "60bc7657",
-      "framework": "semantic_kernel",
-      "governance_score": 43,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 18,
-        "MEDIUM": 8,
-        "LOW": 7
-      },
-      "framework_file_count": 3,
-      "framework_loc": 324,
-      "repo_total_loc": 975
-    },
-    {
-      "id": "b5b25553",
-      "framework": "semantic_kernel",
-      "governance_score": 42,
-      "grade": "D",
-      "agents": 0,
-      "tools": 2,
-      "findings_by_severity": {
-        "MEDIUM": 22,
-        "HIGH": 51,
-        "LOW": 24
-      },
-      "framework_file_count": 5,
-      "framework_loc": 170,
-      "repo_total_loc": 2113
-    },
-    {
-      "id": "883a4cd1",
-      "framework": "semantic_kernel",
-      "governance_score": 52,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 25,
-        "MEDIUM": 15,
-        "LOW": 12
-      },
-      "framework_file_count": 9,
-      "framework_loc": 938,
-      "repo_total_loc": 938
-    },
-    {
-      "id": "430e9506",
-      "framework": "semantic_kernel",
-      "governance_score": 50,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 116,
-        "MEDIUM": 27,
-        "LOW": 56
-      },
-      "framework_file_count": 32,
-      "framework_loc": 1463,
-      "repo_total_loc": 1572
+      "repo_total_loc": 1140,
+      "last_commit_date": "2026-03-28T15:37:00Z"
     },
     {
       "id": "d825f08c",
@@ -432,58 +234,26 @@
       },
       "framework_file_count": 5,
       "framework_loc": 367,
-      "repo_total_loc": 367
+      "repo_total_loc": 367,
+      "last_commit_date": "2025-07-19T07:38:57Z"
     },
     {
-      "id": "9be4a3a6",
+      "id": "cbf30b00",
       "framework": "pydantic_ai",
       "governance_score": 0,
       "grade": "F",
-      "agents": 1,
-      "tools": 0,
+      "agents": 50,
+      "tools": 5,
       "findings_by_severity": {
-        "CRITICAL": 20,
-        "HIGH": 409,
-        "MEDIUM": 51,
-        "LOW": 196
+        "HIGH": 422,
+        "CRITICAL": 37,
+        "MEDIUM": 75,
+        "LOW": 201
       },
-      "framework_file_count": 18,
-      "framework_loc": 1649,
-      "repo_total_loc": 141100
-    },
-    {
-      "id": "37e821c5",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 5,
-      "tools": 1,
-      "findings_by_severity": {
-        "HIGH": 192,
-        "MEDIUM": 33,
-        "CRITICAL": 16,
-        "LOW": 88
-      },
-      "framework_file_count": 121,
-      "framework_loc": 40018,
-      "repo_total_loc": 120457
-    },
-    {
-      "id": "4af67efd",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 115,
-      "tools": 46,
-      "findings_by_severity": {
-        "CRITICAL": 162,
-        "HIGH": 1015,
-        "MEDIUM": 158,
-        "LOW": 488
-      },
-      "framework_file_count": 20,
-      "framework_loc": 2344,
-      "repo_total_loc": 29449
+      "framework_file_count": 44,
+      "framework_loc": 8935,
+      "repo_total_loc": 23486,
+      "last_commit_date": "2026-04-01T21:55:52Z"
     },
     {
       "id": "217adf17",
@@ -500,7 +270,8 @@
       },
       "framework_file_count": 3,
       "framework_loc": 804,
-      "repo_total_loc": 11765
+      "repo_total_loc": 11765,
+      "last_commit_date": "2025-06-20T13:59:30Z"
     },
     {
       "id": "2f322618",
@@ -517,40 +288,8 @@
       },
       "framework_file_count": 3,
       "framework_loc": 173,
-      "repo_total_loc": 506
-    },
-    {
-      "id": "c246ea84",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 2,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 9,
-        "HIGH": 195,
-        "MEDIUM": 31,
-        "LOW": 63
-      },
-      "framework_file_count": 35,
-      "framework_loc": 7747,
-      "repo_total_loc": 66047
-    },
-    {
-      "id": "1be56c8e",
-      "framework": "llama_index",
-      "governance_score": 70,
-      "grade": "C",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 4,
-        "MEDIUM": 6,
-        "LOW": 3
-      },
-      "framework_file_count": 9,
-      "framework_loc": 1665,
-      "repo_total_loc": 2003
+      "repo_total_loc": 506,
+      "last_commit_date": "2025-05-24T00:21:49Z"
     },
     {
       "id": "a50a5c53",
@@ -567,7 +306,26 @@
       },
       "framework_file_count": 7,
       "framework_loc": 831,
-      "repo_total_loc": 16719
+      "repo_total_loc": 16719,
+      "last_commit_date": "2026-02-07T19:50:47Z"
+    },
+    {
+      "id": "76c37ca1",
+      "framework": "llama_index",
+      "governance_score": 37,
+      "grade": "F",
+      "agents": 0,
+      "tools": 0,
+      "findings_by_severity": {
+        "CRITICAL": 1,
+        "HIGH": 122,
+        "MEDIUM": 36,
+        "LOW": 58
+      },
+      "framework_file_count": 30,
+      "framework_loc": 9507,
+      "repo_total_loc": 27958,
+      "last_commit_date": "2026-03-04T17:22:04Z"
     },
     {
       "id": "893bac46",
@@ -584,7 +342,8 @@
       },
       "framework_file_count": 3,
       "framework_loc": 415,
-      "repo_total_loc": 15988
+      "repo_total_loc": 15988,
+      "last_commit_date": "2025-06-06T15:54:38Z"
     },
     {
       "id": "70a36a1a",
@@ -600,23 +359,8 @@
       },
       "framework_file_count": 5,
       "framework_loc": 234,
-      "repo_total_loc": 234
-    },
-    {
-      "id": "961330a8",
-      "framework": "llama_index",
-      "governance_score": 57,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 20,
-        "MEDIUM": 14,
-        "LOW": 10
-      },
-      "framework_file_count": 93,
-      "framework_loc": 1934,
-      "repo_total_loc": 2247
+      "repo_total_loc": 234,
+      "last_commit_date": "2025-04-21T15:56:23Z"
     },
     {
       "id": "d333cabe",
@@ -632,40 +376,8 @@
       },
       "framework_file_count": 4,
       "framework_loc": 219,
-      "repo_total_loc": 219
-    },
-    {
-      "id": "f9d87d97",
-      "framework": "llama_index",
-      "governance_score": 48,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 14,
-        "MEDIUM": 6,
-        "LOW": 7
-      },
-      "framework_file_count": 4,
-      "framework_loc": 119,
-      "repo_total_loc": 119
-    },
-    {
-      "id": "44575fb1",
-      "framework": "llama_index",
-      "governance_score": 29,
-      "grade": "F",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 1,
-        "HIGH": 30,
-        "MEDIUM": 9,
-        "LOW": 10
-      },
-      "framework_file_count": 14,
-      "framework_loc": 2583,
-      "repo_total_loc": 3699
+      "repo_total_loc": 219,
+      "last_commit_date": "2025-05-18T22:09:38Z"
     }
   ]
 }

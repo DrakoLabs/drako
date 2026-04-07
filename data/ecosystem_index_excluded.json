@@ -1,52 +1,9 @@
 {
-  "generated_at": "2026-04-07T13:54:05.321918+00:00",
-  "total_scanned": 17,
-  "by_framework": {
-    "crewai": {
-      "count": 2,
-      "avg_governance": 18.0,
-      "grade_distribution": {
-        "F": 2
-      }
-    },
-    "langgraph": {
-      "count": 2,
-      "avg_governance": 19.5,
-      "grade_distribution": {
-        "F": 2
-      }
-    },
-    "autogen": {
-      "count": 4,
-      "avg_governance": 20.5,
-      "grade_distribution": {
-        "D": 1,
-        "F": 3
-      }
-    },
-    "semantic_kernel": {
-      "count": 2,
-      "avg_governance": 43.0,
-      "grade_distribution": {
-        "D": 2
-      }
-    },
-    "pydantic_ai": {
-      "count": 3,
-      "avg_governance": 14.7,
-      "grade_distribution": {
-        "F": 3
-      }
-    },
-    "llama_index": {
-      "count": 4,
-      "avg_governance": 48.5,
-      "grade_distribution": {
-        "F": 2,
-        "B": 1,
-        "D": 1
-      }
-    }
+  "generated_at": "2026-04-07T15:57:05.300518+00:00",
+  "total_excluded": 33,
+  "by_reason": {
+    "insufficient_framework_usage": 9,
+    "stale_repository": 24
   },
   "projects": [
     {
@@ -65,42 +22,7 @@
       "framework_file_count": 1,
       "framework_loc": 168,
       "repo_total_loc": 2552,
-      "exclusion_reason": "insufficient_framework_usage"
-    },
-    {
-      "id": "0450a87f",
-      "framework": "crewai",
-      "governance_score": 31,
-      "grade": "F",
-      "agents": 3,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 21,
-        "MEDIUM": 9,
-        "LOW": 7,
-        "CRITICAL": 2
-      },
-      "framework_file_count": 1,
-      "framework_loc": 85,
-      "repo_total_loc": 85,
-      "exclusion_reason": "insufficient_framework_usage"
-    },
-    {
-      "id": "006eafeb",
-      "framework": "langgraph",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 0,
-      "tools": 4,
-      "findings_by_severity": {
-        "HIGH": 25,
-        "CRITICAL": 8,
-        "MEDIUM": 10,
-        "LOW": 7
-      },
-      "framework_file_count": 1,
-      "framework_loc": 383,
-      "repo_total_loc": 383,
+      "last_commit_date": "2026-01-01T19:34:42Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
@@ -118,130 +40,63 @@
       "framework_file_count": 2,
       "framework_loc": 117,
       "repo_total_loc": 511,
+      "last_commit_date": "2025-08-23T02:06:28Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
-      "id": "a35f85d0",
-      "framework": "autogen",
-      "governance_score": 45,
-      "grade": "D",
+      "id": "02c5287c",
+      "framework": "semantic_kernel",
+      "governance_score": 32,
+      "grade": "F",
       "agents": 0,
       "tools": 0,
       "findings_by_severity": {
-        "CRITICAL": 1,
-        "HIGH": 5,
-        "MEDIUM": 12,
-        "LOW": 1
+        "HIGH": 36,
+        "MEDIUM": 9,
+        "LOW": 14
       },
       "framework_file_count": 1,
-      "framework_loc": 154,
-      "repo_total_loc": 5334,
+      "framework_loc": 52,
+      "repo_total_loc": 641,
+      "last_commit_date": "2025-04-15T07:30:08Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
-      "id": "0578a1f4",
-      "framework": "autogen",
-      "governance_score": 37,
-      "grade": "F",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 1,
-        "HIGH": 16,
-        "MEDIUM": 7,
-        "LOW": 7
-      },
-      "framework_file_count": 2,
-      "framework_loc": 603,
-      "repo_total_loc": 707,
-      "exclusion_reason": "insufficient_framework_usage"
-    },
-    {
-      "id": "88cd631d",
-      "framework": "autogen",
+      "id": "c093c351",
+      "framework": "pydantic_ai",
       "governance_score": 0,
       "grade": "F",
-      "agents": 5,
-      "tools": 0,
+      "agents": 6,
+      "tools": 2,
       "findings_by_severity": {
-        "HIGH": 16,
-        "MEDIUM": 10,
-        "LOW": 4,
-        "CRITICAL": 7
+        "HIGH": 106,
+        "CRITICAL": 11,
+        "MEDIUM": 32,
+        "LOW": 46
       },
-      "framework_file_count": 2,
-      "framework_loc": 527,
-      "repo_total_loc": 527,
+      "framework_file_count": 1,
+      "framework_loc": 121,
+      "repo_total_loc": 2039,
+      "last_commit_date": "2025-04-18T03:12:04Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
-      "id": "4f7b3353",
-      "framework": "autogen",
+      "id": "e0f8804d",
+      "framework": "pydantic_ai",
       "governance_score": 0,
       "grade": "F",
       "agents": 6,
       "tools": 0,
       "findings_by_severity": {
-        "CRITICAL": 103,
-        "HIGH": 431,
-        "MEDIUM": 282,
-        "LOW": 53
+        "CRITICAL": 5,
+        "HIGH": 40,
+        "MEDIUM": 11,
+        "LOW": 15
       },
       "framework_file_count": 2,
-      "framework_loc": 608,
-      "repo_total_loc": 20489,
-      "exclusion_reason": "insufficient_framework_usage"
-    },
-    {
-      "id": "a72c3b79",
-      "framework": "semantic_kernel",
-      "governance_score": 43,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 17,
-        "MEDIUM": 9,
-        "LOW": 6
-      },
-      "framework_file_count": 2,
-      "framework_loc": 362,
-      "repo_total_loc": 966,
-      "exclusion_reason": "insufficient_framework_usage"
-    },
-    {
-      "id": "a8be4a19",
-      "framework": "semantic_kernel",
-      "governance_score": 43,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 15,
-        "MEDIUM": 10,
-        "LOW": 5
-      },
-      "framework_file_count": 2,
-      "framework_loc": 358,
-      "repo_total_loc": 532,
-      "exclusion_reason": "insufficient_framework_usage"
-    },
-    {
-      "id": "a3e14cd6",
-      "framework": "pydantic_ai",
-      "governance_score": 0,
-      "grade": "F",
-      "agents": 1,
-      "tools": 22,
-      "findings_by_severity": {
-        "HIGH": 49,
-        "CRITICAL": 15,
-        "MEDIUM": 49,
-        "LOW": 10
-      },
-      "framework_file_count": 1,
-      "framework_loc": 75,
-      "repo_total_loc": 4225,
+      "framework_loc": 443,
+      "repo_total_loc": 445,
+      "last_commit_date": "2025-06-06T05:45:28Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
@@ -260,6 +115,7 @@
       "framework_file_count": 2,
       "framework_loc": 155,
       "repo_total_loc": 1624,
+      "last_commit_date": "2026-01-19T22:35:24Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
@@ -278,41 +134,25 @@
       "framework_file_count": 1,
       "framework_loc": 1370,
       "repo_total_loc": 54666,
+      "last_commit_date": "2026-04-06T14:48:34Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
-      "id": "15a676e9",
-      "framework": "llama_index",
-      "governance_score": 37,
+      "id": "7de2431b",
+      "framework": "pydantic_ai",
+      "governance_score": 39,
       "grade": "F",
       "agents": 0,
-      "tools": 0,
+      "tools": 7,
       "findings_by_severity": {
-        "HIGH": 11,
-        "MEDIUM": 6,
-        "LOW": 1
-      },
-      "framework_file_count": 1,
-      "framework_loc": 208,
-      "repo_total_loc": 648,
-      "exclusion_reason": "insufficient_framework_usage"
-    },
-    {
-      "id": "2cc861a9",
-      "framework": "llama_index",
-      "governance_score": 37,
-      "grade": "F",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "CRITICAL": 1,
-        "HIGH": 9,
-        "MEDIUM": 8,
-        "LOW": 3
+        "HIGH": 16,
+        "MEDIUM": 12,
+        "LOW": 5
       },
       "framework_file_count": 2,
-      "framework_loc": 418,
-      "repo_total_loc": 578,
+      "framework_loc": 222,
+      "repo_total_loc": 957,
+      "last_commit_date": "2025-05-22T19:23:43Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
@@ -330,24 +170,200 @@
       "framework_file_count": 2,
       "framework_loc": 299,
       "repo_total_loc": 408,
+      "last_commit_date": "2025-12-12T12:51:23Z",
       "exclusion_reason": "insufficient_framework_usage"
     },
     {
-      "id": "6f5647df",
+      "id": "0450a87f",
+      "framework": "crewai",
+      "stars": 70,
+      "last_commit_date": "2024-11-10T12:04:17Z",
+      "days_since_push": 513,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "879b133f",
+      "framework": "crewai",
+      "stars": 46,
+      "last_commit_date": "2024-06-27T14:32:43Z",
+      "days_since_push": 649,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "3a417a9f",
+      "framework": "crewai",
+      "stars": 31,
+      "last_commit_date": "2025-02-18T02:57:43Z",
+      "days_since_push": 413,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "006eafeb",
+      "framework": "langgraph",
+      "stars": 501,
+      "last_commit_date": "2024-08-23T10:57:44Z",
+      "days_since_push": 592,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "7bdbc989",
+      "framework": "langgraph",
+      "stars": 213,
+      "last_commit_date": "2025-01-10T21:28:03Z",
+      "days_since_push": 451,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "4f20181a",
+      "framework": "langgraph",
+      "stars": 95,
+      "last_commit_date": "2024-08-19T10:10:17Z",
+      "days_since_push": 596,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "c69d1fac",
+      "framework": "langgraph",
+      "stars": 50,
+      "last_commit_date": "2025-03-11T11:18:15Z",
+      "days_since_push": 392,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "a35f85d0",
+      "framework": "autogen",
+      "stars": 403,
+      "last_commit_date": "2019-07-28T06:09:02Z",
+      "days_since_push": 2445,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "fc0d9be0",
+      "framework": "autogen",
+      "stars": 120,
+      "last_commit_date": "2024-08-03T12:02:44Z",
+      "days_since_push": 612,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "88cd631d",
+      "framework": "autogen",
+      "stars": 116,
+      "last_commit_date": "2023-10-12T01:38:53Z",
+      "days_since_push": 908,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "7779c697",
+      "framework": "autogen",
+      "stars": 90,
+      "last_commit_date": "2023-10-23T13:08:35Z",
+      "days_since_push": 897,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "9e2ad6d8",
+      "framework": "autogen",
+      "stars": 79,
+      "last_commit_date": "2023-12-22T13:30:01Z",
+      "days_since_push": 837,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "5b4a5a43",
+      "framework": "autogen",
+      "stars": 75,
+      "last_commit_date": "2024-12-05T08:21:20Z",
+      "days_since_push": 488,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "226f68e5",
+      "framework": "autogen",
+      "stars": 61,
+      "last_commit_date": "2021-06-17T15:55:42Z",
+      "days_since_push": 1754,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "4f7b3353",
+      "framework": "autogen",
+      "stars": 58,
+      "last_commit_date": "2025-04-01T09:15:03Z",
+      "days_since_push": 371,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "ec7afaf5",
+      "framework": "semantic_kernel",
+      "stars": 4903,
+      "last_commit_date": "2024-10-12T07:58:40Z",
+      "days_since_push": 542,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "60bc7657",
+      "framework": "semantic_kernel",
+      "stars": 108,
+      "last_commit_date": "2024-11-02T08:59:50Z",
+      "days_since_push": 521,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "430e9506",
+      "framework": "semantic_kernel",
+      "stars": 38,
+      "last_commit_date": "2024-07-24T08:02:58Z",
+      "days_since_push": 622,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "1be56c8e",
       "framework": "llama_index",
-      "governance_score": 43,
-      "grade": "D",
-      "agents": 0,
-      "tools": 0,
-      "findings_by_severity": {
-        "HIGH": 14,
-        "MEDIUM": 8,
-        "LOW": 8
-      },
-      "framework_file_count": 1,
-      "framework_loc": 573,
-      "repo_total_loc": 573,
-      "exclusion_reason": "insufficient_framework_usage"
+      "stars": 6533,
+      "last_commit_date": "2024-04-05T05:36:59Z",
+      "days_since_push": 732,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "15a676e9",
+      "framework": "llama_index",
+      "stars": 859,
+      "last_commit_date": "2024-01-26T04:49:00Z",
+      "days_since_push": 802,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "a14ae764",
+      "framework": "llama_index",
+      "stars": 92,
+      "last_commit_date": "2024-12-16T15:38:21Z",
+      "days_since_push": 477,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "63658516",
+      "framework": "llama_index",
+      "stars": 69,
+      "last_commit_date": "2024-02-16T06:19:12Z",
+      "days_since_push": 781,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "f9d87d97",
+      "framework": "llama_index",
+      "stars": 46,
+      "last_commit_date": "2023-12-21T00:16:08Z",
+      "days_since_push": 838,
+      "exclusion_reason": "stale_repository"
+    },
+    {
+      "id": "44575fb1",
+      "framework": "llama_index",
+      "stars": 40,
+      "last_commit_date": "2024-06-26T03:27:20Z",
+      "days_since_push": 650,
+      "exclusion_reason": "stale_repository"
     }
   ]
 }
