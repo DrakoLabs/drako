@@ -43,7 +43,7 @@ pip install drako && drako scan .
 ## Scan for Free
 
 <p align="center">
-  <img src=".github/assets/drakoscanner.svg" alt="Drako – AI Agent Security & Governance" width="100%" style="max-width: 900px;">
+  <img src=".github/assets/drakoscanner.svg" alt="Drako – AI Agent Security & Governance"  width="900px" style="max-width: 900px;">
 </p>
 
 Two scores, two audiences. **Governance** speaks to security teams — are your agents safe?
@@ -77,7 +77,7 @@ drako bom .
 ```
 
 <p align="center">
-  <img src=".github/assets/agentbom.svg" alt="Drako – AI Agent Security & Governance" width="100%" style="max-width: 900px;">
+  <img src=".github/assets/agentbom.svg" alt="Drako – AI Agent Security & Governance" width="900px" style="max-width: 900px;">
 </p>
 
 Output formats: `--format text` (default) · `json` · `markdown`
@@ -358,16 +358,6 @@ jobs:
   hooks:
     - id: drako-scan
 ```
-
----
-
-## Ecosystem Ratings
-
-Drako scans popular frameworks, MCP servers, and open-source projects — and publishes the results.
-
-- 🏆 [**Framework Security Ratings**](https://getdrako.com/ratings) — Governance grades for CrewAI, LangGraph, AutoGen, Semantic Kernel, PydanticAI, Google ADK, OpenAI Agents SDK
-- 🔌 [**MCP Server Directory**](https://getdrako.com/mcp-directory) — Permission scope, input validation, and governance assessment for popular MCP servers
-- 📊 [**AI Agent Governance Index**](https://getdrako.com/governance-index) — Aggregate governance stats from 100 open-source AI agent projects (the data behind `--benchmark`)
 
 ---
 ## Supported Frameworks
