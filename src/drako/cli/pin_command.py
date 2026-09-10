@@ -55,6 +55,10 @@ def mcp() -> None:
     """Pin and inspect MCP server supply-chain locks."""
 
 
+from drako.cli.audit_command import audit as _audit  # noqa: E402
+mcp.add_command(_audit)
+
+
 @mcp.command(name="pin")
 @click.argument("package")
 @click.option("--lock", "lock_path", default="mcp.lock",
@@ -69,6 +73,15 @@ def pin(package: str, lock_path: str, pinned_by: str) -> None:
     name, requested = _split_spec(package.strip())
     if not name:
         raise click.ClickException(f"refusing empty package spec {package!r}")
+    if not requested:
+        # P0-hunt (2026-09-10): pinning a mutable tag is TOFU on
+        # whatever the registry serves RIGHT NOW. Loud, not silent.
+        click.secho(
+            "  [warn]   no @version given — resolving 'latest' and pinning "
+            "whatever the registry serves now (TOFU). Prefer an explicit "
+            "@x.y.z you have verified.",
+            fg="yellow",
+        )
     version = requested or _npm_field(name, "version")
     if requested:
         # Confirm the requested version exists before pinning it.
