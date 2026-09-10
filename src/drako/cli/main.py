@@ -60,6 +60,7 @@ def _register_commands() -> None:
     from drako.cli.desktop_command import desktop
     from drako.cli.nocode_command import nocode
     from drako.cli.comply_command import comply
+    from drako.cli.pin_command import mcp
 
     # Ordered by user journey: scan → configure → connect → manage
     cli.add_command(scan)
@@ -82,6 +83,7 @@ def _register_commands() -> None:
     cli.add_command(desktop)
     cli.add_command(nocode)
     cli.add_command(comply)
+    cli.add_command(mcp)
 
 
 _register_commands()

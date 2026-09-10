@@ -233,6 +233,10 @@ class A2AWormDetectionConfig(BaseModel):
     scan_inter_agent_messages: bool = True
     max_propagation_depth: int = 3
     circular_reference_block: bool = True
+    # U-3 (2026-09-04): soft "suspicious" verdicts deny ONLY in strict tier
+    # or with this explicit opt-in. Default False: deny-by-default on soft
+    # signals fabricates FPs that break legit meshes.
+    block_suspicious: bool = False
 
 
 class A2AConfig(BaseModel):
@@ -240,6 +244,35 @@ class A2AConfig(BaseModel):
     auth: A2AAuthConfig = Field(default_factory=A2AAuthConfig)
     channels: list[A2AChannelRuleConfig] = Field(default_factory=list)
     worm_detection: A2AWormDetectionConfig = Field(default_factory=A2AWormDetectionConfig)
+
+
+# ------------------------------------------------------------------
+# MCP servers config  (U-6, 2026-09-04)
+# ------------------------------------------------------------------
+
+class MCPConfig(BaseModel):
+    # DENY-BY-DEFAULT: only these env vars may flow into MCP server
+    # processes, on top of the OS-minimal passthrough (PATH etc). A server
+    # that needs a token not listed here fails LOUD naming the exact var.
+    env_allowlist: list[str] = Field(default_factory=list)
+    # Kill flag for `npx -y` auto-install. True is INTERIM: until the
+    # mcp.lock hash-pin lands (Sprint 2 first item), auto-install is
+    # UNVERIFIED SUPPLY-CHAIN (the bytes installed today are not provably
+    # the bytes approved yesterday). False → `--no-install`: refuse to
+    # fetch, fail loud unless the exact package is already installed.
+    # If the pin does not land in Sprint 2, this default flips to False.
+    allow_auto_install: bool = True
+
+
+# ------------------------------------------------------------------
+# Egress config  (Sprint 2 #5, U-1 primary mechanism)
+# ------------------------------------------------------------------
+
+class EgressConfig(BaseModel):
+    # Tenant domain allowlist for server-side outbound fetches
+    # (DAG agents, webhooks). Absent section = no allowlist constraint
+    # (public-IP check still applies). Explicit [] allows NOTHING.
+    allowed_domains: list[str] = Field(default_factory=list)
 
 
 # ------------------------------------------------------------------
@@ -324,6 +357,10 @@ class DrakoConfig(BaseModel):
     a2a: A2AConfig = Field(default_factory=A2AConfig)
     topology: TopologyConfig = Field(default_factory=TopologyConfig)
     chaos: ChaosConfig = Field(default_factory=ChaosConfig)
+    # MCP servers (U-6): env allowlist (deny-by-default) + auto-install flag
+    mcp: MCPConfig = Field(default_factory=MCPConfig)
+    # Egress (Sprint 2 #5): tenant domain allowlist, enforced server-side
+    egress: EgressConfig = Field(default_factory=EgressConfig)
 
     @classmethod
     def load(cls, path: str = ".drako.yaml") -> DrakoConfig:

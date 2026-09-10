@@ -109,3 +109,52 @@ class TestConfigSerialization:
         assert loaded.tenant_id == "roundtrip"
         assert loaded.framework == "langgraph"
         assert loaded.tools.audit_log_action is True
+
+
+class TestMCPConfigU6:
+    """U-6 (2026-09-04): mcp.env_allowlist deny-by-default + auto-install
+    kill flag, parseable from .drako.yaml."""
+
+    def test_mcp_defaults_deny_by_default(self):
+        config = DrakoConfig(tenant_id="t1")
+        assert config.mcp.env_allowlist == []
+        assert config.mcp.allow_auto_install is True  # INTERIM until mcp.lock
+
+    def test_mcp_yaml_parses(self, tmp_path):
+        cfg = tmp_path / "drako.yaml"
+        cfg.write_text(
+            "version: '1.0'\ntenant_id: t1\n"
+            "mcp:\n  env_allowlist: [GITHUB_TOKEN]\n  allow_auto_install: false\n"
+            "a2a:\n  worm_detection:\n    block_suspicious: true\n"
+        )
+        loaded = DrakoConfig.load(str(cfg))
+        assert loaded.mcp.env_allowlist == ["GITHUB_TOKEN"]
+        assert loaded.mcp.allow_auto_install is False
+        assert loaded.a2a.worm_detection.block_suspicious is True
+
+    def test_mcp_roundtrip(self, tmp_path):
+        config = DrakoConfig(
+            tenant_id="t1",
+            mcp={"env_allowlist": ["X_TOKEN"], "allow_auto_install": False},
+        )
+        path = str(tmp_path / "out.yaml")
+        config.to_yaml(path)
+        loaded = DrakoConfig.load(path)
+        assert loaded.mcp.env_allowlist == ["X_TOKEN"]
+        assert loaded.mcp.allow_auto_install is False
+
+
+class TestEgressConfigS2:
+    """Sprint 2 #5: egress.allowed_domains parses from .drako.yaml."""
+
+    def test_egress_defaults_empty(self):
+        assert DrakoConfig(tenant_id="t1").egress.allowed_domains == []
+
+    def test_egress_yaml_parses(self, tmp_path):
+        cfg = tmp_path / "drako.yaml"
+        cfg.write_text(
+            "version: '1.0'\ntenant_id: t1\n"
+            "egress:\n  allowed_domains: [api.example.com]\n"
+        )
+        assert DrakoConfig.load(str(cfg)).egress.allowed_domains == [
+            "api.example.com"]

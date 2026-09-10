@@ -214,6 +214,12 @@ class TestInitEnvHint:
         import respx
         import httpx
         with respx.mock:
+            # Hermetic offline: key validation fails closed-fast WITHOUT
+            # real network (relying on ambient failure made this
+            # order-dependent).
+            respx.post("https://api.getdrako.com/api/v1/auth/validate").mock(
+                side_effect=httpx.ConnectError("offline")
+            )
             respx.get("https://api.getdrako.com/api/v1/stats").mock(
                 return_value=httpx.Response(200, json={"ok": True})
             )

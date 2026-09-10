@@ -271,10 +271,14 @@ class TestBenchmarkPanel:
 # CLI integration tests
 # ---------------------------------------------------------------------------
 
-def _extract_json(output: str) -> dict:
-    """Extract the JSON object from CLI output (ignoring [cache] lines)."""
-    start = output.index("{")
-    return json.loads(output[start:])
+def _extract_json(result) -> dict:
+    """Parse the JSON document from a CLI result's STDOUT.
+
+    Gates and cache notices go to stderr by design (--format json stdout
+    must stay machine-readable); parsing result.output (mixed streams)
+    breaks the moment any gate fires.
+    """
+    return json.loads(result.stdout)
 
 
 class TestBenchmarkCLI:
@@ -293,7 +297,7 @@ class TestBenchmarkCLI:
             "--format", "json", "--benchmark",
         ])
         assert result.exit_code in (0, 1)
-        data = _extract_json(result.output)
+        data = _extract_json(result)
         assert "benchmark" in data
         assert "percentile" in data["benchmark"]
 
@@ -303,5 +307,5 @@ class TestBenchmarkCLI:
             "scan", str(FIXTURES / "crewai_basic"), "--format", "json",
         ])
         assert result.exit_code in (0, 1)
-        data = _extract_json(result.output)
+        data = _extract_json(result)
         assert "benchmark" not in data

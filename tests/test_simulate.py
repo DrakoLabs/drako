@@ -157,10 +157,15 @@ class TestSimulateCommand:
         assert len(parsed["blocked_breakdown"]) == 2
 
     def test_simulate_no_policy_file(self, runner: CliRunner):
-        """Missing --policy flag produces a usage error."""
+        """No policy anywhere: exit 1 with guidance (not a usage error).
+
+        The intended UX is a friendly pointer (drako init / --policy),
+        not a click usage error.
+        """
         result = runner.invoke(cli, ["simulate"])
         assert result.exit_code != 0
-        assert "Missing" in result.output or "Error" in result.output or "required" in result.output.lower()
+        assert "drako init" in result.output
+        assert "--policy" in result.output
 
     @patch("httpx.Client")
     def test_simulate_api_error(
