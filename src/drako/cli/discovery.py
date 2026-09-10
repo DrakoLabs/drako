@@ -80,6 +80,8 @@ _FRAMEWORK_PACKAGES: dict[str, str] = {
     "pydantic_ai": "pydantic_ai",
     "semantic-kernel": "semantic_kernel",
     "semantic_kernel": "semantic_kernel",
+    "agent-framework": "maf",
+    "openai-agents": "openai_agents",
 }
 
 # Import module name -> canonical framework name
@@ -98,6 +100,8 @@ _FRAMEWORK_IMPORTS: dict[str, str] = {
     "llama_index": "llamaindex",
     "pydantic_ai": "pydantic_ai",
     "semantic_kernel": "semantic_kernel",
+    "agent_framework": "maf",
+    "agents": "openai_agents",
 }
 
 # Dependency files worth searching in parent directories

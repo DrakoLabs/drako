@@ -1,9 +1,10 @@
 """Policy evaluation engine for `drako scan`.
 
-Evaluates project against 73 built-in governance, security, compliance,
+Evaluates project against 82 built-in governance, security, compliance,
 operational, magnitude, identity, versioning, hooks, finops, resilience,
 a2a, multi-agent, vendor-concentration, framework, and best-practice
-policy rules.
+policy rules (99 policy objects: 17 rules carry TypeScript ports that
+share the rule id and evaluate .ts files only).
 """
 
 from __future__ import annotations

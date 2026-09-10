@@ -44,8 +44,8 @@ class TestAllRulesHaveImpact:
             )
 
     def test_policy_count(self):
-        """Sanity check: we have 97 policies (80 Python + 17 TypeScript)."""
-        assert len(ALL_POLICIES) == 97, f"Expected 97 policies, got {len(ALL_POLICIES)}"
+        """Sanity check: we have 99 policies (82 Python + 17 TypeScript)."""
+        assert len(ALL_POLICIES) == 99, f"Expected 99 policies, got {len(ALL_POLICIES)}"
 
 
 class TestImpactInJSON:

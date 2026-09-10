@@ -125,12 +125,27 @@ def with_autogen_compliance(
 ) -> _AutoGenGroupChatProxy:
     """Add Drako compliance observer to an AutoGen GroupChat.
 
+    .. deprecated::
+        AutoGen support is deprecated (Sprint 2, F-1): the framework is
+        unmaintained upstream — migrate to the Microsoft Agent Framework
+        (`drako.middleware.maf.with_maf_compliance`) or LangGraph. This
+        wrapper keeps working until v5.0 removal.
+
     Usage::
 
         from drako import with_autogen_compliance
 
         chat = with_autogen_compliance(my_group_chat)
     """
+    import warnings
+
+    warnings.warn(
+        "with_autogen_compliance is deprecated: AutoGen is unmaintained "
+        "upstream — migrate to drako.middleware.maf.with_maf_compliance "
+        "(removal v5.0)",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     client = DrakoClient.from_config(config_path)
     observer = DrakoObserver(
         client=client,
