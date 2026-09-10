@@ -59,6 +59,23 @@ Advisories are written as YAML files to `output/` in DRAKO-ABSS format.
 A `state.json` file tracks previously seen advisory IDs across runs.
 On-disk advisories in `output/` are also checked to prevent duplicates.
 
+## Promotion: staging → curated corpus (the part that adds value)
+
+Staged YAMLs are INVISIBLE to the scanner (no `drako_rules`, no
+`patterns`). A staged advisory becomes useful only by human promotion:
+
+1. Run manual (`workflow_dispatch`, dry_run first): review `output/`.
+2. For each keeper: add `mitigation.drako_rules: [SEC-...]` (the rules
+   that must fire), `ioc.patterns` + `pattern_hashes`, and
+   `taint_path: {source, sink, via}` (copy the shape from
+   `src/drako/data/advisories/DRAKO-ABSS-2026-001.yaml`).
+3. Move to `src/drako/data/advisories/` + add vulnerable/safe
+   fixtures (`sdk/tests/fixtures/rules/<ID>/`) + run the fixture
+   suite. Delete the staging copy.
+4. abuse.ch output is staging-grade noise until its filter is
+   rewritten (substring match, hardcoded severity) — default runs
+   use `otx` only.
+
 ## CI Integration
 
 The GitHub Actions workflow (`.github/workflows/threat-intel-sync.yml`) runs daily at 06:00 UTC.

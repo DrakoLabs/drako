@@ -1,20 +1,21 @@
 name: Threat Intel Sync
 
 on:
-  schedule:
-    - cron: "0 6 * * *"  # Daily at 6 AM UTC
+  # NO daily cron (removed 2026-09-10): the cron produced one empty
+  # commit per day (state.json timestamp only, zero advisories in
+  # 5 months) and buried real history. Runs are manual and curated.
   workflow_dispatch:
     inputs:
       source:
         description: "Sync source: otx, abusech, or all"
         required: false
         type: string
-        default: "all"
+        default: "otx"
       dry_run:
         description: "Dry run (preview without writing)"
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
@@ -76,7 +77,9 @@ jobs:
         run: |
           git config user.name "angelnicolasc"
           git config user.email "angelnicolasc@users.noreply.github.com"
-          git add tools/threat-intel-sync/output/ tools/threat-intel-sync/state.json
+          # output/ ONLY: state.json is workspace-ephemeral (dedup also
+          # reads on-disk output/), so empty runs commit NOTHING.
+          git add tools/threat-intel-sync/output/
           if git diff --staged --quiet; then
             echo "No new advisories to commit"
           else
