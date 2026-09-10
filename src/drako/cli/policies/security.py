@@ -6,7 +6,12 @@ import ast
 import re
 from typing import TYPE_CHECKING
 
-from drako.cli.policies.base import BasePolicy, Finding
+from drako.cli.policies.base import (
+    BasePolicy,
+    Finding,
+    find_function_node,
+    function_body_text,
+)
 
 if TYPE_CHECKING:
     from drako.cli.bom import AgentBOM
@@ -194,12 +199,20 @@ def _has_path_validation(content: str, func_name: str) -> bool:
         r"whitelist",
         r"allowlist",
     ]
-    # Try to find the function body
-    func_match = re.search(rf"def\s+{re.escape(func_name)}\s*\(.*?\).*?(?=\ndef\s|\Z)", content, re.DOTALL)
-    if func_match:
-        func_body = func_match.group()
-        return any(re.search(p, func_body, re.IGNORECASE) for p in patterns)
-    return False
+    # Structural check first: real path-confinement calls on the AST.
+    node = find_function_node(content, func_name)
+    if node is None:
+        return False
+    for child in ast.walk(node):
+        if isinstance(child, ast.Call):
+            func = child.func
+            attr = func.attr if isinstance(func, ast.Attribute) else (
+                func.id if isinstance(func, ast.Name) else "")
+            if attr in ("is_relative_to", "resolve", "validate_path", "validate_url"):
+                return True
+    # Fallback: name heuristics within the TRUE body (not a regex slice).
+    func_body = function_body_text(content, func_name) or ""
+    return any(re.search(p, func_body, re.IGNORECASE) for p in patterns)
 
 
 # ---------------------------------------------------------------------------
@@ -240,7 +253,7 @@ class SEC004(BasePolicy):
 
 
 def _has_domain_allowlist(content: str, func_name: str) -> bool:
-    """Check if a function has domain/URL validation."""
+    """Check if a function has domain/URL validation (AST-located body)."""
     patterns = [
         r"allowed_domain",
         r"allowlist",
@@ -251,11 +264,18 @@ def _has_domain_allowlist(content: str, func_name: str) -> bool:
         r"ALLOWED_DOMAINS",
         r"ALLOWED_URLS",
     ]
-    func_match = re.search(rf"def\s+{re.escape(func_name)}\s*\(.*?\).*?(?=\ndef\s|\Z)", content, re.DOTALL)
-    if func_match:
-        func_body = func_match.group()
-        return any(re.search(p, func_body, re.IGNORECASE) for p in patterns)
-    return False
+    node = find_function_node(content, func_name)
+    if node is None:
+        return False
+    for child in ast.walk(node):
+        if isinstance(child, ast.Call):
+            func = child.func
+            attr = func.attr if isinstance(func, ast.Attribute) else (
+                func.id if isinstance(func, ast.Name) else "")
+            if attr in ("validate_url", "urlparse", "urlsplit"):
+                return True
+    func_body = function_body_text(content, func_name) or ""
+    return any(re.search(p, func_body, re.IGNORECASE) for p in patterns)
 
 
 # ---------------------------------------------------------------------------
@@ -511,15 +531,11 @@ class SEC008(BasePolicy):
             if not content:
                 continue
 
-            # Find the tool function body
-            func_match = re.search(
-                rf"def\s+{re.escape(tool.name)}\s*\(.*?\).*?(?=\ndef\s|\Z)",
-                content, re.DOTALL,
-            )
-            if not func_match:
+            # Find the tool function body via AST (P1-4: handles decorators,
+            # async def, and methods — the old regex slice did not).
+            func_body = function_body_text(content, tool.name)
+            if func_body is None:
                 continue
-
-            func_body = func_match.group()
 
             # Does the tool fetch external data?
             if not _EXTERNAL_DATA_CALLS.search(func_body):
@@ -647,12 +663,64 @@ class SEC009(BasePolicy):
 # ---------------------------------------------------------------------------
 
 _INJECTION_DEFENSE_PATTERNS = [
-    "guardrails", "guardrail", "drako", "GovernanceMiddleware",
+    "guardrails", "guardrail", "GovernanceMiddleware",
     "PromptGuard", "prompt_guard", "lakera", "rebuff", "nemo_guardrails",
     "input_validation", "sanitize_prompt", "injection_detection",
     "instruction_hierarchy", "system_boundary", "with_compliance",
     "PromptInjectionDetector", "ContentFilter",
 ]
+
+# NOTE (P1-4/U-5, 2026-09-04): suppression is by AST USE (calls_defense),
+# never by substring — a bare import (of anything) silences nothing.
+
+
+def _norm(name: str) -> str:
+    return name.lower().replace("_", "").replace(".", "")
+
+
+def calls_defense(content: str) -> bool:
+    """True iff the code USES an injection defense (U-5, 2026-09-04).
+
+    Suppression is by AST Call (or decorator application) for EVERY pattern
+    in _INJECTION_DEFENSE_PATTERNS — a bare import never silences. Decorators
+    count (@guard counts as use; the function IS wrapped at import).
+    """
+    try:
+        tree = ast.parse(content)
+    except SyntaxError:
+        return False
+    patterns = [_norm(p) for p in _INJECTION_DEFENSE_PATTERNS]
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Name):
+                names = [func.id]
+            elif isinstance(func, ast.Attribute):
+                parts: list[str] = []
+                cur: ast.AST = func
+                while isinstance(cur, ast.Attribute):
+                    parts.append(cur.attr)
+                    cur = cur.value
+                if isinstance(cur, ast.Name):
+                    parts.append(cur.id)
+                names = [".".join(reversed(parts))]
+            else:
+                continue
+            if any(p and (p in _norm(n) or _norm(n) in p) for n in names for p in patterns):
+                return True
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            for dec in node.decorator_list:
+                if isinstance(dec, ast.Name):
+                    dnames = [dec.id]
+                elif isinstance(dec, ast.Attribute):
+                    dnames = [dec.attr]
+                elif isinstance(dec, ast.Call):
+                    continue  # handled as Call above
+                else:
+                    continue
+                if any(p and (p in _norm(n) or _norm(n) in p) for n in dnames for p in patterns):
+                    return True
+    return False
 
 
 class SEC010(BasePolicy):
@@ -668,14 +736,15 @@ class SEC010(BasePolicy):
     remediation_effort = "moderate"
 
     def evaluate(self, bom: AgentBOM, metadata: ProjectMetadata) -> list[Finding]:
-        all_content = "\n".join(
-            c for p, c in metadata.file_contents.items() if p.endswith(".py")
-        )
-        if not all_content.strip():
+        py_files = {
+            p: c for p, c in metadata.file_contents.items() if p.endswith(".py")
+        }
+        if not "".join(py_files.values()).strip():
             return []
-        lower = all_content.lower()
 
-        if any(p.lower() in lower for p in _INJECTION_DEFENSE_PATTERNS):
+        # U-5 (2026-09-04): suppression by AST USE for the whole pattern list.
+        # Bare imports (incl. `import drako` alone) never silence.
+        if any(calls_defense(c) for c in py_files.values()):
             return []
 
         return [self._finding(

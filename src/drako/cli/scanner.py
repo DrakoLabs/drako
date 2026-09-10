@@ -7,6 +7,7 @@ call. 100% offline — no network calls.
 
 from __future__ import annotations
 
+import ast
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,7 +26,7 @@ from drako.cli.scoring import (
 
 if TYPE_CHECKING:
     from drako.advisories import Advisory
-    from drako.reachability import ToolReachability
+    from drako.heuristic_reachability import ToolReachability
 
 
 @dataclass
@@ -44,6 +45,28 @@ class ScanResult:
     determinism_grade: str = "A"
     reachability: list[ToolReachability] = field(default_factory=list)
     languages: set[str] = field(default_factory=set)
+    # U-4 (2026-09-04): files the AST-based rules could not parse and
+    # therefore SKIPPED. Observable by contract: a scanner that skips
+    # silently is un-auditable. Shown in terminal + JSON output.
+    skipped_files: list[str] = field(default_factory=list)
+
+
+def find_unparseable_files(file_contents: dict[str, str]) -> list[str]:
+    """Return .py paths whose content fails ast.parse (U-4, 2026-09-04).
+
+    Single canonical pre-pass: every policy's `except SyntaxError: continue`
+    skips exactly this set, so the counter is the scan-level observable
+    for all of them.
+    """
+    skipped: list[str] = []
+    for path, content in file_contents.items():
+        if not path.endswith(".py"):
+            continue
+        try:
+            ast.parse(content)
+        except SyntaxError:
+            skipped.append(path)
+    return skipped
 
 
 def run_scan(
@@ -76,8 +99,12 @@ def run_scan(
     # Phase 2: Generate Agent BOM
     bom = generate_bom(metadata)
 
-    # Phase 2.5: Reachability analysis
-    from drako.reachability import analyze_reachability
+    # Phase 2.4 (U-4): canonical skipped-files pre-pass — AST-based rules
+    # `except SyntaxError: continue` on exactly this set.
+    skipped_files = find_unparseable_files(metadata.file_contents)
+
+    # Phase 2.5: Heuristic reachability analysis (string-match, not dataflow)
+    from drako.heuristic_reachability import analyze_reachability
     reachability = analyze_reachability(bom, metadata)
 
     # Phase 3: Evaluate all policies
@@ -114,4 +141,5 @@ def run_scan(
         determinism_grade=det_grade,
         reachability=reachability,
         languages=languages,
+        skipped_files=skipped_files,
     )

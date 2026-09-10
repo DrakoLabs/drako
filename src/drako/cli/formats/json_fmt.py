@@ -34,6 +34,7 @@ def format_json(
         "score": result.score,
         "grade": result.grade,
         "scan_duration_ms": result.scan_duration_ms,
+        "skipped_files": list(getattr(result, "skipped_files", [])),
         "findings": [
             {
                 "policy_id": f.policy_id,

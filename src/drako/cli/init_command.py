@@ -374,6 +374,22 @@ def _generate_manual_yaml(
         # ci:
         #   threshold: 70
         #   fail_on: [critical, high]
+
+    """)
+
+    mcp_section = textwrap.dedent("""\
+        # === MCP Servers ===
+        # env_allowlist is DENY-BY-DEFAULT: only these vars may flow into
+        # MCP server processes. A server needing an unlisted token fails
+        # LOUD naming the exact var.
+        # allow_auto_install (npx -y) is UNVERIFIED SUPPLY-CHAIN until the
+        # mcp.lock hash-pin lands (Sprint 2 first item): the bytes installed
+        # today are not provably the bytes approved yesterday. Set false to
+        # refuse fetching (--no-install: fail loud unless pre-installed).
+        # Docs: https://docs.getdrako.com/config/mcp
+        # mcp:
+        #   env_allowlist: [GITHUB_TOKEN]
+        #   allow_auto_install: true
     """)
 
     return (
@@ -388,6 +404,7 @@ def _generate_manual_yaml(
         + audit_section
         + hitl_section
         + ci_section
+        + mcp_section
     )
 
 
@@ -674,17 +691,20 @@ def init(api_key: str | None, framework: str | None, endpoint: str,
     ensure_gitignore_cache(".")
 
     # ---- Step 8: suggest .env for API key ----
+    # P1-hygiene (2026-09-04): NEVER print the full key — terminal scrollback,
+    # screenshots and shared sessions leak it. Prefix only.
     if api_key:
+        redacted = (api_key[:12] + "...") if len(api_key) > 12 else "***"
         env_path = Path(".env")
         if env_path.exists():
             env_content = env_path.read_text(encoding="utf-8")
             if "DRAKO_API_KEY" not in env_content:
-                click.echo(click.style("  [hint]   ", fg="yellow") + f"Add to .env: DRAKO_API_KEY={api_key}")
+                click.echo(click.style("  [hint]   ", fg="yellow") + f"Add to .env: DRAKO_API_KEY=<your-key> (starts with {redacted})")
         else:
             if os.name == "nt":
-                click.echo(click.style("  [hint]   ", fg="yellow") + f'Set env var: $env:DRAKO_API_KEY = "{api_key}"')
+                click.echo(click.style("  [hint]   ", fg="yellow") + f'Set env var: $env:DRAKO_API_KEY = "<your-key>" ({redacted})')
             else:
-                click.echo(click.style("  [hint]   ", fg="yellow") + f"Set env var: export DRAKO_API_KEY={api_key}")
+                click.echo(click.style("  [hint]   ", fg="yellow") + f"Set env var: export DRAKO_API_KEY=<your-key> ({redacted})")
     else:
         click.echo(click.style("  [hint]   ", fg="yellow") + "Add your API key later: https://getdrako.com/signup")
 

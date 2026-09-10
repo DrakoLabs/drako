@@ -293,6 +293,7 @@ def scan(
             determinism_grade=result.determinism_grade,
             matched_advisories=result.matched_advisories,
             reachability=result.reachability,
+            skipped_files=result.skipped_files,
         )
         if benchmark_result:
             from drako.cli.report import render_benchmark_panel

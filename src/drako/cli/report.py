@@ -151,6 +151,7 @@ def render_report(
     determinism_grade: str | None = None,
     matched_advisories: dict | None = None,
     reachability: list | None = None,
+    skipped_files: list | None = None,
 ) -> None:
     """Render the full scan report to the terminal.
 
@@ -181,6 +182,16 @@ def render_report(
         border_style="cyan",
         padding=(1, 2),
     ))
+
+    # U-4 (2026-09-04): skipped files are observable, never silent.
+    if skipped_files:
+        console.print(
+            f"[bold yellow]⚠ {len(skipped_files)} file(s) skipped: "
+            "AST parse failed — AST-based rules did not evaluate: "
+            + ", ".join(skipped_files[:5])
+            + ("…" if len(skipped_files) > 5 else "")
+            + "[/bold yellow]"
+        )
 
     console.print()
 
@@ -241,9 +252,9 @@ def render_report(
     console.print(Panel(score_text, border_style=grade_color))
     console.print()
 
-    # ---- Reachability summary ----
+    # ---- Reachability summary (HEURISTIC string-match, not dataflow) ----
     if reachability:
-        from drako.reachability import ReachabilityStatus
+        from drako.heuristic_reachability import ReachabilityStatus
         r_counts = {"reachable": 0, "potentially_reachable": 0, "unreachable": 0}
         for tr in reachability:
             r_counts[tr.status.value] += 1
