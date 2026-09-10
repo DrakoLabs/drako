@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 if TYPE_CHECKING:
     from drako.cli.bom import AgentBOM
@@ -63,3 +64,35 @@ class BasePolicy(ABC):
     def evaluate(self, bom: AgentBOM, metadata: ProjectMetadata) -> list[Finding]:
         """Evaluate this policy against the project. Return list of findings."""
         ...
+
+
+def find_function_node(
+    content: str, func_name: str
+) -> Optional[Union[ast.FunctionDef, ast.AsyncFunctionDef]]:
+    """Locate a FunctionDef/AsyncFunctionDef by name via AST (P1-4, 2026-09-04).
+
+    Single canonical implementation for all policies. The old per-rule regex
+    (`def NAME(...).*?(?=\\ndef)`) broke on decorators, `async def`, methods,
+    and nested functions — silently analyzing the wrong slice (or nothing).
+    Returns None when the name is not a defined function (callers treat as
+    "no evidence", never as clean).
+    """
+    try:
+        tree = ast.parse(content)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
+            return node
+    return None
+
+
+def function_body_text(content: str, func_name: str) -> Optional[str]:
+    """Exact source of the named function body (None if not found)."""
+    node = find_function_node(content, func_name)
+    if node is None:
+        return None
+    try:
+        return ast.get_source_segment(content, node)
+    except Exception:
+        return None

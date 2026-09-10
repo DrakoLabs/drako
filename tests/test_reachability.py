@@ -1,10 +1,11 @@
-"""Tests for the reachability analysis module."""
+"""Tests for the heuristic reachability analysis module (P1-6)."""
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
-from drako.reachability import (
+from drako.heuristic_reachability import (
     ReachabilityStatus,
     ToolReachability,
     analyze_reachability,
@@ -155,3 +156,17 @@ task = Task(description="Research", tools=[my_tool])
 
         assert len(results) == 1
         assert results[0].status == ReachabilityStatus.REACHABLE
+
+
+def test_deprecated_shim_still_works_with_warning():
+    """P1-6: old import path keeps working (no breakage) but warns."""
+    import importlib
+
+    import drako.reachability as shim
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        importlib.reload(shim)  # re-execute to capture the import-time warning
+    assert shim.analyze_reachability is analyze_reachability
+    assert shim.ReachabilityStatus is ReachabilityStatus
+    assert any(issubclass(w.category, DeprecationWarning) for w in caught)

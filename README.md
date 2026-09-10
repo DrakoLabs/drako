@@ -27,7 +27,7 @@
   <a href="https://github.com/drakolabs/drako/actions">
     <img src="https://img.shields.io/badge/tests-1489%20passing-2ea44f.svg?style=flat-square&logo=github-actions&logoColor=white" alt="Tests">
   </a>
-  <img src="https://img.shields.io/badge/rules-97-6366F1.svg?style=flat-square" alt="Rules">
+  <img src="https://img.shields.io/badge/rules-80-6366F1.svg?style=flat-square" alt="Rules">
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/license-BUSL--1.1-6366F1.svg?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License: BUSL-1.1">
   </a>
@@ -86,7 +86,7 @@ Output formats: `--format text` (default) · `json` · `markdown`
 
 ## Rules
 
-97 deterministic rules across 16 categories. No LLM in the evaluation loop. Same code, same result, every time. [Full rule reference →](docs/rules/index.md)
+80 deterministic rules across 16 categories. No LLM in the evaluation loop. Same code, same result, every time. [Full rule reference →](docs/rules/index.md)
 
 | Category | Rules | What it catches |
 |----------|-------|-----------------|
@@ -392,12 +392,12 @@ High-risk system rules take effect **August 2, 2026**.
 
 ## Performance
 
-97 rules, 10,000 iterations, `time.perf_counter_ns()`, after 1,000 warmup:
+80 rules, 10,000 iterations, `time.perf_counter_ns()`, after 1,000 warmup:
 
 | Scenario | P50 | P99 |
 |---|---|---|
 | Single rule | **0.031ms** | 0.08ms |
-| Full scan (97 rules) | **2.1ms** | 3.8ms |
+| Full scan (80 rules) | **2.1ms** | 3.8ms |
 | Batch (100 tool calls) | **1.79ms** | 2.8ms |
 
 Governance overhead: **<0.3%** of a typical LLM call.
@@ -459,6 +459,25 @@ deploying AI agents to production,
 [watch the repo](https://github.com/drakolabs/drako)
 — or better, run the scan and see what it finds.
 📄 [Full roadmap →](ROADMAP.md)
+
+---
+
+## Known limitations
+
+Honest limits, documented instead of hidden — a documented limit is
+engineering; a hidden one is your next CVE.
+
+- **DNS-rebinding TOCTOU (egress guard).** The scanner-side egress check is
+  resolve→check→connect, which is racy by nature: a hostile DNS can answer
+  differently at connect time. Mitigations applied today: per-redirect-hop
+  revalidation, no credentials forwarded on redirect, short timeouts. The
+  full fix — an egress proxy with DNS pinning — is a tracked P2 item.
+- **Heuristic reachability is string-match, not dataflow.** `analyze_reachability`
+  reports capability adjacency, not proven call paths. Treat it as triage,
+  not proof.
+- **Delayed threat-intel feed on Starter.** Starter workspaces receive the
+  collective IOC feed with a 24h delay; paid plans get it realtime. Every
+  tenant is still protected — paid plans are protected *faster*.
 
 ---
 

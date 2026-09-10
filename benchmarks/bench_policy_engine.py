@@ -69,11 +69,11 @@ def main():
         metadata_single
     )
     
-    # 2. Full scan evaluation
+    # 2. Full scan evaluation (all rules — count verified: 80, 2026-09-04)
     stats_full = run_benchmark(
-        "Full Scan Eval (25 rules)", 
-        evaluate_all_policies, 
-        bom_single, 
+        "Full Scan Eval (80 rules)",
+        evaluate_all_policies,
+        bom_single,
         metadata_single
     )
     
@@ -91,7 +91,7 @@ def main():
     
     results = {
         "Single Policy": stats_single,
-        "Full Scan (25 rules)": stats_full,
+        "Full Scan (80 rules)": stats_full,
         "Batch (100 tools)": stats_batch
     }
     

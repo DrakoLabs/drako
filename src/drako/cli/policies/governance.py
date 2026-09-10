@@ -6,7 +6,7 @@ import ast
 import re
 from typing import TYPE_CHECKING
 
-from drako.cli.policies.base import BasePolicy, Finding
+from drako.cli.policies.base import BasePolicy, Finding, function_body_text
 
 if TYPE_CHECKING:
     from drako.cli.bom import AgentBOM
@@ -291,15 +291,10 @@ class GOV007(BasePolicy):
             if not content:
                 continue
 
-            # Find the tool function body
-            func_match = re.search(
-                rf"def\s+{re.escape(tool.name)}\s*\(.*?\).*?(?=\ndef\s|\Z)",
-                content, re.DOTALL,
-            )
-            if not func_match:
+            # Tool function body via AST (P1-4: decorators/async/methods safe).
+            func_body = function_body_text(content, tool.name)
+            if func_body is None:
                 continue
-
-            func_body = func_match.group()
 
             # Does the tool make external calls?
             if not _EXTERNAL_CALL_PATTERNS.search(func_body):
@@ -366,14 +361,10 @@ class GOV008(BasePolicy):
             if not content:
                 continue
 
-            func_match = re.search(
-                rf"def\s+{re.escape(tool.name)}\s*\(.*?\).*?(?=\ndef\s|\Z)",
-                content, re.DOTALL,
-            )
-            if not func_match:
+            # Tool function body via AST (P1-4).
+            func_body = function_body_text(content, tool.name)
+            if func_body is None:
                 continue
-
-            func_body = func_match.group()
 
             if _FALLBACK_PATTERNS.search(func_body):
                 continue
@@ -436,12 +427,12 @@ class GOV009(BasePolicy):
             if not content:
                 continue
 
-            # Extract the function body
-            func_match = re.search(
-                rf"def\s+{re.escape(tool.name)}\s*\(.*?\).*?(?=\ndef\s|\Z)",
-                content, re.DOTALL,
-            )
-            func_body = func_match.group() if func_match else content
+            # Function body via AST (P1-4). NOTE: the old code fell back to
+            # the WHOLE FILE when the function wasn't found — that silently
+            # scanned unrelated code. Not-found now means no evidence: skip.
+            func_body = function_body_text(content, tool.name)
+            if func_body is None:
+                continue
 
             if _HITL_REGEX.search(func_body):
                 continue
@@ -558,11 +549,10 @@ class GOV011(BasePolicy):
             if not content:
                 continue
 
-            func_match = re.search(
-                rf"def\s+{re.escape(tool.name)}\s*\(.*?\).*?(?=\ndef\s|\Z)",
-                content, re.DOTALL,
-            )
-            func_body = func_match.group() if func_match else content
+            # Function body via AST (P1-4; no whole-file fallback — see above).
+            func_body = function_body_text(content, tool.name)
+            if func_body is None:
+                continue
 
             if _REPLAY_PROTECTION_PATTERNS.search(func_body):
                 continue

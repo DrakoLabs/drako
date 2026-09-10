@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 import uuid
 from typing import Any
@@ -11,6 +12,19 @@ from typing import Any
 from drako.client import DrakoClient
 from drako.middleware.base import ComplianceMiddleware
 from drako.utils.logger import log
+
+
+_SECRET_SHAPED_RE = re.compile(
+    r"(?i)(secret|token|passwd|password|api[_-]?key|auth|credential|private[_-]?key)"
+    r"\s*[:=]\s*['\"]?[^'\",\s}]{4,}['\"]?"
+)
+_LONG_HEX_RE = re.compile(r"\b(?:sk-|am_live_|xox[bap]-)?[A-Za-z0-9_\-]{32,}\b")
+
+
+def _redact_preview(text: str) -> str:
+    """Redact secret-shaped values from a payload preview (P1-hygiene)."""
+    text = _SECRET_SHAPED_RE.sub(r"\1=[REDACTED]", text)
+    return _LONG_HEX_RE.sub("[REDACTED]", text)
 
 
 class CrewAIComplianceMiddleware(ComplianceMiddleware):
@@ -179,12 +193,14 @@ class CrewAIComplianceMiddleware(ComplianceMiddleware):
         cache_ref = self._response_cache
 
         def governed_run(*args: Any, **kwargs: Any) -> Any:
-            # Build a truncated payload preview for DLP scanning
+            # Build a truncated payload preview for DLP scanning.
+            # P1-hygiene (2026-09-04): secret-shaped values are redacted BEFORE
+            # the preview leaves the process (backend/audit transport).
             payload_parts: list[str] = []
             if args:
-                payload_parts.append(str(args)[:200])
+                payload_parts.append(_redact_preview(str(args)[:200]))
             if kwargs:
-                payload_parts.append(str(kwargs)[:300])
+                payload_parts.append(_redact_preview(str(kwargs)[:300]))
             payload_preview = " ".join(payload_parts) if payload_parts else None
 
             context = {

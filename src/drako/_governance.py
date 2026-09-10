@@ -1,5 +1,13 @@
 """One-line governance wrapper for any supported framework.
 
+BEST-EFFORT, IN-PROCESS — NOT a security boundary (P1-3, 2026-09-04).
+`govern()` monkey-patches tool hooks inside the agent's own process: code
+running there (e.g. via prompt-injection → code-exec) can unwrap or bypass
+it, and any error returns the object UNGOVERNED ("never crashes" = fail-open
+by design until v4.0 enforce-only). Use it as defense-in-depth PLUS the
+out-of-process proxy/gateway and CI gates — never as the sole control.
+The real boundary is the Authority Kernel (AGENT-HOOKS-0.1 Guardian).
+
 Usage:
     from drako import govern
 
