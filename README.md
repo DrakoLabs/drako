@@ -17,8 +17,10 @@
 </div>
 
 ```bash
-pip install drako && drako scan .
+pip install --pre drako && drako scan .
 ```
+
+> `drako scan .` is **100% read-only** by default — zero files created, zero `.gitignore` edits, zero network calls. *(v4.0 is currently in alpha: `4.0.0a1`.)*
 
 ---
 
@@ -66,6 +68,18 @@ drako why <receipt_id> --pubkey-file .drako/keys/operator.pub
 ---
 
 ## Runtime Authority Kernel in Python
+
+### One-Line Guard (Zero Disk I/O, Fail-Closed)
+
+```python
+from drako import guard
+
+# Fail-closed by default; supports glob patterns across LangGraph, OpenAI Agents,
+# Claude Agent SDK, MAF, ADK, CrewAI, or plain Python tool callables.
+agent = guard(my_agent, allow=["search_*"], deny=["delete_*"])
+```
+
+### Explicit Host, Memory Firewall & Ed25519 Receipts
 
 ```python
 from drako.kernel import ACS_SPEC_PIN
