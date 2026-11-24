@@ -142,3 +142,22 @@ def test_why_and_verify_end_to_end(tmp_path: Path):
     r_ver = runner.invoke(cli, ["verify", str(store_p), "--pubkey-file", str(pub_p), "--format", "json"])
     assert r_ver.exit_code == 0, r_ver.output
     assert json.loads(r_ver.output)["valid"] is True
+
+
+def test_scan_is_read_only_by_default_and_never_mutates_gitignore(tmp_path: Path):
+    """`drako scan` must not create `.drako/` files or edit `.gitignore` unless opted in."""
+    (tmp_path / "app.py").write_text("def hello():\n    return 'ok'\n", encoding="utf-8")
+    gitignore = tmp_path / ".gitignore"
+    gitignore.write_text("*.pyc\n", encoding="utf-8")
+
+    runner = CliRunner()
+    res = runner.invoke(cli, ["scan", str(tmp_path), "--format", "json"])
+    assert res.exit_code == 0, res.output
+    assert not (tmp_path / ".drako").exists()
+    assert gitignore.read_text(encoding="utf-8") == "*.pyc\n"
+
+    # Explicit opt-in --save-cache writes cache without mutating .gitignore
+    res_cache = runner.invoke(cli, ["scan", str(tmp_path), "--format", "json", "--save-cache"])
+    assert res_cache.exit_code == 0, res_cache.output
+    assert (tmp_path / ".drako" / ".last_scan.json").exists()
+    assert gitignore.read_text(encoding="utf-8") == "*.pyc\n"

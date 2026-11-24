@@ -76,6 +76,8 @@ def bom(directory: str, output_format: str, output: str | None) -> None:
             {"type": "machine-learning-model", "bom-ref": f"model:{m.name}", "name": m.name}
             for m in agent_bom.models
         ]
+        from drako import __version__ as _drako_version
+
         content = _json.dumps(
             {
                 "bomFormat": "CycloneDX",
@@ -83,7 +85,7 @@ def bom(directory: str, output_format: str, output: str | None) -> None:
                 "version": 1,
                 "metadata": {
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "tools": [{"vendor": "DrakoLabs", "name": "drako-bom", "version": "4.0.0"}],
+                    "tools": [{"vendor": "DrakoLabs", "name": "drako-bom", "version": _drako_version}],
                 },
                 "components": components,
             },

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "drako"
-version = "4.0.0"
+version = "4.0.0a1"
 description = "The Portable Authority Kernel for AI Agents — deterministic enforcement, origin-bound lattice, memory firewall, MCP/A2A guards, and Ed25519 receipts"
 readme = "README.md"
 license = "Apache-2.0"
@@ -25,7 +25,7 @@ keywords = [
     "receipts",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
@@ -103,7 +103,6 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "drako.cli.formats.scorecard",
     "drako.cli.policies.frameworks.*",
     "drako.a2a.*",
     "drako.mcp_guard.*",
@@ -114,3 +113,7 @@ disallow_untyped_defs = true
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]

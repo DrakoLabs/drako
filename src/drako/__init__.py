@@ -1,6 +1,8 @@
 """Drako — The Portable Authority Kernel for AI Agents."""
 
-__version__ = "4.0.0"
+from __future__ import annotations
+
+__version__ = "4.0.0a1"
 
 from drako.config import DrakoConfig
 from drako.exceptions import (
@@ -9,6 +11,7 @@ from drako.exceptions import (
     FrameworkNotInstalledError,
     PolicyViolationError,
 )
+from drako.guard import build_host, guard
 
 __all__ = [
     "__version__",
@@ -17,7 +20,9 @@ __all__ = [
     "ConfigError",
     "FrameworkNotInstalledError",
     "PolicyViolationError",
+    "build_host",
     "govern",
+    "guard",
 ]
 
 

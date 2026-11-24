@@ -61,7 +61,7 @@ class ClaudeAgentAdapter(BaseAdapter):
             return agent_options
         hooks = getattr(agent_options, "hooks", None)
         if hooks is None:
-            setattr(agent_options, "hooks", {"PreToolUse": [hook_fn]})
+            agent_options.hooks = {"PreToolUse": [hook_fn]}
         elif isinstance(hooks, dict):
             hooks.setdefault("PreToolUse", []).insert(0, hook_fn)
         return agent_options

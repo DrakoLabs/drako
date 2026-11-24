@@ -10,8 +10,9 @@ Zero network calls. Zero remote backend client. Optional framework imports are l
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from drako.exceptions import ConfigError, PolicyViolationError
 from drako.kernel.authority import ConsentToken, Label, TrustLevel
@@ -24,7 +25,7 @@ def default_tool_provenance(
     tool_name: str,
     *,
     origin_prefix: str = "tool:adapter",
-    host: Optional[Host] = None,
+    host: Host | None = None,
 ) -> list[Label]:
     """Build a TOOL-capped provenance label (attested when Host is provided)."""
     origin = f"{origin_prefix}:{tool_name}"
@@ -41,9 +42,9 @@ def govern_with_remodify(
     *,
     side_effect_class: str = "write",
     origin: str = "tool:adapter",
-    provenance: Optional[list[Label]] = None,
-    consent_token: Optional[ConsentToken] = None,
-) -> tuple[Decision, Optional[dict[str, Any]], Optional[dict[str, Any]], Optional[dict[str, Any]]]:
+    provenance: list[Label] | None = None,
+    consent_token: ConsentToken | None = None,
+) -> tuple[Decision, dict[str, Any] | None, dict[str, Any] | None, dict[str, Any] | None]:
     """Govern a tool call, apply at most ONE modify round, and re-govern (T-5).
 
     Returns (decision, receipt, superseded_receipt, final_args):
@@ -96,16 +97,16 @@ class BaseAdapter:
     def __init__(self, host: Host, *, default_side_effect: str = "write") -> None:
         self.host = host
         self.default_side_effect = default_side_effect
-        self.last_receipt: Optional[dict[str, Any]] = None
+        self.last_receipt: dict[str, Any] | None = None
 
     def check_tool(
         self,
         tool_name: str,
         args: dict[str, Any],
         *,
-        side_effect_class: Optional[str] = None,
-        provenance: Optional[list[Label]] = None,
-        consent_token: Optional[ConsentToken] = None,
+        side_effect_class: str | None = None,
+        provenance: list[Label] | None = None,
+        consent_token: ConsentToken | None = None,
     ) -> dict[str, Any]:
         """Evaluate tool call through Host. Raises PolicyViolationError on deny.
 
@@ -133,8 +134,8 @@ class BaseAdapter:
         self,
         fn: Callable[..., Any],
         *,
-        tool_name: Optional[str] = None,
-        side_effect_class: Optional[str] = None,
+        tool_name: str | None = None,
+        side_effect_class: str | None = None,
     ) -> Callable[..., Any]:
         """Wrap a plain Python tool callable so arguments pass through Host."""
         name = tool_name or getattr(fn, "__name__", "unknown_tool")
@@ -166,9 +167,9 @@ def host_from_profile(profile_path: str, *, agent_id: str = "default-agent") -> 
 def wrap_agent(
     obj: Any,
     *,
-    host: Optional[Host] = None,
-    profile_path: Optional[str] = None,
-    framework: Optional[str] = None,
+    host: Host | None = None,
+    profile_path: str | None = None,
+    framework: str | None = None,
 ) -> Any:
     """Dispatch an agent/tool object to the matching offline adapter."""
     resolved_host = host or (host_from_profile(profile_path) if profile_path else None)
@@ -183,7 +184,7 @@ def wrap_agent(
         from drako.adapters.langgraph import wrap_tool_node
 
         return wrap_tool_node(obj, resolved_host)
-    if fw in ("openai", "openai-agents", "openai_agents") or "agents" == mod_name.split(".")[0]:
+    if fw in ("openai", "openai-agents", "openai_agents") or mod_name.split(".")[0] == "agents":
         from drako.adapters.openai_agents import wrap_openai_agent
 
         return wrap_openai_agent(obj, resolved_host)

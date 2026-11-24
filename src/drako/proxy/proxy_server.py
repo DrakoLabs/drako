@@ -333,9 +333,11 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
     globals()["Request"] = Request
     globals()["Response"] = Response
 
+    from drako import __version__ as _drako_version
+
     app = FastAPI(
         title="Drako Enforcement Proxy",
-        version="4.0.0",
+        version=_drako_version,
         description="Local kernel-backed proxy enforcing Authority Kernel policies, loop breaker, and egress controls.",
     )
 

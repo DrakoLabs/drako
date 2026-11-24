@@ -195,13 +195,32 @@ def init(
         )
     else:
         try:
-            from drako.utils.detection import detect_frameworks
+            from drako.cli.scanner import scan_directory
 
-            fws = detect_frameworks(".")
-            if not framework and fws:
-                detected_fw = fws[0]
+            live = scan_directory(".")
+            if not framework and live.bom.frameworks:
+                detected_fw = live.bom.frameworks[0].name
+            for a in live.bom.agents:
+                if a.name:
+                    detected_agents[a.name] = {
+                        "source": a.file_path or "",
+                        "description": getattr(a, "role", "") or "",
+                    }
+            for t in live.bom.tools:
+                if t.name:
+                    detected_tools[t.name] = {
+                        "source": t.file_path or "",
+                        "type": getattr(t, "category", "read") or "read",
+                    }
         except Exception:
-            pass
+            try:
+                from drako.utils.detection import detect_frameworks
+
+                fws = detect_frameworks(".")
+                if not framework and fws:
+                    detected_fw = fws[0]
+            except Exception:
+                pass
 
     cfg_doc = _build_v4_config(
         project_id=project_id,

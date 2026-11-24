@@ -7,7 +7,7 @@ contract: returns `None` to allow execution (updating `args` in-place on
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from drako.adapters.base import BaseAdapter, govern_with_remodify
 from drako.kernel.host import Host
@@ -23,7 +23,7 @@ class GoogleADKAdapter(BaseAdapter):
         tool_context: Any = None,
         *,
         side_effect_class: str = "write",
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """ADK before_tool_callback: None = allow, dict = deny short-circuit."""
         tool_name = getattr(tool, "name", None) or getattr(tool, "__name__", str(tool))
         decision, receipt, _sup, final_args = govern_with_remodify(
@@ -49,7 +49,7 @@ class GoogleADKAdapter(BaseAdapter):
     def wrap_agent(self, agent: Any, *, side_effect_class: str = "write") -> Any:
         existing = getattr(agent, "before_tool_callback", None)
 
-        def chained(tool: Any, args: dict[str, Any], tool_context: Any = None) -> Optional[dict[str, Any]]:
+        def chained(tool: Any, args: dict[str, Any], tool_context: Any = None) -> dict[str, Any] | None:
             denied = self.before_tool_callback(
                 tool, args, tool_context, side_effect_class=side_effect_class
             )

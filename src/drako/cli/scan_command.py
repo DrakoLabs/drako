@@ -25,9 +25,10 @@ import click
     help="Comma-separated frameworks to detect (e.g. langgraph,openai-agents,maf)",
 )
 @click.option(
-    "--share",
+    "--save-cache",
     is_flag=True,
-    help="Show shareable score card and pre-redacted summary",
+    default=False,
+    help="Persist scan cache to .drako/.last_scan.json (read-only by default)",
 )
 @click.option(
     "--details",
@@ -82,7 +83,7 @@ def scan(
     directory: str,
     output_format: str,
     framework: str | None,
-    share: bool,
+    save_cache: bool,
     details: bool,
     compact: bool,
     save_baseline: bool,
@@ -194,17 +195,17 @@ def scan(
         baselined_count = len(baselined_findings)
         resolved_count = len(resolved_fps)
 
-    from drako.cli.scan_cache import ensure_gitignore_cache, save_scan_cache
+    if save_cache:
+        from drako.cli.scan_cache import save_scan_cache
 
-    try:
-        save_scan_cache(result, directory)
-        ensure_gitignore_cache(directory)
-        if output_format == "terminal":
-            click.echo(click.style("  [cache]  ", fg="green") + "Scan results saved to .drako/.last_scan.json")
-        else:
-            click.echo("  [cache]  Scan results saved to .drako/.last_scan.json", err=True)
-    except OSError:
-        pass
+        try:
+            save_scan_cache(result, directory)
+            if output_format == "terminal":
+                click.echo(click.style("  [cache]  ", fg="green") + "Scan results saved to .drako/.last_scan.json")
+            else:
+                click.echo("  [cache]  Scan results saved to .drako/.last_scan.json", err=True)
+        except OSError:
+            pass
 
     benchmark_result = None
     if benchmark:
@@ -260,11 +261,6 @@ def scan(
             from drako.cli.report import render_benchmark_panel
 
             render_benchmark_panel(benchmark_result, result.score, result.grade)
-
-    if share:
-        from drako.cli.share import run_share_flow
-
-        run_share_flow(result, scan_url=None, directory=directory)
 
     _SEVERITY_ORDER = ["low", "medium", "high", "critical"]
 

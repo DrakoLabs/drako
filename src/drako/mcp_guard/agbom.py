@@ -117,13 +117,15 @@ def agbom_to_cyclonedx(
             "note": f"lock_hash={snapshot.get('lock_hash', '')}",
         })
 
+    from drako import __version__ as _drako_version
+
     doc: dict[str, Any] = {
         "bomFormat": "CycloneDX",
         "specVersion": spec_version,
         "version": 1,
         "metadata": {
             "timestamp": str(snapshot.get("generated_at", "")),
-            "tools": [{"vendor": "DrakoLabs", "name": "drako-agbom", "version": "4.0.0"}],
+            "tools": [{"vendor": "DrakoLabs", "name": "drako-agbom", "version": _drako_version}],
             "properties": [
                 {"name": "drako:snapshot_hash", "value": str(snapshot.get("snapshot_hash", ""))},
                 {

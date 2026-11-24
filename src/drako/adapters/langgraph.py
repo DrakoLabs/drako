@@ -6,7 +6,8 @@ Thin translator only: LangGraph tool-call shape -> Proposal -> (Decision, Receip
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from drako.adapters.base import govern_with_remodify as _base_remodify
 from drako.kernel.authority import Label, TrustLevel
@@ -44,7 +45,7 @@ def govern_tool_node_call(
     *,
     side_effect_class: str = "write",
     origin: str = "tool:langgraph-node",
-) -> tuple[Any, Optional[dict[str, Any]]]:
+) -> tuple[Any, dict[str, Any] | None]:
     """Govern one LangGraph tool invocation. Returns (decision, receipt)."""
     return host.govern_tool_call(
         tool_name,
@@ -61,7 +62,7 @@ def govern_with_remodify(
     *,
     side_effect_class: str = "write",
     origin: str = "tool:langgraph-node",
-) -> tuple[Any, Optional[dict[str, Any]], Optional[dict[str, Any]], Optional[dict[str, Any]]]:
+) -> tuple[Any, dict[str, Any] | None, dict[str, Any] | None, dict[str, Any] | None]:
     return _base_remodify(
         host,
         tool_name,
