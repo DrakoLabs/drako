@@ -40,6 +40,13 @@ _ORIGIN_CEILINGS: tuple[tuple[str, TrustLevel], ...] = (
 )
 
 
+def _parse_iso_utc(value: str) -> datetime:
+    """Parse ISO-8601 timestamps including trailing 'Z' on Python 3.10+."""
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    dt = datetime.fromisoformat(normalized)
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
 def ceiling_for_origin(origin: str) -> TrustLevel:
     """Max trust an origin class may assert (P1-04, pure, testable)."""
     for prefix, ceiling in _ORIGIN_CEILINGS:
@@ -86,7 +93,7 @@ class Label:
         if self.ttl_seconds is None:
             return False
         now = now or datetime.now(timezone.utc)
-        issued = datetime.fromisoformat(self.issued_at)
+        issued = _parse_iso_utc(self.issued_at)
         return (now - issued).total_seconds() > self.ttl_seconds
 
 
@@ -240,7 +247,7 @@ def verify_consent_token(
         if expected_action_hash is not None and token.action_hash != expected_action_hash:
             return False
         check_now = now or datetime.now(timezone.utc)
-        if datetime.fromisoformat(token.expires_at) <= check_now:
+        if _parse_iso_utc(token.expires_at) <= check_now:
             return False
         _, Ed25519PublicKey, serialization = _ed25519()
         pub = serialization.load_pem_public_key(operator_public_pem.encode("utf-8"))

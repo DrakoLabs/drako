@@ -114,7 +114,14 @@ def detect_drift(
 
     if baseline_issued_at:
         try:
-            issued = datetime.fromisoformat(baseline_issued_at)
+            normalized = (
+                baseline_issued_at[:-1] + "+00:00"
+                if baseline_issued_at.endswith("Z")
+                else baseline_issued_at
+            )
+            issued = datetime.fromisoformat(normalized)
+            if issued.tzinfo is None:
+                issued = issued.replace(tzinfo=timezone.utc)
             age_days = ((now or datetime.now(timezone.utc)) - issued).days
             if age_days > max_age_days:
                 report.items.append(DriftItem(
