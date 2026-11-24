@@ -12,9 +12,16 @@ from dataclasses import dataclass, field
 from pathlib import PurePosixPath
 from typing import Generator
 
-import tree_sitter_javascript as _ts_js
-import tree_sitter_typescript as _ts_ts
-from tree_sitter import Language, Node, Parser, Tree
+try:
+    import tree_sitter_javascript as _ts_js
+    import tree_sitter_typescript as _ts_ts
+    from tree_sitter import Language, Node, Parser, Tree
+    _TS_IMPORT_ERROR: ImportError | None = None
+except ImportError as _exc:
+    _ts_js = None  # type: ignore[assignment]
+    _ts_ts = None  # type: ignore[assignment]
+    Language = Node = Parser = Tree = None  # type: ignore[assignment,misc]
+    _TS_IMPORT_ERROR = _exc
 
 # ---------------------------------------------------------------------------
 # Data structures returned by high-level queries

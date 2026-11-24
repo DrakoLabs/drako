@@ -1,75 +1,33 @@
-"""Drako SDK — The Trust Layer for AI Agents."""
+"""Drako — The Portable Authority Kernel for AI Agents."""
 
-__version__ = "3.0.0"
+from __future__ import annotations
 
-from drako.client import DrakoClient
+__version__ = "4.0.0a1"
+
 from drako.config import DrakoConfig
 from drako.exceptions import (
-    DrakoAPIError,
-    AuthenticationError,
+    ConfigError,
+    DrakoError,
+    FrameworkNotInstalledError,
     PolicyViolationError,
-    QuotaExceededError,
 )
+from drako.guard import build_host, guard
 
 __all__ = [
-    "DrakoClient",
+    "__version__",
     "DrakoConfig",
-    "DrakoAPIError",
-    "AuthenticationError",
+    "DrakoError",
+    "ConfigError",
+    "FrameworkNotInstalledError",
     "PolicyViolationError",
-    "QuotaExceededError",
-    "with_compliance",
-    "with_langgraph_compliance",
-    "with_autogen_compliance",
+    "build_host",
     "govern",
-    "test_mode",
-    "MockHITLResolver",
+    "guard",
 ]
 
 
-def test_mode(**kwargs):
-    """Context manager for testing governed agents without blocking CI."""
-    from drako.testing import test_mode as _test_mode
-
-    return _test_mode(**kwargs)
-
-
-def MockHITLResolver(**kwargs):  # noqa: N802 — matches class name for convenience
-    """Pluggable HITL resolver for per-tool test rules."""
-    from drako.testing import MockHITLResolver as _Cls
-
-    return _Cls(**kwargs)
-
-
-def with_compliance(crew, **kwargs):
-    """Wrap a CrewAI Crew with Drako compliance middleware."""
-    from drako.middleware.crewai import with_compliance as _with_compliance
-
-    return _with_compliance(crew, **kwargs)
-
-
-def with_langgraph_compliance(graph, **kwargs):
-    """Wrap a LangGraph compiled graph with Drako compliance."""
-    from drako.middleware.langgraph import with_langgraph_compliance as _fn
-
-    return _fn(graph, **kwargs)
-
-
-def with_autogen_compliance(group_chat, **kwargs):
-    """Wrap an AutoGen GroupChat with Drako compliance."""
-    from drako.middleware.autogen import with_autogen_compliance as _fn
-
-    return _fn(group_chat, **kwargs)
-
-
 def govern(obj, **kwargs):
-    """Wrap any framework object with Drako governance (one line).
-
-    Usage::
-
-        from drako import govern
-        crew = govern(crew)
-    """
+    """Wrap a supported agent framework object with the offline Drako Authority Kernel."""
     from drako._governance import govern as _govern
 
     return _govern(obj, **kwargs)

@@ -1,39 +1,26 @@
-# Drako Proxy — Docker Compose reference
+# Drako v4 Local Enforcement Proxy — Docker Compose reference
 #
 # Usage:
-#   docker-compose -f docker-compose.drako.yml up
+#   DRAKO_PROXY_TOKEN=$(openssl rand -hex 32) docker compose -f docker-compose.drako.yml up
 #
-# Your agent connects through the proxy:
-#   OPENAI_BASE_URL=http://drako-proxy:8990/openai/v1
-#   ANTHROPIC_BASE_URL=http://drako-proxy:8990/anthropic/v1
+# Point your agent SDKs through the local loopback proxy:
+#   OPENAI_BASE_URL=http://127.0.0.1:8990/openai/v1
+#   ANTHROPIC_BASE_URL=http://127.0.0.1:8990/anthropic/v1
 
 services:
   drako-proxy:
-    image: useagentmesh/proxy:latest
-    build:
-      context: .
-      dockerfile: Dockerfile.proxy
+    image: ghcr.io/drakolabs/drako-proxy:4.0.0
     ports:
-      - "8990:8990"
+      - "127.0.0.1:8990:8990"
     volumes:
       - ./.drako.yaml:/app/.drako.yaml:ro
+      - ./.drako:/app/.drako
     environment:
-      - DRAKO_API_KEY=${DRAKO_API_KEY}
+      - DRAKO_PROXY_TOKEN=${DRAKO_PROXY_TOKEN:?set DRAKO_PROXY_TOKEN}
       - DRAKO_PROXY_PORT=8990
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8990/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8990/health"]
       interval: 30s
       timeout: 5s
       retries: 3
     restart: unless-stopped
-
-  # Example: your agent service
-  # my-agent:
-  #   build: .
-  #   environment:
-  #     - OPENAI_BASE_URL=http://drako-proxy:8990/openai/v1
-  #     - ANTHROPIC_BASE_URL=http://drako-proxy:8990/anthropic/v1
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
-  #   depends_on:
-  #     drako-proxy:
-  #       condition: service_healthy

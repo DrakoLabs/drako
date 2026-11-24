@@ -1,0 +1,27 @@
+version: "4.0"
+project_id: langgraph-clean
+governance_level: strict
+framework: langgraph
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
+  default_effect: deny
+  receipt_store: .drako/receipts.jsonl
+audit:
+  enabled: true
+  cryptographic: true
+  receipt_store: .drako/receipts.jsonl
+hitl:
+  mode: enforce
+  timeout_action: reject
+  triggers:
+    tool_types: [write, execute, payment]
+hooks:
+  pre_action:
+    - name: validate-input
+      condition: "tool_name == 'fetch_api'"
+      action_on_fail: block
+  on_session_end:
+    - name: session-check
+      script: .drako/hooks/check.py
+      timeout_ms: 5000
+      action_on_fail: block

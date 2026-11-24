@@ -1,0 +1,6 @@
+version: "4.0"
+hooks:
+  pre_action:
+    - name: check-sql
+      condition: "tool_name == 'sql'"
+      action_on_fail: block

@@ -1,520 +1,882 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/angelnicolasc/drako/main/schema/drako-config.schema.json",
-  "title": "Drako Configuration",
-  "description": "Schema for .drako.yaml — the governance configuration file for Drako.",
-  "type": "object",
-  "required": ["tenant_id"],
-  "properties": {
-    "version": {
-      "type": "string",
-      "default": "1.0",
-      "description": "Configuration schema version."
-    },
-    "tenant_id": {
-      "type": "string",
-      "description": "Your Drako tenant identifier."
-    },
-    "api_key_env": {
-      "type": "string",
-      "default": "DRAKO_API_KEY",
-      "description": "Environment variable name that holds the API key."
-    },
-    "api_key": {
-      "type": ["string", "null"],
-      "description": "API key stored directly (prefer api_key_env for production)."
-    },
-    "endpoint": {
-      "type": "string",
-      "default": "https://api.getdrako.com",
-      "description": "Drako platform API endpoint."
-    },
-    "framework": {
-      "type": "string",
-      "default": "generic",
-      "description": "Primary AI agent framework used in the project.",
-      "enum": ["generic", "crewai", "langgraph", "autogen", "langchain", "llamaindex", "pydantic_ai"]
-    },
-    "agents": {
-      "type": "object",
-      "description": "Map of agent names to their configuration.",
-      "additionalProperties": {
-        "$ref": "#/$defs/AgentEntry"
-      }
-    },
-    "detected_tools": {
-      "type": "object",
-      "description": "Map of tool names to their configuration.",
-      "additionalProperties": {
-        "$ref": "#/$defs/ToolEntry"
-      }
-    },
-    "tools": {
-      "$ref": "#/$defs/ToolsConfig",
-      "description": "Legacy feature flags for tool-level enforcement."
-    },
-    "guardrails": {
-      "$ref": "#/$defs/GuardrailsConfig",
-      "description": "Legacy guardrail settings."
-    },
-    "trust": {
-      "$ref": "#/$defs/TrustConfig",
-      "description": "Legacy trust score settings."
-    },
-    "bft": {
-      "$ref": "#/$defs/BFTConfig",
-      "description": "Legacy Byzantine Fault Tolerance settings."
-    },
-    "dlp": {
-      "$ref": "#/$defs/DLPConfig",
-      "description": "Data Loss Prevention configuration."
-    },
-    "circuit_breaker": {
-      "$ref": "#/$defs/CircuitBreakerConfig",
-      "description": "Circuit breaker for agent-level failure thresholds."
-    },
-    "audit": {
-      "$ref": "#/$defs/AuditConfig",
-      "description": "Audit trail configuration."
-    },
-    "governance": {
-      "$ref": "#/$defs/GovernanceConfig",
-      "description": "General governance behavior."
-    },
-    "hitl": {
-      "$ref": "#/$defs/HITLConfig",
-      "description": "Human-in-the-Loop checkpoint configuration. Requires Pro plan."
-    },
-    "intent_verification": {
-      "$ref": "#/$defs/IntentVerificationConfig",
-      "description": "Intent fingerprinting and replay protection. Requires Pro plan."
-    },
-    "hooks": {
-      "$ref": "#/$defs/HooksConfig",
-      "description": "Programmable pre/post action hooks. Requires Pro plan."
-    },
-    "finops": {
-      "$ref": "#/$defs/FinOpsConfig",
-      "description": "Agentic FinOps: cost tracking, model routing, caching, budgets. Requires Pro plan."
-    },
-    "fallback": {
-      "$ref": "#/$defs/FallbackConfig",
-      "description": "Deterministic fallback configuration. Requires Pro plan."
-    },
-    "a2a": {
-      "$ref": "#/$defs/A2AConfig",
-      "description": "Agent-to-Agent secure gateway. Requires Enterprise plan."
-    },
-    "topology": {
-      "$ref": "#/$defs/TopologyConfig",
-      "description": "Multi-agent topology and conflict detection. Requires Enterprise plan."
-    },
-    "chaos": {
-      "$ref": "#/$defs/ChaosConfig",
-      "description": "Chaos engineering experiments. Requires Enterprise plan."
-    }
-  },
   "$defs": {
-    "AgentEntry": {
-      "type": "object",
+    "A2AChannelRuleConfig": {
       "properties": {
-        "source": { "type": "string", "default": "", "description": "File path where the agent is defined." },
-        "description": { "type": "string", "default": "", "description": "Human-readable agent description." }
-      }
-    },
-    "ToolEntry": {
-      "type": "object",
-      "properties": {
-        "source": { "type": "string", "default": "", "description": "File path where the tool is defined." },
-        "type": {
-          "type": "string",
-          "default": "read",
-          "enum": ["read", "write", "execute", "network", "payment"],
-          "description": "Tool capability classification. Determines which governance rules apply."
-        }
-      }
-    },
-    "ToolsConfig": {
-      "type": "object",
-      "properties": {
-        "audit_log_action": { "type": "boolean", "default": true, "description": "Log every tool call to audit trail." },
-        "verify_agent_identity": { "type": "boolean", "default": true, "description": "Verify agent identity before tool execution." },
-        "evaluate_policy": { "type": "boolean", "default": true, "description": "Evaluate governance policy on each call." }
-      }
-    },
-    "GuardrailsConfig": {
-      "type": "object",
-      "properties": {
-        "prompt_injection_detection": { "type": "boolean", "default": true, "description": "Enable prompt injection scanning." },
-        "dlp_scanning": { "type": "boolean", "default": false, "description": "Enable DLP scanning on payloads." }
-      }
-    },
-    "TrustConfig": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean", "default": true },
-        "decay_half_life_hours": { "type": "integer", "default": 168, "minimum": 1, "description": "Hours for trust score to decay by half." },
-        "circuit_breaker_threshold": { "type": "integer", "default": 3, "minimum": 1, "description": "Consecutive failures before circuit breaker opens." }
-      }
-    },
-    "BFTConfig": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean", "default": false },
-        "quorum_size": { "type": "integer", "default": 4, "minimum": 1, "description": "Number of agents required for quorum." }
-      }
-    },
-    "DLPConfig": {
-      "type": "object",
-      "properties": {
-        "mode": {
-          "type": "string",
-          "default": "audit",
-          "enum": ["audit", "enforce", "off"],
-          "description": "DLP enforcement mode. 'audit' logs violations, 'enforce' blocks them."
-        }
-      }
-    },
-    "CircuitBreakerConfig": {
-      "type": "object",
-      "properties": {
-        "agent_level": {
-          "type": "object",
-          "properties": {
-            "failure_threshold": { "type": "integer", "default": 10, "minimum": 1, "description": "Failures before breaker opens." },
-            "time_window_seconds": { "type": "integer", "default": 300, "minimum": 1, "description": "Time window for counting failures." },
-            "recovery_timeout_seconds": { "type": "integer", "default": 60, "minimum": 1, "description": "Seconds before half-open retry." }
-          }
-        }
-      }
-    },
-    "AuditConfig": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean", "default": true, "description": "Enable audit trail." }
-      }
-    },
-    "GovernanceConfig": {
-      "type": "object",
-      "properties": {
-        "on_backend_unreachable": {
-          "type": "string",
-          "default": "allow",
-          "enum": ["allow", "block"],
-          "description": "Behavior when the Drako platform is unreachable."
-        }
-      }
-    },
-    "HITLConfig": {
-      "type": "object",
-      "properties": {
-        "mode": {
-          "type": "string",
-          "default": "off",
-          "enum": ["audit", "enforce", "off"],
-          "description": "HITL enforcement mode."
+        "from": {
+          "default": "*",
+          "title": "From",
+          "type": "string"
         },
-        "triggers": {
-          "type": "object",
-          "properties": {
-            "tool_types": {
-              "type": "array",
-              "items": { "type": "string", "enum": ["read", "write", "execute", "network", "payment"] },
-              "description": "Tool types that require human approval."
+        "to": {
+          "default": "*",
+          "title": "To",
+          "type": "string"
+        },
+        "allowed_message_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Message Types",
+          "type": "array"
+        },
+        "max_payload_size_kb": {
+          "default": 500,
+          "title": "Max Payload Size Kb",
+          "type": "integer"
+        },
+        "require_intent_verification": {
+          "default": false,
+          "title": "Require Intent Verification",
+          "type": "boolean"
+        },
+        "policy": {
+          "anyOf": [
+            {
+              "type": "string"
             },
-            "tools": {
-              "type": "array",
-              "items": { "type": "string" },
-              "description": "Specific tool names that require human approval."
-            },
-            "trust_score_below": { "type": ["number", "null"], "minimum": 0, "maximum": 100, "description": "Trigger HITL when agent trust score is below this value." },
-            "spend_above_usd": { "type": ["number", "null"], "minimum": 0, "description": "Trigger HITL when action cost exceeds this USD amount." },
-            "records_above": { "type": ["integer", "null"], "minimum": 0, "description": "Trigger HITL when action affects more than N records." },
-            "first_time_tool": { "type": "boolean", "default": false, "description": "Require approval for first use of any tool." },
-            "first_time_action": { "type": "boolean", "default": false, "description": "Require approval for first action type." }
-          }
-        },
-        "notification": {
-          "type": "object",
-          "properties": {
-            "webhook_url": { "type": ["string", "null"], "format": "uri", "description": "Webhook URL for HITL notifications." },
-            "email": { "type": ["string", "null"], "format": "email", "description": "Email for HITL notifications." }
-          }
-        },
-        "approval_timeout_minutes": { "type": "integer", "default": 30, "minimum": 1, "description": "Minutes to wait for human approval." },
-        "timeout_action": {
-          "type": "string",
-          "default": "reject",
-          "enum": ["reject", "allow"],
-          "description": "Action when approval times out."
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Policy"
         }
-      }
-    },
-    "IntentVerificationConfig": {
-      "type": "object",
-      "properties": {
-        "mode": {
-          "type": "string",
-          "default": "off",
-          "enum": ["audit", "enforce", "off"],
-          "description": "Intent verification enforcement mode."
-        },
-        "required_for": {
-          "type": "object",
-          "properties": {
-            "tool_types": {
-              "type": "array",
-              "items": { "type": "string" },
-              "default": ["payment", "write", "execute"],
-              "description": "Tool types requiring intent verification."
-            },
-            "tools": {
-              "type": "array",
-              "items": { "type": "string" },
-              "description": "Specific tools requiring intent verification."
-            }
-          }
-        },
-        "anti_replay": { "type": "boolean", "default": true, "description": "Enable replay attack prevention." },
-        "intent_ttl_seconds": { "type": "integer", "default": 300, "minimum": 1, "description": "Time-to-live for intent fingerprints." }
-      }
-    },
-    "HookEntry": {
-      "type": "object",
-      "required": ["name"],
-      "properties": {
-        "name": { "type": "string", "description": "Hook identifier." },
-        "condition": { "type": ["string", "null"], "description": "YAML condition expression (e.g., 'tool_type == write')." },
-        "script": { "type": ["string", "null"], "description": "Path to Python script to execute." },
-        "timeout_ms": { "type": "integer", "default": 5000, "minimum": 100, "description": "Maximum execution time in milliseconds." },
-        "action_on_fail": {
-          "type": "string",
-          "default": "allow",
-          "enum": ["allow", "block"],
-          "description": "Action when hook script fails or times out."
-        },
-        "priority": { "type": "integer", "default": 0, "description": "Execution priority (lower runs first)." }
-      }
-    },
-    "HooksConfig": {
-      "type": "object",
-      "properties": {
-        "pre_action": { "type": "array", "items": { "$ref": "#/$defs/HookEntry" }, "description": "Hooks executed before each tool call." },
-        "post_action": { "type": "array", "items": { "$ref": "#/$defs/HookEntry" }, "description": "Hooks executed after each tool call." },
-        "on_error": { "type": "array", "items": { "$ref": "#/$defs/HookEntry" }, "description": "Hooks executed on tool call errors." },
-        "on_session_end": { "type": "array", "items": { "$ref": "#/$defs/HookEntry" }, "description": "Hooks executed when agent session ends." }
-      }
-    },
-    "FinOpsConfig": {
-      "type": "object",
-      "properties": {
-        "tracking": {
-          "type": "object",
-          "properties": {
-            "enabled": { "type": "boolean", "default": true },
-            "model_costs": {
-              "type": "object",
-              "description": "Map of model name to cost per 1K tokens.",
-              "additionalProperties": {
-                "type": "object",
-                "properties": {
-                  "input": { "type": "number", "minimum": 0, "description": "Cost per 1K input tokens (USD)." },
-                  "output": { "type": "number", "minimum": 0, "description": "Cost per 1K output tokens (USD)." }
-                }
-              }
-            }
-          }
-        },
-        "routing": {
-          "type": "object",
-          "properties": {
-            "enabled": { "type": "boolean", "default": false },
-            "default_model": { "type": "string", "default": "gpt-4o", "description": "Model used when no routing rule matches." },
-            "rules": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "condition": { "type": "string", "description": "Condition expression." },
-                  "model": { "type": "string", "description": "Model to route to." },
-                  "reason": { "type": "string", "description": "Human-readable reason for this routing rule." }
-                }
-              }
-            }
-          }
-        },
-        "cache": {
-          "type": "object",
-          "properties": {
-            "enabled": { "type": "boolean", "default": false },
-            "similarity_threshold": { "type": "number", "default": 0.92, "minimum": 0, "maximum": 1, "description": "Semantic similarity threshold for cache hits." },
-            "ttl_hours": { "type": "integer", "default": 24, "minimum": 1, "description": "Cache time-to-live in hours." }
-          }
-        },
-        "budgets": {
-          "type": "object",
-          "properties": {
-            "daily_usd": { "type": ["number", "null"], "minimum": 0, "description": "Maximum daily spend in USD." },
-            "weekly_usd": { "type": ["number", "null"], "minimum": 0, "description": "Maximum weekly spend in USD." },
-            "monthly_usd": { "type": ["number", "null"], "minimum": 0, "description": "Maximum monthly spend in USD." },
-            "alert_at_percent": {
-              "type": "array",
-              "items": { "type": "integer", "minimum": 1, "maximum": 100 },
-              "default": [50, 80, 95],
-              "description": "Budget usage percentages that trigger alerts."
-            }
-          }
-        }
-      }
-    },
-    "FallbackConfig": {
-      "type": "object",
-      "properties": {
-        "mode": {
-          "type": "string",
-          "default": "off",
-          "enum": ["audit", "enforce", "off"],
-          "description": "Fallback enforcement mode."
-        },
-        "tools": {
-          "type": "object",
-          "description": "Per-tool fallback configuration.",
-          "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "fallback_script": { "type": ["string", "null"], "description": "Path to fallback Python script." },
-              "fallback_agent": { "type": ["string", "null"], "description": "Agent to delegate to on failure." },
-              "fallback_action": {
-                "type": "string",
-                "default": "escalate_human",
-                "enum": ["escalate_human", "retry", "safe_default", "queue"],
-                "description": "Default fallback behavior."
-              },
-              "safe_default": { "type": ["string", "null"], "description": "Safe default return value." },
-              "triggers": {
-                "type": "array",
-                "items": { "type": "string" },
-                "description": "Events that trigger fallback (e.g., 'circuit_breaker_open')."
-              }
-            }
-          }
-        },
-        "default": {
-          "type": "object",
-          "properties": {
-            "fallback_action": { "type": "string", "default": "escalate_human" },
-            "preserve_state": { "type": "boolean", "default": true, "description": "Save agent state on failure." },
-            "state_ttl_hours": { "type": "integer", "default": 24, "minimum": 1, "description": "Hours to retain preserved state." }
-          }
-        }
-      }
+      },
+      "title": "A2AChannelRuleConfig",
+      "type": "object"
     },
     "A2AConfig": {
-      "type": "object",
       "properties": {
         "mode": {
-          "type": "string",
-          "default": "off",
-          "enum": ["audit", "enforce", "off"],
-          "description": "A2A gateway enforcement mode."
+          "default": "enforce",
+          "title": "Mode",
+          "type": "string"
         },
-        "auth": {
-          "type": "object",
-          "properties": {
-            "method": {
-              "type": "string",
-              "default": "did_exchange",
-              "enum": ["did_exchange", "mtls", "shared_secret"],
-              "description": "Authentication method for agent-to-agent communication."
+        "require_signed_cards": {
+          "default": true,
+          "title": "Require Signed Cards",
+          "type": "boolean"
+        },
+        "trusted_pubkeys_dir": {
+          "anyOf": [
+            {
+              "type": "string"
             },
-            "auto_rotate": { "type": "boolean", "default": true, "description": "Automatically rotate credentials." },
-            "rotation_hours": { "type": "integer", "default": 24, "minimum": 1, "description": "Hours between credential rotations." }
-          }
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trusted Pubkeys Dir"
         },
         "channels": {
-          "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "from": { "type": "string", "default": "*", "description": "Source agent (or * for any)." },
-              "to": { "type": "string", "default": "*", "description": "Destination agent (or * for any)." },
-              "allowed_message_types": {
-                "type": "array",
-                "items": { "type": "string" },
-                "description": "Message types permitted on this channel."
-              },
-              "max_payload_size_kb": { "type": "integer", "default": 500, "minimum": 1 },
-              "require_intent_verification": { "type": "boolean", "default": false },
-              "policy": { "type": ["string", "null"], "enum": ["deny", null], "description": "Set to 'deny' to explicitly block this channel." }
-            }
-          }
+            "$ref": "#/$defs/A2AChannelRuleConfig"
+          },
+          "title": "Channels",
+          "type": "array"
         },
         "worm_detection": {
-          "type": "object",
-          "properties": {
-            "enabled": { "type": "boolean", "default": true, "description": "Enable prompt worm detection." },
-            "scan_inter_agent_messages": { "type": "boolean", "default": true },
-            "max_propagation_depth": { "type": "integer", "default": 3, "minimum": 1, "description": "Maximum allowed message propagation depth." },
-            "circular_reference_block": { "type": "boolean", "default": true }
-          }
+          "$ref": "#/$defs/A2AWormDetectionConfig"
         }
-      }
+      },
+      "title": "A2AConfig",
+      "type": "object"
     },
-    "TopologyConfig": {
-      "type": "object",
+    "A2AWormDetectionConfig": {
       "properties": {
-        "enabled": { "type": "boolean", "default": false },
-        "conflict_detection": {
-          "type": "object",
-          "properties": {
-            "resource_contention": { "type": "boolean", "default": true, "description": "Detect multiple agents writing to same resource." },
-            "contradictory_actions": { "type": "boolean", "default": true, "description": "Detect agents taking opposing actions." },
-            "cascade_amplification": { "type": "boolean", "default": true, "description": "Detect cascading failure patterns." },
-            "resource_exhaustion": { "type": "boolean", "default": true, "description": "Detect resource exhaustion risks." }
-          }
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
         },
-        "alert_on": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": ["circular_dependency", "resource_contention"],
-          "description": "Events that trigger topology alerts."
+        "scan_inter_agent_messages": {
+          "default": true,
+          "title": "Scan Inter Agent Messages",
+          "type": "boolean"
+        },
+        "max_propagation_depth": {
+          "default": 3,
+          "title": "Max Propagation Depth",
+          "type": "integer"
+        },
+        "circular_reference_block": {
+          "default": true,
+          "title": "Circular Reference Block",
+          "type": "boolean"
+        },
+        "block_suspicious": {
+          "default": false,
+          "title": "Block Suspicious",
+          "type": "boolean"
         }
-      }
+      },
+      "title": "A2AWormDetectionConfig",
+      "type": "object"
     },
-    "ChaosConfig": {
-      "type": "object",
+    "AgentEntry": {
       "properties": {
-        "experiments": {
-          "type": "array",
+        "source": {
+          "default": "",
+          "title": "Source",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "title": "AgentEntry",
+      "type": "object"
+    },
+    "AuditConfig": {
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "cryptographic": {
+          "default": true,
+          "title": "Cryptographic",
+          "type": "boolean"
+        },
+        "receipt_store": {
+          "default": ".drako/receipts.jsonl",
+          "title": "Receipt Store",
+          "type": "string"
+        },
+        "retention_days": {
+          "default": 90,
+          "title": "Retention Days",
+          "type": "integer"
+        }
+      },
+      "title": "AuditConfig",
+      "type": "object"
+    },
+    "CircuitBreakerAgentConfig": {
+      "properties": {
+        "failure_threshold": {
+          "default": 10,
+          "title": "Failure Threshold",
+          "type": "integer"
+        },
+        "time_window_seconds": {
+          "default": 300,
+          "title": "Time Window Seconds",
+          "type": "integer"
+        },
+        "recovery_timeout_seconds": {
+          "default": 60,
+          "title": "Recovery Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "title": "CircuitBreakerAgentConfig",
+      "type": "object"
+    },
+    "CircuitBreakerConfig": {
+      "properties": {
+        "agent_level": {
+          "$ref": "#/$defs/CircuitBreakerAgentConfig"
+        }
+      },
+      "title": "CircuitBreakerConfig",
+      "type": "object"
+    },
+    "DLPConfig": {
+      "properties": {
+        "mode": {
+          "default": "audit",
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "title": "DLPConfig",
+      "type": "object"
+    },
+    "EgressConfig": {
+      "description": "Outbound network SSRF allowlist enforced by drako.kernel.egress.",
+      "properties": {
+        "allowed_domains": {
           "items": {
-            "type": "object",
-            "required": ["name"],
-            "properties": {
-              "name": { "type": "string", "description": "Experiment identifier." },
-              "description": { "type": "string", "default": "" },
-              "target_tool": { "type": ["string", "null"], "description": "Tool to inject faults into." },
-              "target_agent": { "type": ["string", "null"], "description": "Agent to inject faults into." },
-              "fault_type": {
-                "type": "string",
-                "default": "tool_deny",
-                "enum": ["tool_deny", "tool_latency", "tool_error", "budget_exhaust", "trust_drop", "circuit_break", "agent_timeout"],
-                "description": "Type of fault to inject."
-              },
-              "duration_seconds": { "type": "integer", "default": 60, "minimum": 1 },
-              "latency_ms": { "type": ["integer", "null"], "minimum": 0, "description": "Latency to inject (for tool_latency fault)." },
-              "remaining_usd": { "type": ["number", "null"], "minimum": 0, "description": "Simulated remaining budget (for budget_exhaust fault)." }
-            }
-          }
-        },
-        "safety": {
-          "type": "object",
-          "properties": {
-            "max_blast_radius": { "type": "integer", "default": 1, "minimum": 1, "description": "Maximum number of agents affected simultaneously." },
-            "auto_rollback_on_failure": { "type": "boolean", "default": true },
-            "require_approval": { "type": "boolean", "default": true, "description": "Require human approval before running experiments." }
-          }
+            "type": "string"
+          },
+          "title": "Allowed Domains",
+          "type": "array"
         }
-      }
+      },
+      "title": "EgressConfig",
+      "type": "object"
+    },
+    "FallbackConfig": {
+      "properties": {
+        "mode": {
+          "default": "off",
+          "title": "Mode",
+          "type": "string"
+        },
+        "tools": {
+          "additionalProperties": {
+            "$ref": "#/$defs/FallbackToolConfig"
+          },
+          "title": "Tools",
+          "type": "object"
+        },
+        "default": {
+          "$ref": "#/$defs/FallbackDefaultConfig"
+        }
+      },
+      "title": "FallbackConfig",
+      "type": "object"
+    },
+    "FallbackDefaultConfig": {
+      "properties": {
+        "fallback_action": {
+          "default": "escalate_human",
+          "title": "Fallback Action",
+          "type": "string"
+        },
+        "preserve_state": {
+          "default": true,
+          "title": "Preserve State",
+          "type": "boolean"
+        },
+        "state_ttl_hours": {
+          "default": 24,
+          "title": "State Ttl Hours",
+          "type": "integer"
+        }
+      },
+      "title": "FallbackDefaultConfig",
+      "type": "object"
+    },
+    "FallbackToolConfig": {
+      "properties": {
+        "fallback_script": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback Script"
+        },
+        "fallback_agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback Agent"
+        },
+        "fallback_action": {
+          "default": "escalate_human",
+          "title": "Fallback Action",
+          "type": "string"
+        },
+        "safe_default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Safe Default"
+        },
+        "triggers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Triggers",
+          "type": "array"
+        }
+      },
+      "title": "FallbackToolConfig",
+      "type": "object"
+    },
+    "FinOpsBudgetConfig": {
+      "properties": {
+        "daily_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Daily Usd"
+        },
+        "weekly_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weekly Usd"
+        },
+        "monthly_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monthly Usd"
+        },
+        "alert_at_percent": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Alert At Percent",
+          "type": "array"
+        }
+      },
+      "title": "FinOpsBudgetConfig",
+      "type": "object"
+    },
+    "FinOpsConfig": {
+      "properties": {
+        "tracking": {
+          "$ref": "#/$defs/FinOpsTrackingConfig"
+        },
+        "budgets": {
+          "$ref": "#/$defs/FinOpsBudgetConfig"
+        }
+      },
+      "title": "FinOpsConfig",
+      "type": "object"
+    },
+    "FinOpsTrackingConfig": {
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "model_costs": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ModelCostConfig"
+          },
+          "title": "Model Costs",
+          "type": "object"
+        }
+      },
+      "title": "FinOpsTrackingConfig",
+      "type": "object"
+    },
+    "HITLConfig": {
+      "properties": {
+        "mode": {
+          "default": "enforce",
+          "title": "Mode",
+          "type": "string"
+        },
+        "triggers": {
+          "$ref": "#/$defs/HITLTriggersConfig"
+        },
+        "approval_timeout_minutes": {
+          "default": 30,
+          "title": "Approval Timeout Minutes",
+          "type": "integer"
+        },
+        "timeout_action": {
+          "default": "reject",
+          "title": "Timeout Action",
+          "type": "string"
+        }
+      },
+      "title": "HITLConfig",
+      "type": "object"
+    },
+    "HITLTriggersConfig": {
+      "properties": {
+        "tool_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tool Types",
+          "type": "array"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        },
+        "trust_score_below": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trust Score Below"
+        },
+        "spend_above_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Spend Above Usd"
+        },
+        "records_above": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Records Above"
+        },
+        "first_time_tool": {
+          "default": false,
+          "title": "First Time Tool",
+          "type": "boolean"
+        },
+        "first_time_action": {
+          "default": false,
+          "title": "First Time Action",
+          "type": "boolean"
+        }
+      },
+      "title": "HITLTriggersConfig",
+      "type": "object"
+    },
+    "HookEntryConfig": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition"
+        },
+        "script": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Script"
+        },
+        "timeout_ms": {
+          "default": 5000,
+          "title": "Timeout Ms",
+          "type": "integer"
+        },
+        "action_on_fail": {
+          "default": "block",
+          "title": "Action On Fail",
+          "type": "string"
+        },
+        "priority": {
+          "default": 0,
+          "title": "Priority",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "HookEntryConfig",
+      "type": "object"
+    },
+    "HooksConfig": {
+      "properties": {
+        "pre_action": {
+          "items": {
+            "$ref": "#/$defs/HookEntryConfig"
+          },
+          "title": "Pre Action",
+          "type": "array"
+        },
+        "post_action": {
+          "items": {
+            "$ref": "#/$defs/HookEntryConfig"
+          },
+          "title": "Post Action",
+          "type": "array"
+        },
+        "on_error": {
+          "items": {
+            "$ref": "#/$defs/HookEntryConfig"
+          },
+          "title": "On Error",
+          "type": "array"
+        },
+        "on_session_end": {
+          "items": {
+            "$ref": "#/$defs/HookEntryConfig"
+          },
+          "title": "On Session End",
+          "type": "array"
+        }
+      },
+      "title": "HooksConfig",
+      "type": "object"
+    },
+    "IntentRequiredForConfig": {
+      "properties": {
+        "tool_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tool Types",
+          "type": "array"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "title": "IntentRequiredForConfig",
+      "type": "object"
+    },
+    "IntentVerificationConfig": {
+      "properties": {
+        "mode": {
+          "default": "enforce",
+          "title": "Mode",
+          "type": "string"
+        },
+        "required_for": {
+          "$ref": "#/$defs/IntentRequiredForConfig"
+        },
+        "anti_replay": {
+          "default": true,
+          "title": "Anti Replay",
+          "type": "boolean"
+        },
+        "intent_ttl_seconds": {
+          "default": 300,
+          "title": "Intent Ttl Seconds",
+          "type": "integer"
+        }
+      },
+      "title": "IntentVerificationConfig",
+      "type": "object"
+    },
+    "KernelConfig": {
+      "description": "Authority Kernel configuration (AGENT-HOOKS-0.1).",
+      "properties": {
+        "spec_pin": {
+          "default": "AGENT-HOOKS-0.1",
+          "title": "Spec Pin",
+          "type": "string"
+        },
+        "default_effect": {
+          "default": "deny",
+          "title": "Default Effect",
+          "type": "string"
+        },
+        "profile_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Profile Path"
+        },
+        "receipt_store": {
+          "default": ".drako/receipts.jsonl",
+          "title": "Receipt Store",
+          "type": "string"
+        },
+        "operator_pubkey_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Operator Pubkey Path"
+        },
+        "tiers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tiers",
+          "type": "object"
+        }
+      },
+      "title": "KernelConfig",
+      "type": "object"
+    },
+    "LoopBreakerConfig": {
+      "description": "Runaway repetition circuit-breaker (OWASP ASI08/ASI10).",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "trip_threshold": {
+          "default": 10,
+          "title": "Trip Threshold",
+          "type": "integer"
+        },
+        "window_seconds": {
+          "default": 300.0,
+          "title": "Window Seconds",
+          "type": "number"
+        }
+      },
+      "title": "LoopBreakerConfig",
+      "type": "object"
+    },
+    "MCPConfig": {
+      "description": "MCP supply-chain & runtime guard configuration.",
+      "properties": {
+        "lockfile": {
+          "default": "mcp.lock",
+          "title": "Lockfile",
+          "type": "string"
+        },
+        "enforce_pin": {
+          "default": true,
+          "title": "Enforce Pin",
+          "type": "boolean"
+        },
+        "env_allowlist": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Env Allowlist",
+          "type": "array"
+        },
+        "allow_auto_install": {
+          "default": false,
+          "title": "Allow Auto Install",
+          "type": "boolean"
+        },
+        "protocol_version": {
+          "default": "2026-07-28",
+          "title": "Protocol Version",
+          "type": "string"
+        }
+      },
+      "title": "MCPConfig",
+      "type": "object"
+    },
+    "ModelCostConfig": {
+      "properties": {
+        "input": {
+          "default": 0.0,
+          "title": "Input",
+          "type": "number"
+        },
+        "output": {
+          "default": 0.0,
+          "title": "Output",
+          "type": "number"
+        }
+      },
+      "title": "ModelCostConfig",
+      "type": "object"
+    },
+    "ProxyConfig": {
+      "description": "Local enforcement proxy settings (loopback-only by default).",
+      "properties": {
+        "host": {
+          "default": "127.0.0.1",
+          "title": "Host",
+          "type": "string"
+        },
+        "port": {
+          "default": 8990,
+          "title": "Port",
+          "type": "integer"
+        },
+        "cors_origins": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cors Origins",
+          "type": "array"
+        }
+      },
+      "title": "ProxyConfig",
+      "type": "object"
+    },
+    "ToolEntry": {
+      "properties": {
+        "source": {
+          "default": "",
+          "title": "Source",
+          "type": "string"
+        },
+        "type": {
+          "default": "read",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "title": "ToolEntry",
+      "type": "object"
     }
-  }
+  },
+  "description": "Root `.drako.yaml` schema for Drako v4 (100% local-first).",
+  "properties": {
+    "version": {
+      "default": "4.0",
+      "title": "Version",
+      "type": "string"
+    },
+    "project_id": {
+      "default": "default",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenant Id"
+    },
+    "governance_level": {
+      "default": "balanced",
+      "title": "Governance Level",
+      "type": "string"
+    },
+    "extends": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Extends"
+    },
+    "framework": {
+      "default": "generic",
+      "title": "Framework",
+      "type": "string"
+    },
+    "kernel": {
+      "$ref": "#/$defs/KernelConfig"
+    },
+    "loop_breaker": {
+      "$ref": "#/$defs/LoopBreakerConfig"
+    },
+    "agents": {
+      "additionalProperties": {
+        "$ref": "#/$defs/AgentEntry"
+      },
+      "title": "Agents",
+      "type": "object"
+    },
+    "detected_tools": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ToolEntry"
+      },
+      "title": "Detected Tools",
+      "type": "object"
+    },
+    "dlp": {
+      "$ref": "#/$defs/DLPConfig"
+    },
+    "circuit_breaker": {
+      "$ref": "#/$defs/CircuitBreakerConfig"
+    },
+    "audit": {
+      "$ref": "#/$defs/AuditConfig"
+    },
+    "hitl": {
+      "$ref": "#/$defs/HITLConfig"
+    },
+    "intent_verification": {
+      "$ref": "#/$defs/IntentVerificationConfig"
+    },
+    "hooks": {
+      "$ref": "#/$defs/HooksConfig"
+    },
+    "finops": {
+      "$ref": "#/$defs/FinOpsConfig"
+    },
+    "fallback": {
+      "$ref": "#/$defs/FallbackConfig"
+    },
+    "a2a": {
+      "$ref": "#/$defs/A2AConfig"
+    },
+    "mcp": {
+      "$ref": "#/$defs/MCPConfig"
+    },
+    "egress": {
+      "$ref": "#/$defs/EgressConfig"
+    },
+    "proxy": {
+      "$ref": "#/$defs/ProxyConfig"
+    }
+  },
+  "title": "DrakoConfig",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/DrakoLabs/drako/main/schema/drako-config.schema.json"
 }

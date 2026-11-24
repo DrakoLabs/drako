@@ -1,4 +1,4 @@
-"""Context Versioning policy rules (CV-001, CV-002)."""
+"""Context Versioning policy rules (CV-001, CV-002) — v4 local-first."""
 
 from __future__ import annotations
 
@@ -12,57 +12,53 @@ if TYPE_CHECKING:
 
 
 class CV001(BasePolicy):
-    """CV-001: No policy versioning configured."""
+    """CV-001: No pinned policy versioning configured."""
+
     policy_id = "CV-001"
     category = "Context Versioning"
     severity = "HIGH"
     title = "No policy versioning configured"
-    impact = "Without policy versioning, you cannot trace which governance rules were active during a past incident or audit."
-    attack_scenario = "Regulator asks which safety policies were active when an incident occurred. Without versioning, you cannot answer."
+    impact = "Without pinned policy versioning, you cannot trace which governance profile was active during a past incident or audit."
+    attack_scenario = "Regulator asks which safety policies were active when an incident occurred. Without pinned spec/policy versions, you cannot prove it."
     references = ["https://artificialintelligenceact.eu/article/12/"]
     remediation_effort = "moderate"
     finding_type = "recommendation"
 
     def evaluate(self, bom: AgentBOM, metadata: ProjectMetadata) -> list[Finding]:
-        # Check for .drako.yaml with platform connection
         config_content = ""
         for path, content in metadata.config_files.items():
-            if ".drako" in path:
-                config_content = content
-                break
+            if ".drako" in path or "drako-policy" in path:
+                config_content += "\n" + content
 
-        if not config_content:
-            # No config file at all — always flag
+        if not config_content.strip():
             return [self._finding(
                 message=(
-                    "No .drako.yaml found. Without platform connection, policy changes "
-                    "are not versioned and audit logs cannot reference the active policy version. "
-                    "This violates EU AI Act Art. 12 traceability requirements."
+                    "No .drako.yaml or ACS policy profile found. Policy changes are not pinned "
+                    "and receipts cannot reference an immutable spec version (EU AI Act Art. 12)."
                 ),
                 fix_snippet=(
-                    "# Initialize and connect to Drako platform:\n"
+                    "# Initialize local-first v4 config and pinned ACS profile:\n"
                     "drako init\n"
-                    "drako push\n\n"
-                    "# Every push now creates an immutable, hash-chained snapshot.\n"
-                    "# View history: drako history\n"
-                    "# Compare:     drako diff v1 v2"
+                    "drako validate .drako.yaml"
                 ),
             )]
 
-        # Has config but no endpoint / api_key_env → offline only, no versioning
-        has_endpoint = "endpoint:" in config_content or "api_key_env:" in config_content
-        if not has_endpoint:
+        has_pin = (
+            "spec_pin:" in config_content
+            or "policy_version:" in config_content
+            or "kernel:" in config_content
+        )
+        if not has_pin:
             return [self._finding(
                 message=(
-                    "Config exists but has no platform connection (missing endpoint/api_key_env). "
-                    "Policy versions are not tracked. Run `drako push` to enable versioning."
+                    "Config exists but lacks pinned policy versioning (missing spec_pin / kernel block). "
+                    "Run `drako upgrade --v4` to pin AGENT-HOOKS-0.1."
                 ),
                 fix_snippet=(
-                    "# Add to .drako.yaml:\n"
-                    "api_key_env: DRAKO_API_KEY\n"
-                    "endpoint: https://api.getdrako.com\n\n"
-                    "# Then push:\n"
-                    "drako push"
+                    "# Add to .drako.yaml (or run `drako upgrade --v4`):\n"
+                    "kernel:\n"
+                    "  spec_pin: AGENT-HOOKS-0.1\n"
+                    "  default_effect: deny"
                 ),
             )]
 
@@ -70,19 +66,18 @@ class CV001(BasePolicy):
 
 
 class CV002(BasePolicy):
-    """CV-002: Audit logs without policy version reference."""
+    """CV-002: Audit logging without cryptographic receipt / policy binding."""
+
     policy_id = "CV-002"
     category = "Context Versioning"
     severity = "MEDIUM"
-    title = "Audit logs without policy version reference"
-    impact = "Audit entries without policy version references are useless for post-incident forensics and regulatory compliance."
-    attack_scenario = "Audit log shows a blocked action but doesn't reference which policy version caused the block. Investigation stalls."
+    title = "Audit logs without cryptographic policy binding"
+    impact = "Plain audit logs without cryptographic policy/receipt references cannot survive post-incident forensics or EU AI Act Art. 12 audits."
+    attack_scenario = "Audit log shows an action ran, but lacks signed receipt hash-chain or policy_id binding. Investigation stalls."
     references = ["https://artificialintelligenceact.eu/article/12/"]
     remediation_effort = "trivial"
 
     def evaluate(self, bom: AgentBOM, metadata: ProjectMetadata) -> list[Finding]:
-        # This is an online-only check. For offline scan, we check if audit
-        # logging is configured but there's no platform connection.
         config_content = ""
         for path, content in metadata.config_files.items():
             if ".drako" in path:
@@ -90,22 +85,27 @@ class CV002(BasePolicy):
                 break
 
         if not config_content:
-            return []  # CV-001 already flags missing config
+            return []
 
         has_audit = "audit:" in config_content
-        has_connection = "api_key_env:" in config_content or "endpoint:" in config_content
+        has_binding = (
+            "receipt_store:" in config_content
+            or "spec_pin:" in config_content
+            or "cryptographic: true" in config_content
+        )
 
-        if has_audit and not has_connection:
+        if has_audit and not has_binding:
             return [self._finding(
                 message=(
-                    "Audit logging is configured but without platform connection. "
-                    "Audit entries will not reference the active policy version, "
-                    "making post-incident investigation harder."
+                    "Audit logging is configured without cryptographic receipt binding "
+                    "(missing receipt_store / spec_pin / cryptographic: true)."
                 ),
                 fix_snippet=(
-                    "# Connect to platform so audit logs include policy_snapshot_id:\n"
-                    "api_key_env: DRAKO_API_KEY\n"
-                    "drako push"
+                    "# Enable cryptographic receipt chaining in .drako.yaml:\n"
+                    "audit:\n"
+                    "  enabled: true\n"
+                    "  cryptographic: true\n"
+                    "  receipt_store: .drako/receipts.jsonl"
                 ),
             )]
 

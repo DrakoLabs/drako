@@ -86,11 +86,8 @@ class FW_OPENAI_001(FrameworkPolicy):
                     line_number=node.lineno,
                     code_snippet=line_content,
                     fix_snippet=(
-                        "from drako.middleware.openai_agents import "
-                        "make_drako_input_guardrail\n\n"
-                        "agent = Agent(name=..., instructions=...,\n"
-                        "    input_guardrails=[make_drako_input_guardrail("
-                        "my_check)])"
+                        "from drako.adapters.openai_agents import wrap_openai_agent\n\n"
+                        "agent = wrap_openai_agent(agent, host)"
                     ),
                 ))
         return findings

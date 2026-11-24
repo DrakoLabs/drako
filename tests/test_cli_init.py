@@ -1,229 +1,53 @@
-"""Tests for `drako init` CLI command."""
+"""Tests for offline `drako init` v4 CLI."""
 
-from __future__ import annotations
-
-import os
 from pathlib import Path
 
-import pytest
 import yaml
 from click.testing import CliRunner
 
-from drako.cli.init_command import init
+from drako.cli.main import cli
+from drako.kernel.policies import compile_profile
 
 
-@pytest.fixture()
-def runner():
-    return CliRunner()
+def test_init_generates_v4_config_and_valid_acs_profile(tmp_path: Path):
+    runner = CliRunner()
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        res = runner.invoke(cli, ["init", "--framework", "langgraph", "--level", "balanced", "-y"])
+        assert res.exit_code == 0, res.output
+
+        cfg_p = Path(".drako.yaml")
+        prof_p = Path("drako-policy.yaml")
+        assert cfg_p.exists() and prof_p.exists()
+
+        cfg = yaml.safe_load(cfg_p.read_text(encoding="utf-8"))
+        assert cfg["version"] == "4.0"
+        assert cfg["framework"] == "langgraph"
+        assert cfg["kernel"]["spec_pin"] == "AGENT-HOOKS-0.1"
+        assert cfg["kernel"]["default_effect"] == "deny"
+        assert "api_key_env" not in cfg and "endpoint" not in cfg
+
+        prof = yaml.safe_load(prof_p.read_text(encoding="utf-8"))
+        compiled = compile_profile(prof)
+        assert compiled["spec_pin"] == "AGENT-HOOKS-0.1"
 
 
-class TestInitDetection:
-    def test_detects_crewai_project(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-        (tmp_path / "crewai.yaml").touch()
+def test_init_strict_and_autopilot_levels(tmp_path: Path):
+    runner = CliRunner()
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        r1 = runner.invoke(cli, ["init", "--level", "strict", "-y"])
+        assert r1.exit_code == 0
+        assert yaml.safe_load(Path(".drako.yaml").read_text())["kernel"]["default_effect"] == "deny"
 
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_tenant1_secret"])
-
-        assert result.exit_code == 0
-        assert "crewai" in result.output.lower()
-
-    def test_detects_langgraph_project(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-        (tmp_path / "requirements.txt").write_text("langgraph>=0.2.0\n")
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s"])
-
-        assert result.exit_code == 0
-        assert "langgraph" in result.output.lower()
-
-    def test_uses_generic_when_no_framework(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s"])
-
-        assert result.exit_code == 0
-        assert "generic" in result.output.lower()
+        r2 = runner.invoke(cli, ["init", "--level", "autopilot", "-y"])
+        assert r2.exit_code == 0
+        assert yaml.safe_load(Path(".drako.yaml").read_text())["kernel"]["default_effect"] == "permit"
 
 
-class TestInitGeneratesFiles:
-    def test_generates_yaml_config(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_myorg_key123", "--framework", "crewai"])
-
-        assert result.exit_code == 0
-        config_path = tmp_path / ".drako.yaml"
-        assert config_path.exists()
-
-        config = yaml.safe_load(config_path.read_text())
-        assert config["tenant_id"] == "myorg"
-        assert config["framework"] == "crewai"
-        # v2.0: autopilot generates governance_level and dlp
-        assert config["governance_level"] == "autopilot"
-        assert config["dlp"]["mode"] == "audit"
-
-    def test_generates_autopilot_by_default(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s"])
-
-        assert result.exit_code == 0
-        config_path = tmp_path / ".drako.yaml"
-        assert config_path.exists()
-
-        config = yaml.safe_load(config_path.read_text())
-        assert config["governance_level"] == "autopilot"
-        assert "audit" in result.output.lower() or "autopilot" in result.output.lower()
-
-    def test_generates_manual_config(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s", "--manual"])
-
-        assert result.exit_code == 0
-        config_path = tmp_path / ".drako.yaml"
-        assert config_path.exists()
-
-        config = yaml.safe_load(config_path.read_text())
-        assert config["governance_level"] == "custom"
-
-    def test_generates_balanced_config(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s", "--balanced"])
-
-        assert result.exit_code == 0
-        config = yaml.safe_load((tmp_path / ".drako.yaml").read_text())
-        assert config["governance_level"] == "balanced"
-        assert config["dlp"]["mode"] == "enforce"
-
-    def test_generates_strict_config(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s", "--strict"])
-
-        assert result.exit_code == 0
-        config = yaml.safe_load((tmp_path / ".drako.yaml").read_text())
-        assert config["governance_level"] == "strict"
-        assert config["dlp"]["mode"] == "enforce"
-        assert config.get("intent_verification", {}).get("mode") == "enforce"
-
-
-class TestInitAPIValidation:
-    def test_invalid_api_key_exits(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(401, text="Unauthorized")
-            )
-            result = runner.invoke(init, ["--api-key", "bad_key"])
-
-        assert result.exit_code == 1
-        assert "Invalid API key" in result.output or "invalid" in result.output.lower()
-
-    def test_offline_mode_continues(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                side_effect=httpx.ConnectError("offline")
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s", "--framework", "generic"])
-
-        assert result.exit_code == 0
-        assert "offline" in result.output.lower() or "warn" in result.output.lower()
-
-
-class TestInitOverwrite:
-    def test_asks_before_overwrite(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-        (tmp_path / ".drako.yaml").write_text("existing: true")
-
-        import respx
-        import httpx
-        with respx.mock:
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            # Say skip to overwrite
-            result = runner.invoke(init, ["--api-key", "am_live_t_s"], input="s\n")
-
-        assert result.exit_code == 0
-        # File should still have the original content
-        assert "existing" in (tmp_path / ".drako.yaml").read_text()
-
-
-class TestInitEnvHint:
-    def test_suggests_env_for_dotenv(self, runner, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-        (tmp_path / ".env").write_text("OTHER_VAR=foo\n")
-
-        import respx
-        import httpx
-        with respx.mock:
-            # Hermetic offline: key validation fails closed-fast WITHOUT
-            # real network (relying on ambient failure made this
-            # order-dependent).
-            respx.post("https://api.getdrako.com/api/v1/auth/validate").mock(
-                side_effect=httpx.ConnectError("offline")
-            )
-            respx.get("https://api.getdrako.com/api/v1/stats").mock(
-                return_value=httpx.Response(200, json={"ok": True})
-            )
-            result = runner.invoke(init, ["--api-key", "am_live_t_s", "--framework", "generic"])
-
-        assert result.exit_code == 0
-        assert "DRAKO_API_KEY" in result.output
+def test_init_prompts_before_overwrite(tmp_path: Path):
+    runner = CliRunner()
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path(".drako.yaml").write_text("version: '4.0'\nproject_id: keep\n", encoding="utf-8")
+        res = runner.invoke(cli, ["init"], input="n\n")
+        assert res.exit_code == 0
+        assert "Aborted" in res.output
+        assert "keep" in Path(".drako.yaml").read_text(encoding="utf-8")

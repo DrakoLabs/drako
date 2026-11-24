@@ -112,5 +112,72 @@ def pin(package: str, lock_path: str, pinned_by: str) -> None:
         "pinned_by": pinned_by,
     }
     lock_file.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-    click.echo(f"pinned {name}@{version} → {lock_file}")
-    click.echo(f"  integrity: {integrity[:32]}… (full hash in lock)")
+    click.echo(f"pinned {name}@{version} -> {lock_file}")
+    click.echo(f"  integrity: {integrity[:32]}... (full hash in lock)")
+
+
+@mcp.command(name="agbom")
+@click.option("--lock", "lock_path", default="mcp.lock", help="Input mcp.lock path")
+@click.option(
+    "--format", "output_format",
+    type=click.Choice(["snapshot", "cyclonedx", "cyclonedx-1.6"]),
+    default="cyclonedx",
+    help="Output format (default: CycloneDX 1.7 ECMA-424)",
+)
+@click.option("--output", "-o", default=None, help="Write AgBOM to file")
+def agbom_cmd(lock_path: str, output_format: str, output: str | None) -> None:
+    """Generate a canonical AgBOM or CycloneDX 1.7 SBOM from mcp.lock."""
+    from drako.mcp_guard.agbom import agbom_to_cyclonedx, canonical_snapshot, lock_hash
+    from drako.mcp_guard.lock import LockError, load_lock
+
+    p = Path(lock_path)
+    if not p.exists():
+        raise click.ClickException(f"mcp.lock not found at {lock_path} (run `drako mcp pin` first)")
+    try:
+        locked = load_lock(p)
+    except LockError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    admitted = [
+        {
+            "package": srv.package,
+            "version": srv.version,
+            "integrity": srv.integrity,
+            "admitted_spec": srv.spec,
+        }
+        for srv in locked.values()
+    ]
+    snap = canonical_snapshot(admitted, lock_hash=lock_hash(p.read_text(encoding="utf-8")))
+    if output_format == "snapshot":
+        doc = snap
+    elif output_format == "cyclonedx-1.6":
+        doc = agbom_to_cyclonedx(snap, spec_version="1.6")
+    else:
+        doc = agbom_to_cyclonedx(snap, spec_version="1.7")
+
+    rendered = json.dumps(doc, indent=2) + "\n"
+    if output:
+        Path(output).write_text(rendered, encoding="utf-8")
+        click.echo(f"AgBOM written to {output}")
+    else:
+        click.echo(rendered)
+
+
+@mcp.command(name="check-drift")
+@click.argument("endpoint")
+@click.option("--baseline-hash", default=None, help="Expected sha256:... tools/list fingerprint")
+@click.option("--allow-private", is_flag=True, help="Allow private/loopback URLs (local dev only)")
+def check_drift_cmd(endpoint: str, baseline_hash: str | None, allow_private: bool) -> None:
+    """Query a stateless MCP 2026-07-28 server's tools/list and verify against a baseline hash."""
+    from drako.kernel.egress import EgressViolation
+    from drako.mcp_guard.client import MCPClientError, MCPGAClient
+    from drako.mcp_guard.drift import ToolsDriftError, check_tools_drift
+
+    try:
+        client = MCPGAClient(endpoint, allow_private=allow_private)
+        tools = client.list_tools()
+        fp = check_tools_drift(baseline_hash, tools, endpoint)
+    except (EgressViolation, MCPClientError, ToolsDriftError) as exc:
+        click.secho(f"  [FAIL] {exc}", fg="red", err=True)
+        raise SystemExit(1)
+    click.echo(json.dumps({"endpoint": endpoint, "tool_count": len(tools), "fingerprint": fp, "drift": False}, indent=2))

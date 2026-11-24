@@ -1,0 +1,4 @@
+version: "4.0"
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
+  default_effect: deny

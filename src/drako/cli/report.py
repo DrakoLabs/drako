@@ -501,7 +501,7 @@ def render_benchmark_panel(
 
     lines.append("\n")
     lines.append(
-        "Note: Benchmark uses an aggregate dataset. Contribute: drako scan . --share",
+        "Note: Benchmark uses the bundled anonymized aggregate dataset.",
         style="dim italic",
     )
 

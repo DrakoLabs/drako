@@ -1,0 +1,7 @@
+version: "4.0"
+hooks:
+  on_session_end:
+    - name: require-tests-passed
+      script: .drako/hooks/check_tests.py
+      action_on_fail: block
+      timeout_ms: 10000

@@ -1,67 +1,86 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
 name = "drako"
-version = "3.0.0"
-description = "The Python Governance Platform for AI Agents — compliance middleware for LangGraph, CrewAI, AutoGen"
+version = "4.0.0a1"
+description = "The Portable Authority Kernel for AI Agents — deterministic enforcement, origin-bound lattice, memory firewall, MCP/A2A guards, and Ed25519 receipts"
 readme = "README.md"
-license = "BUSL-1.1"
+license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [
-    { name = "Drako", email = "hello@getdrako.com" },
+    { name = "DrakoLabs", email = "hello@getdrako.com" },
 ]
-keywords = ["ai-governance", "agent-security", "compliance", "eu-ai-act", "langraph", "crewai", "autogen", "dlp", "audit-trail", "mcp"]
+keywords = [
+    "ai-governance",
+    "agent-security",
+    "authority-kernel",
+    "owasp-agentic",
+    "owasp-acs",
+    "mcp-security",
+    "a2a",
+    "cyclonedx",
+    "eu-ai-act",
+    "receipts",
+]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Framework :: FastAPI",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: Other/Proprietary License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "httpx>=0.27.0",
     "click>=8.1.0",
+    "cryptography>=42.0.0",
+    "httpx>=0.27.0",
+    "networkx>=3.0",
     "pydantic>=2.0.0",
     "pyyaml>=6.0",
     "rich>=13.0.0",
-    "networkx>=3.0",
 ]
 
 [project.optional-dependencies]
-crewai = ["crewai>=0.70.0"]
-langgraph = ["langgraph>=0.2.0"]
-autogen = ["pyautogen>=0.4.0"]
-comply = ["python-docx>=1.1.0", "weasyprint>=60.0", "jinja2>=3.1.0"]
+# Guardian kernel: AGENT-HOOKS-0.1 CTK conformance + Rust JCS canonicalizer.
+guardian = ["agent-hooks-sdk==0.1.0a5"]
 proxy = ["fastapi>=0.110.0", "uvicorn>=0.29.0"]
 typescript = [
     "tree-sitter>=0.23",
     "tree-sitter-typescript>=0.23",
     "tree-sitter-javascript>=0.23",
 ]
-all = ["crewai>=0.70.0", "langgraph>=0.2.0", "pyautogen>=0.4.0"]
+comply = [
+    "python-docx>=1.1.0",
+    "weasyprint>=60.0",
+    "jinja2>=3.1.0",
+]
+langgraph = ["langgraph>=0.2.0"]
+openai-agents = ["openai-agents>=0.1.0"]
+crewai = ["crewai>=0.70.0"]
 dev = [
     "pytest>=8.0",
-    "pytest-asyncio>=0.24.0",
+    "pytest-asyncio>=1.3.0",
     "respx>=0.22.0",
     "coverage>=7.0",
     "hypothesis>=6.100.0",
+    "ruff>=0.6.0",
+    "mypy>=1.11.0",
 ]
 
 [project.scripts]
 drako = "drako.cli.main:cli"
 
 [project.urls]
-Homepage = "https://getdrako.com"
+Homepage = "https://github.com/DrakoLabs/drako"
 Repository = "https://github.com/DrakoLabs/drako"
 Issues = "https://github.com/DrakoLabs/drako/issues"
+Documentation = "https://github.com/DrakoLabs/drako/tree/main/docs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/drako"]
@@ -69,8 +88,10 @@ packages = ["src/drako"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 markers = [
     "comply: tests requiring the [comply] optional extras",
+    "ctk: AGENT-HOOKS-0.1 conformance tests requiring [guardian]",
 ]
 
 [tool.mypy]
@@ -78,17 +99,21 @@ python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
-# Gradual typing: existing modules are not yet fully typed
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "drako.cli.formats.scorecard",
     "drako.cli.policies.frameworks.*",
+    "drako.a2a.*",
+    "drako.mcp_guard.*",
 ]
-disallow_any_explicit = true
+disallow_any_explicit = false
 disallow_untyped_defs = true
 
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]

@@ -1,0 +1,4 @@
+version: "1.0"
+audit:
+  enabled: true
+  log_level: verbose
