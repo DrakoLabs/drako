@@ -216,3 +216,25 @@ def test_slsa_shape():
     assert s["_type"] == "https://in-toto.io/Statement/v1"
     assert s["subject"][0]["digest"]["sha256"] == r["payload_hash"]
 
+
+def test_guardian_glob_matching_deny_wins():
+    profile = {
+        "spec_pin": "AGENT-HOOKS-0.1",
+        "default_effect": "deny",
+        "tools": {
+            "*": {"id": "rule:any", "effect": "allow"},
+            "delete_*": {"id": "rule:no-delete", "effect": "deny", "reason": "destructive"},
+            "delete_tmp": {"id": "rule:exact-tmp", "effect": "allow"},
+        },
+    }
+    g = Guardian(profile)
+    # Glob allow matches read_docs
+    d1 = g.evaluate(Proposal(action="read_docs", side_effect_class="read"))
+    assert d1.verdict == "permit"
+    # Glob deny wins over wildcard '*'
+    d2 = g.evaluate(Proposal(action="delete_volume", side_effect_class="read"))
+    assert d2.verdict == "deny" and d2.policy_id == "rule:no-delete"
+    # Exact match takes precedence over glob
+    d3 = g.evaluate(Proposal(action="delete_tmp", side_effect_class="read"))
+    assert d3.verdict == "permit" and d3.policy_id == "rule:exact-tmp"
+

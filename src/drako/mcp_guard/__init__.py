@@ -2,7 +2,7 @@
 
 from drako.mcp_guard.admission import AdmissionDecision, admit
 from drako.mcp_guard.agbom import agbom_to_cyclonedx, canonical_snapshot, lock_hash
-from drako.mcp_guard.client import MCPGAClient, MCPClientError
+from drako.mcp_guard.client import MCPClientError, MCPGAClient
 from drako.mcp_guard.drift import ToolsDriftError, check_tools_drift, fingerprint_tools
 from drako.mcp_guard.lock import LockError, PinnedServer, check_pin, empty_lock, load_lock
 

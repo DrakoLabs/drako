@@ -23,7 +23,7 @@ import hmac
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import IntEnum
-from typing import Any, Optional
+from typing import Any
 
 
 class TrustLevel(IntEnum):
@@ -70,9 +70,9 @@ class Label:
     origin: str
     trust: TrustLevel = TrustLevel.UNTRUSTED
     scope: frozenset = field(default_factory=frozenset)
-    ttl_seconds: Optional[int] = None
+    ttl_seconds: int | None = None
     issued_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    attestation: Optional[str] = None  # optional call-site HMAC from OriginAttester
+    attestation: str | None = None  # optional call-site HMAC from OriginAttester
 
     def __post_init__(self) -> None:
         ceiling = ceiling_for_origin(self.origin)
@@ -82,7 +82,7 @@ class Label:
                 f"{self.trust.name} (ceiling {ceiling.name})"
             )
 
-    def expired(self, now: Optional[datetime] = None) -> bool:
+    def expired(self, now: datetime | None = None) -> bool:
         if self.ttl_seconds is None:
             return False
         now = now or datetime.now(timezone.utc)
@@ -99,7 +99,7 @@ class OriginAttester:
     access to the Host instance could read the secret.
     """
 
-    def __init__(self, secret: Optional[bytes] = None) -> None:
+    def __init__(self, secret: bytes | None = None) -> None:
         import os
 
         self._secret = secret or os.urandom(32)
@@ -108,7 +108,7 @@ class OriginAttester:
         msg = (
             f"{label.origin}|{int(label.trust)}|"
             f"{','.join(sorted(label.scope))}|{label.issued_at}|{label.ttl_seconds}"
-        ).encode("utf-8")
+        ).encode()
         return hmac.new(self._secret, msg, hashlib.sha256).hexdigest()
 
     def issue(
@@ -117,7 +117,7 @@ class OriginAttester:
         origin: str,
         trust: TrustLevel,
         scope: frozenset,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
     ) -> Label:
         base = Label(origin=origin, trust=trust, scope=scope, ttl_seconds=ttl_seconds)
         return Label(
@@ -166,7 +166,7 @@ class ConsentToken:
     issuer: str  # "human:<id>" or "policy:<id>"
     action_hash: str  # binds approval to exact JCS args hash (anti-TOCTOU)
     expires_at: str
-    signature: Optional[str] = None  # base64 Ed25519 signature over canonical body
+    signature: str | None = None  # base64 Ed25519 signature over canonical body
 
     def canonical_dict(self) -> dict[str, Any]:
         return {
@@ -228,8 +228,8 @@ def verify_consent_token(
     token: ConsentToken,
     operator_public_pem: str,
     *,
-    expected_action_hash: Optional[str] = None,
-    now: Optional[datetime] = None,
+    expected_action_hash: str | None = None,
+    now: datetime | None = None,
 ) -> bool:
     """Target-side offline verification of a ConsentToken. Fail-closed (False on any error)."""
     from drako.kernel.receipts import _canonical, _ed25519
@@ -256,8 +256,8 @@ def verify_consent_token(
 class CapabilityToken:
     origin: str
     scope: frozenset
-    ttl_seconds: Optional[int] = None
-    consent: Optional[ConsentToken] = None
+    ttl_seconds: int | None = None
+    consent: ConsentToken | None = None
 
 
 def may_influence(label: Label, required_trust: TrustLevel, side_effect: str) -> bool:
@@ -267,9 +267,7 @@ def may_influence(label: Label, required_trust: TrustLevel, side_effect: str) ->
         return False
     if label.trust < required_trust:
         return False
-    if side_effect not in label.scope:
-        return False
-    return True
+    return side_effect in label.scope
 
 
 REQUIRED_TRUST = {

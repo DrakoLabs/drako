@@ -11,8 +11,9 @@ keys you get decisions only (explicit, never silent-unsigned).
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence
+from typing import Any
 
 from drako.kernel.authority import ConsentToken, Label, OriginAttester, TrustLevel
 from drako.kernel.envelope import Decision, Guardian, Proposal, args_hash
@@ -27,10 +28,10 @@ class HostConfig:
     agent_id: str = "default-agent"
     session_id: str = ""
     manifest_snapshot: str = ""
-    store_path: Optional[str] = None
-    private_pem: Optional[str] = None
-    public_pem: Optional[str] = None
-    operator_public_pem: Optional[str] = None  # sealed pubkey for ConsentToken verification
+    store_path: str | None = None
+    private_pem: str | None = None
+    public_pem: str | None = None
+    operator_public_pem: str | None = None  # sealed pubkey for ConsentToken verification
     enable_loop_breaker: bool = True
     loop_threshold: int = 10
     loop_window_seconds: float = 300.0
@@ -39,19 +40,19 @@ class HostConfig:
 class Host:
     """Owns a Guardian + key material + hash chain + LoopBreaker across calls."""
 
-    def __init__(self, guardian: Guardian, config: Optional[HostConfig] = None):
+    def __init__(self, guardian: Guardian, config: HostConfig | None = None):
         self.guardian = guardian
         self.config = config or HostConfig()
         if self.config.operator_public_pem and not self.guardian.operator_public_pem:
             self.guardian.operator_public_pem = self.config.operator_public_pem
-        self._last_hash: Optional[str] = None
+        self._last_hash: str | None = None
         self._store = None
         if self.config.store_path:
             from drako.kernel.receipts import ReceiptStore
 
             self._store = ReceiptStore(self.config.store_path)
         self.attester = OriginAttester()
-        self.loop_breaker: Optional[LoopBreaker] = (
+        self.loop_breaker: LoopBreaker | None = (
             LoopBreaker(
                 trip_threshold=self.config.loop_threshold,
                 window_seconds=self.config.loop_window_seconds,
@@ -61,7 +62,7 @@ class Host:
         )
 
     @property
-    def last_hash(self) -> Optional[str]:
+    def last_hash(self) -> str | None:
         return self._last_hash
 
     def attest_label(
@@ -70,7 +71,7 @@ class Host:
         origin: str,
         trust: TrustLevel,
         scope: frozenset,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
     ) -> Label:
         """Mint a call-site attested Label scoped to this Host."""
         return self.attester.issue(
@@ -89,8 +90,8 @@ class Host:
         tool_name: str,
         digest: str,
         provenance: Sequence[Label],
-        supersedes_receipt_id: Optional[str] = None,
-    ) -> Optional[dict[str, Any]]:
+        supersedes_receipt_id: str | None = None,
+    ) -> dict[str, Any] | None:
         if not (self.config.private_pem and self.config.public_pem):
             return None
         from drako.kernel import receipts as R
@@ -104,11 +105,11 @@ class Host:
             args_hash=digest,
             provenance=[
                 {
-                    "origin": l.origin,
-                    "trust": l.trust.name,
-                    "ttl_seconds": l.ttl_seconds,
+                    "origin": lbl.origin,
+                    "trust": lbl.trust.name,
+                    "ttl_seconds": lbl.ttl_seconds,
                 }
-                for l in provenance
+                for lbl in provenance
             ],
             prev_hash=self._last_hash,
             supersedes_receipt_id=supersedes_receipt_id,
@@ -124,11 +125,11 @@ class Host:
         self,
         tool_name: str,
         args: dict[str, Any],
-        provenance: Optional[list[Label]] = None,
+        provenance: list[Label] | None = None,
         side_effect_class: str = "write",
-        consent_token: Optional[ConsentToken] = None,
-        supersedes_receipt_id: Optional[str] = None,
-    ) -> tuple[Decision, Optional[dict[str, Any]]]:
+        consent_token: ConsentToken | None = None,
+        supersedes_receipt_id: str | None = None,
+    ) -> tuple[Decision, dict[str, Any] | None]:
         """Evaluate + check loop breaker + (if keys) mint a chained receipt."""
         prov = tuple(provenance or ())
         digest = args_hash(dict(args))
@@ -190,7 +191,7 @@ class Host:
         self,
         memory_id: str,
         labels: Sequence[Label],
-    ) -> tuple[MemoryDecision, Optional[dict[str, Any]]]:
+    ) -> tuple[MemoryDecision, dict[str, Any] | None]:
         """Authorize a memory write (ASI06) and mint a chained receipt."""
         mdec = authorize_memory_write(labels, memory_id)
         digest = args_hash({"memory_id": memory_id, "label_count": len(labels)})

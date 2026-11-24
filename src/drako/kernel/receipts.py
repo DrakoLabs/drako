@@ -18,7 +18,7 @@ import hashlib
 import hmac
 import json
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 try:
     from agent_hooks import canonical_json as _ah_canonical_json
@@ -84,10 +84,10 @@ def mint_receipt(
     tool_name: str,
     agent_id: str,
     args_hash: str,
-    provenance: Optional[list[dict[str, Any]]] = None,
-    intent_binding: Optional[str] = None,
-    prev_hash: Optional[str] = None,
-    supersedes_receipt_id: Optional[str] = None,
+    provenance: list[dict[str, Any]] | None = None,
+    intent_binding: str | None = None,
+    prev_hash: str | None = None,
+    supersedes_receipt_id: str | None = None,
     private_pem: str,
     public_pem: str,
     grade: str = "evidence",
@@ -165,9 +165,10 @@ def verify_receipt_hmac(receipt: dict[str, Any], shared_secret: bytes) -> tuple[
             if k not in ("hmac", "signature", "payload_hash")
         }
         canonical = _canonical(body)
-        if "payload_hash" in receipt:
-            if hashlib.sha256(canonical).hexdigest() != receipt.get("payload_hash"):
-                return False, "invalid"
+        if "payload_hash" in receipt and (
+            hashlib.sha256(canonical).hexdigest() != receipt.get("payload_hash")
+        ):
+            return False, "invalid"
         expected = hmac.new(shared_secret, canonical, hashlib.sha256).hexdigest()
         if hmac.compare_digest(presented, expected):
             return True, "telemetry"
@@ -176,7 +177,7 @@ def verify_receipt_hmac(receipt: dict[str, Any], shared_secret: bytes) -> tuple[
         return False, "invalid"
 
 
-def verify_chain(receipts: list[dict[str, Any]], public_pem: str) -> tuple[bool, Optional[int]]:
+def verify_chain(receipts: list[dict[str, Any]], public_pem: str) -> tuple[bool, int | None]:
     """Verify Ed25519 signatures + hash links in order. Returns (ok, failing_index)."""
     prev = None
     for i, r in enumerate(receipts):
@@ -250,6 +251,7 @@ def to_slsa_provenance(receipt: dict[str, Any]) -> dict[str, Any]:
 
 def _locked_append(path, line: bytes, timeout_s: float = 5.0) -> None:
     """Cross-platform exclusive append via lockfile (T-4, O_CREAT|O_EXCL)."""
+    import contextlib
     import os
     import time
 
@@ -261,18 +263,16 @@ def _locked_append(path, line: bytes, timeout_s: float = 5.0) -> None:
             fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             os.close(fd)
             break
-        except (FileExistsError, PermissionError):
+        except (FileExistsError, PermissionError) as err:
             try:
                 if time.time() - os.path.getmtime(lock) > timeout_s:
-                    try:
+                    with contextlib.suppress(OSError):
                         os.unlink(lock)
-                    except OSError:
-                        pass
                     continue
             except OSError:
                 pass
             if time.time() > deadline:
-                raise TimeoutError(f"receipt store lock contention: {lock}")
+                raise TimeoutError(f"receipt store lock contention: {lock}") from err
             attempt += 1
             time.sleep(min(0.01 * (1 + attempt * 0.5), 0.2))
     try:
@@ -313,7 +313,7 @@ class ReceiptStore:
                     out.append(json.loads(line))
         return out
 
-    def get(self, receipt_id: str) -> Optional[dict[str, Any]]:
+    def get(self, receipt_id: str) -> dict[str, Any] | None:
         for r in self.load_all():
             if r.get("receipt_id") == receipt_id:
                 return r

@@ -21,7 +21,7 @@ import base64
 import hashlib
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 from drako.kernel.receipts import _canonical, _ed25519
 
@@ -79,7 +79,7 @@ def sign_agent_card(
     *,
     kid: str,
     ttl_days: int = CARD_DEFAULT_TTL_DAYS,
-    now: Optional[datetime] = None,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     """Sign an A2A v1.0 Agent Card with RFC 7515 Detached JWS (EdDSA) + JCS.
 
@@ -114,8 +114,8 @@ def verify_agent_card(
     card: Any,
     public_pem: str,
     *,
-    expected_kid: Optional[str] = None,
-    now: Optional[datetime] = None,
+    expected_kid: str | None = None,
+    now: datetime | None = None,
     ignore_expiry: bool = False,
 ) -> bool:
     """Verify at least one valid RFC 7515 Detached JWS signature on an A2A Agent Card.
@@ -155,9 +155,12 @@ def verify_agent_card(
                 continue
             if expected_kid is not None and header.get("kid") != expected_kid:
                 continue
-            if not ignore_expiry and "exp" in header:
-                if not isinstance(header["exp"], (int, float)) or header["exp"] <= check_ts:
-                    continue
+            if (
+                not ignore_expiry
+                and "exp" in header
+                and (not isinstance(header["exp"], (int, float)) or header["exp"] <= check_ts)
+            ):
+                continue
 
             signing_input = f"{protected_b64}.{payload_b64}".encode("ascii")
             try:
@@ -174,9 +177,9 @@ def fetch_and_verify_agent_card(
     url: str,
     public_pem: str,
     *,
-    allowlist: Optional[list[str]] = None,
+    allowlist: list[str] | None = None,
     allow_private: bool = False,
-    expected_kid: Optional[str] = None,
+    expected_kid: str | None = None,
     timeout: float = 10.0,
 ) -> tuple[dict[str, Any], bool]:
     """Fetch a remote Agent Card via SSRF-guarded egress and verify its JWS signature."""

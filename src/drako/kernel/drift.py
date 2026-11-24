@@ -24,9 +24,9 @@ Kinds:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional, Sequence
 
 
 @dataclass(frozen=True)
@@ -66,9 +66,9 @@ def _norm(detail: str) -> str:
 def detect_drift(
     baseline: Sequence[AuthorityEntry],
     effective: Sequence[AuthorityEntry],
-    baseline_issued_at: Optional[str] = None,
+    baseline_issued_at: str | None = None,
     max_age_days: int = 30,
-    now: Optional[datetime] = None,
+    now: datetime | None = None,
 ) -> DriftReport:
     """Compare baseline vs effective authority. Deny-closed on confusion.
 

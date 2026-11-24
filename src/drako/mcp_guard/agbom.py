@@ -16,8 +16,9 @@ from __future__ import annotations
 import base64 as _b64
 import hashlib
 import json
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 
 def canonical_snapshot(

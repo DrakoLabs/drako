@@ -54,7 +54,7 @@ def compile_profile(doc: dict[str, Any]) -> dict[str, Any]:
                 evaluate_condition(cond.get("when", "False"), {})
             except UnsafeExpressionError as e:
                 if "Unknown variable" not in str(e):
-                    raise ProfileError(f"rule {name!r} condition {cond.get('id')!r}: {e}")
+                    raise ProfileError(f"rule {name!r} condition {cond.get('id')!r}: {e}") from e
         compiled[name] = {
             "id": rule.get("id", f"rule:{name}"),
             "effect": effect,

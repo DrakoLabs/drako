@@ -12,7 +12,7 @@ DB-free, local-first client extracted and hardened from P0-01 + P1-01:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -36,7 +36,7 @@ class MCPGAClient:
         server_id: str | None = None,
         protocol_version: str = MCP_GA_PROTOCOL_VERSION,
         bearer_token: str | None = None,
-        allowlist: Optional[list[str]] = None,
+        allowlist: list[str] | None = None,
         allow_private: bool = False,
         timeout: float = 15.0,
     ) -> None:
@@ -51,14 +51,14 @@ class MCPGAClient:
         self.allowlist = allowlist
         self.allow_private = allow_private
         self.timeout = timeout
-        self._tools_baseline: Optional[str] = None
+        self._tools_baseline: str | None = None
         self._req_id = 0
 
     @property
-    def tools_baseline(self) -> Optional[str]:
+    def tools_baseline(self) -> str | None:
         return self._tools_baseline
 
-    def _headers(self, rpc_method: str, tool_name: Optional[str] = None) -> dict[str, str]:
+    def _headers(self, rpc_method: str, tool_name: str | None = None) -> dict[str, str]:
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
@@ -76,7 +76,7 @@ class MCPGAClient:
         payload: dict[str, Any],
         headers: dict[str, str],
         *,
-        client: Optional[httpx.Client] = None,
+        client: httpx.Client | None = None,
     ) -> dict[str, Any]:
         url = assert_public_url(
             self.endpoint,
@@ -109,7 +109,7 @@ class MCPGAClient:
             if owns_client:
                 http.close()
 
-    def list_tools(self, *, client: Optional[httpx.Client] = None) -> list[dict[str, Any]]:
+    def list_tools(self, *, client: httpx.Client | None = None) -> list[dict[str, Any]]:
         """Invoke stateless `tools/list` and fail-closed on mid-session drift."""
         self._req_id += 1
         payload = {
@@ -134,7 +134,7 @@ class MCPGAClient:
         tool_name: str,
         arguments: dict[str, Any] | None = None,
         *,
-        client: Optional[httpx.Client] = None,
+        client: httpx.Client | None = None,
     ) -> dict[str, Any]:
         """Invoke stateless `tools/call` with Mcp-Method/Mcp-Name routing headers."""
         self._req_id += 1

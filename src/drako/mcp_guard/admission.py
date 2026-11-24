@@ -20,15 +20,15 @@ enforcement point that re-verifies integrity at spawn time.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, Optional, Sequence
 
 
 @dataclass(frozen=True)
 class AdmissionDecision:
     admitted: bool
     reason: str
-    admitted_spec: Optional[str] = None  # lock's name@version, if admitted
+    admitted_spec: str | None = None  # lock's name@version, if admitted
 
 
 def _bare_name(spec: str) -> str:
@@ -43,7 +43,7 @@ def _bare_name(spec: str) -> str:
 def admit(
     package: str,
     lock: Mapping[str, str],
-    allowed_packages: Optional[Sequence[str]] = None,
+    allowed_packages: Sequence[str] | None = None,
 ) -> AdmissionDecision:
     """Admit a server package (pure, testable). Deny-closed."""
     name = _bare_name((package or "").strip())

@@ -18,7 +18,6 @@ import ipaddress
 import logging
 import os
 import socket
-from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 logger = logging.getLogger("drako.kernel.egress")
@@ -91,7 +90,7 @@ def assert_public_url(
     *,
     allow_private: bool = False,
     allowed_schemes: tuple[str, ...] = ("https",),
-    allowlist: Optional[list[str]] = None,
+    allowlist: list[str] | None = None,
 ) -> str:
     """Validate an outbound URL. Returns the URL unchanged or raises EgressViolation."""
     if allow_private or os.environ.get("DRAKO_ALLOW_PRIVATE_EGRESS") == "1":
@@ -150,7 +149,7 @@ def resolve_redirect(
     location: str,
     hop: int,
     *,
-    allowlist: Optional[list[str]] = None,
+    allowlist: list[str] | None = None,
 ) -> str:
     """Re-validate a redirect target. Raises EgressViolation on abuse."""
     if hop >= _MAX_REDIRECTS:

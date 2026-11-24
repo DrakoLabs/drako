@@ -31,9 +31,9 @@ is pure). 100% offline, no network.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional, Sequence
 
 from drako.kernel.authority import (
     REQUIRED_TRUST,
@@ -55,13 +55,13 @@ class MemoryDecision:
 
     verdict: str  # "permit" | "deny"
     reason: str
-    effective_ttl_seconds: Optional[int] = None
+    effective_ttl_seconds: int | None = None
 
 
 def authorize_memory_write(
     labels: Sequence[Label],
     memory_id: str,
-    now: Optional[datetime] = None,
+    now: datetime | None = None,
 ) -> MemoryDecision:
     """Authorize a write of derived bytes into memory_id (pure, testable).
 
@@ -111,7 +111,7 @@ def authorize_memory_write(
                 f"fails lattice floor (trust={label.trust.name}, "
                 "need >= AGENT with 'memory_write' in scope)",
             )
-    ttls = [l.ttl_seconds for l in labels if l.ttl_seconds is not None]
+    ttls = [lbl.ttl_seconds for lbl in labels if lbl.ttl_seconds is not None]
     return MemoryDecision(
         "permit",
         f"memory write to {memory_id!r} authorized "

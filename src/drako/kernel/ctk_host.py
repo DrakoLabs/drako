@@ -21,7 +21,7 @@ import json
 import uuid
 from typing import Any
 
-from drako.kernel import CTK_PIN, ACS_SPEC_PIN
+from drako.kernel import CTK_PIN
 
 
 def _require_ctk():
@@ -37,7 +37,7 @@ def _require_ctk():
         raise ImportError(
             "agent-hooks-sdk (guardian extra) required for CTK runs. "
             f"Install: pip install 'drako[guardian]'  ({CTK_PIN}). ({e})"
-        )
+        ) from e
     return h, IdentityProvider, InterceptionBlocked, InterceptionEmitter, AgentContextBuilder
 
 
@@ -228,8 +228,8 @@ class DrakoHarness:
         if self._guardian is None:
             return
         try:
-            from drako.kernel.envelope import Proposal
             from drako.kernel.authority import Label, TrustLevel
+            from drako.kernel.envelope import Proposal
 
             d = self._guardian.evaluate(Proposal(
                 action=tc["name"], side_effect_class="write", args=dict(tc["args"]),

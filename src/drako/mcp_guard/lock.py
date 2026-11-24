@@ -38,7 +38,6 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +88,7 @@ def load_lock(path: str | Path | None = None) -> dict[str, PinnedServer]:
     try:
         raw = json.loads(p.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as e:
-        raise LockError(f"mcp.lock unreadable at {p}: {e}")
+        raise LockError(f"mcp.lock unreadable at {p}: {e}") from e
     if not isinstance(raw, dict) or raw.get("version") != LOCK_VERSION:
         raise LockError(
             f"mcp.lock at {p}: expected {{'version': {LOCK_VERSION}, ...}}"
@@ -155,12 +154,12 @@ async def registry_integrity(package: str, version: str) -> str:
         out, err = await asyncio.wait_for(
             proc.communicate(), timeout=NPM_VIEW_TIMEOUT_SECONDS
         )
-    except FileNotFoundError:
-        raise LockError("npm not found — cannot verify pin integrity")
-    except asyncio.TimeoutError:
+    except FileNotFoundError as e:
+        raise LockError("npm not found — cannot verify pin integrity") from e
+    except asyncio.TimeoutError as e:
         raise LockError(
             f"npm view timed out for {package}@{version} — fail-closed"
-        )
+        ) from e
     if proc.returncode != 0:
         raise LockError(
             f"npm view failed for {package}@{version}: "
@@ -168,8 +167,8 @@ async def registry_integrity(package: str, version: str) -> str:
         )
     try:
         integrity = json.loads(out.decode())
-    except json.JSONDecodeError:
-        raise LockError(f"npm view returned non-JSON for {package}@{version}")
+    except json.JSONDecodeError as e:
+        raise LockError(f"npm view returned non-JSON for {package}@{version}") from e
     if not isinstance(integrity, str) or not integrity.startswith("sha512-"):
         raise LockError(
             f"no usable dist.integrity for {package}@{version} — fail-closed"

@@ -7,13 +7,14 @@ AGENT-HOOKS-0.1 mapping: permit->allow, deny->deny, modify->transform.
 
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from drako.kernel import authority as auth
-from drako.kernel.authority import ConsentToken, Label, TrustLevel
+from drako.kernel.authority import ConsentToken
 from drako.kernel.eval import UnsafeExpressionError, evaluate_condition
 
 logger = logging.getLogger("drako.kernel")
@@ -29,7 +30,7 @@ class Proposal:
     manifest_snapshot: str = ""  # hash of tool manifest at admission
     agent_id: str = ""
     session_id: str = ""
-    consent_token: Optional[ConsentToken] = None  # operator-signed elevation
+    consent_token: ConsentToken | None = None  # operator-signed elevation
 
 
 @dataclass
@@ -37,8 +38,8 @@ class Decision:
     verdict: str  # permit | deny | modify
     reason: str
     policy_id: str = ""
-    modifications: Optional[dict[str, Any]] = None
-    approval: Optional[dict[str, Any]] = None  # liftable deny seam
+    modifications: dict[str, Any] | None = None
+    approval: dict[str, Any] | None = None  # liftable deny seam
     trace: list[str] = field(default_factory=list)
 
 
@@ -55,7 +56,7 @@ class Guardian:
         self,
         profile: dict[str, Any],
         *,
-        operator_public_pem: Optional[str] = None,
+        operator_public_pem: str | None = None,
     ):
         self.profile = profile
         self.spec_pin = profile.get("spec_pin", "")
@@ -87,6 +88,20 @@ class Guardian:
                 expected_action_hash=args_hash(proposal.args),
             )
         return bool(proposal.capability_set)
+
+    def _match_tool_rule(self, action: str) -> dict[str, Any] | None:
+        """Resolve exact tool rule first; otherwise match glob patterns (deny wins on tie)."""
+        exact = self.tools.get(action)
+        if exact is not None:
+            return exact
+        matched_allow: dict[str, Any] | None = None
+        for pattern, candidate in self.tools.items():
+            if any(ch in pattern for ch in "*?[") and fnmatch.fnmatchcase(action, pattern):
+                if candidate.get("effect", "deny") == "deny":
+                    return candidate
+                if matched_allow is None:
+                    matched_allow = candidate
+        return matched_allow
 
     def _evaluate_inner(self, proposal: Proposal) -> Decision:
         if proposal.side_effect_class not in auth.REQUIRED_TRUST:
@@ -121,8 +136,8 @@ class Guardian:
                 )
         trace.append("provenance-ok")
 
-        # 2. Tool rule (Progent-style: effect + arg conditions)
-        rule = self.tools.get(proposal.action)
+        # 2. Tool rule (exact match first, then fail-closed glob match)
+        rule = self._match_tool_rule(proposal.action)
         if rule is None:
             if self.default_effect == "deny":
                 return Decision(

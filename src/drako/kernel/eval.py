@@ -48,14 +48,14 @@ def _eval_node(node: ast.AST, context: dict[str, Any]) -> Any:
         try:
             return value[idx]
         except (KeyError, IndexError, TypeError) as e:
-            raise UnsafeExpressionError(f"Bad subscript: {e}")
+            raise UnsafeExpressionError(f"Bad subscript: {e}") from e
     if isinstance(node, ast.Attribute):
         if node.attr.startswith("_"):
             raise UnsafeExpressionError(f"Dunder/private attribute blocked: {node.attr}")
         return getattr(_eval_node(node.value, context), node.attr)
     if isinstance(node, ast.Compare):
         left = _eval_node(node.left, context)
-        for op_node, comparator in zip(node.ops, node.comparators):
+        for op_node, comparator in zip(node.ops, node.comparators, strict=False):
             op_cls = type(op_node)
             if op_cls not in _ALLOWED_COMPARE_OPS:
                 raise UnsafeExpressionError(f"Disallowed operator: {op_cls.__name__}")
@@ -63,7 +63,7 @@ def _eval_node(node: ast.AST, context: dict[str, Any]) -> Any:
             try:
                 ok = _ALLOWED_COMPARE_OPS[op_cls](left, right)
             except TypeError as e:
-                raise UnsafeExpressionError(f"Incomparable operands: {e}")
+                raise UnsafeExpressionError(f"Incomparable operands: {e}") from e
             if not ok:
                 return False
             left = right
@@ -91,5 +91,5 @@ def evaluate_condition(expr: str, context: dict[str, Any]) -> bool:
     try:
         tree = ast.parse(expr, mode="eval")
     except SyntaxError as e:
-        raise UnsafeExpressionError(f"Syntax error: {e}")
+        raise UnsafeExpressionError(f"Syntax error: {e}") from e
     return bool(_eval_node(tree, context))
