@@ -1,0 +1,5 @@
+version: "4.0"
+hooks:
+  pre_action:
+    - name: validate-schema
+      script: .drako/hooks/validate_schema.py

@@ -263,7 +263,7 @@ class TestDeterminismScoring:
         gov_score = calculate_score(findings)
 
         # Determinism score should only be affected by DET findings
-        assert det_score == 100 - 8  # one HIGH = -8
+        assert det_score == 100 - 5  # one HIGH = -5
         # Governance score should include both (with category cap on Determinism)
         assert gov_score < 100
 

@@ -15,6 +15,7 @@ Agent configuration (env vars):
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import logging
 import os
@@ -31,21 +32,21 @@ logger = logging.getLogger("drako.proxy")
 TARGETS: dict[str, str] = {
     "openai": "https://api.openai.com",
     "anthropic": "https://api.anthropic.com",
+    "google": "https://generativelanguage.googleapis.com",
 }
 
-# Known model cost estimates (input $/1K tokens, output $/1K tokens)
+# Default fallback model cost estimates ($/1K tokens: input, output).
+# Operators should override via `.drako.yaml -> finops.tracking.model_costs`.
 MODEL_COSTS: dict[str, tuple[float, float]] = {
+    "gpt-5": (0.002, 0.01),
     "gpt-4o": (0.0025, 0.01),
     "gpt-4o-mini": (0.00015, 0.0006),
-    "gpt-4-turbo": (0.01, 0.03),
-    "gpt-4": (0.03, 0.06),
-    "gpt-3.5-turbo": (0.0005, 0.0015),
-    "claude-3-opus": (0.015, 0.075),
-    "claude-3-sonnet": (0.003, 0.015),
-    "claude-3-haiku": (0.00025, 0.00125),
-    "claude-3.5-sonnet": (0.003, 0.015),
+    "claude-4.5-sonnet": (0.003, 0.015),
     "claude-4-sonnet": (0.003, 0.015),
     "claude-4-opus": (0.015, 0.075),
+    "claude-3.5-sonnet": (0.003, 0.015),
+    "gemini-2.5-pro": (0.00125, 0.01),
+    "gemini-2.5-flash": (0.00015, 0.0006),
 }
 
 
@@ -277,21 +278,34 @@ def _check_hitl(tool_name: str | None, config: dict[str, Any]) -> dict[str, Any]
     return None
 
 
-def _estimate_cost(model: str, response_body: dict[str, Any]) -> float | None:
-    """Estimate cost from response usage data."""
+def _estimate_cost(
+    model: str,
+    response_body: dict[str, Any],
+    config: dict[str, Any] | None = None,
+) -> float | None:
+    """Estimate cost from response usage data (config overrides MODEL_COSTS)."""
     usage = response_body.get("usage")
     if not usage or not isinstance(usage, dict):
         return None
 
-    input_tokens = usage.get("prompt_tokens", 0)
-    output_tokens = usage.get("completion_tokens", 0)
+    input_tokens = usage.get("prompt_tokens", usage.get("input_tokens", 0))
+    output_tokens = usage.get("completion_tokens", usage.get("output_tokens", 0))
 
-    # Find cost rates
     costs = None
-    for model_prefix, rates in MODEL_COSTS.items():
-        if model_prefix in model.lower():
-            costs = rates
-            break
+    cfg_costs = (
+        (config or {}).get("finops", {}).get("tracking", {}).get("model_costs", {})
+    )
+    if isinstance(cfg_costs, dict):
+        for prefix, entry in cfg_costs.items():
+            if prefix.lower() in model.lower() and isinstance(entry, dict):
+                costs = (float(entry.get("input", 0.0)), float(entry.get("output", 0.0)))
+                break
+
+    if costs is None:
+        for model_prefix, rates in MODEL_COSTS.items():
+            if model_prefix in model.lower():
+                costs = rates
+                break
 
     if not costs:
         return None
@@ -311,23 +325,118 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
             "pip install 'drako[proxy]'"
         )
 
+    # NOTE (2026-09-04): this module uses `from __future__ import annotations`
+    # and fastapi is an OPTIONAL import scoped to this function — so handler
+    # annotations like `request: Request` do NOT resolve (FastAPI degrades the
+    # param to a required query arg → 422 "missing query: request"). Publish
+    # the names to module globals so FastAPI type resolution works.
+    globals()["Request"] = Request
+    globals()["Response"] = Response
+
     app = FastAPI(
         title="Drako Enforcement Proxy",
-        version="2.0.0",
-        description="Intercepts LLM API calls at the network layer for governance enforcement.",
+        version="4.0.0",
+        description="Local kernel-backed proxy enforcing Authority Kernel policies, loop breaker, and egress controls.",
     )
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    # Shared state
+    # Shared state (loaded FIRST: CORS + auth + kernel depend on config)
     config = _load_config(config_path)
     session_state: dict[str, Any] = {}
     audit_log: list[dict[str, Any]] = []
+
+    from drako.kernel.egress import EgressViolation, assert_public_url
+    from drako.kernel.loop_breaker import LoopBreaker, call_fingerprint
+
+    lb_cfg = config.get("loop_breaker", {}) if isinstance(config, dict) else {}
+    loop_breaker: LoopBreaker | None = (
+        LoopBreaker(
+            trip_threshold=int(lb_cfg.get("trip_threshold", 10)),
+            window_seconds=float(lb_cfg.get("window_seconds", 300.0)),
+        )
+        if lb_cfg.get("enabled", True)
+        else None
+    )
+
+    # Optional kernel Host for ACS profile enforcement + Ed25519 receipts
+    kernel_host = None
+    kernel_cfg = config.get("kernel", {}) if isinstance(config, dict) else {}
+    prof_path = kernel_cfg.get("profile_path")
+    if prof_path and Path(prof_path).exists():
+        try:
+            from drako.kernel.host import Host, HostConfig
+            from drako.kernel.policies import guardian_from_yaml
+
+            guardian = guardian_from_yaml(Path(prof_path).read_text(encoding="utf-8"))
+            priv_pem = None
+            pub_pem = None
+            priv_file = os.environ.get("DRAKO_SIGNING_KEY_FILE")
+            pub_file = os.environ.get("DRAKO_SIGNING_PUBKEY_FILE")
+            if priv_file and pub_file and Path(priv_file).exists() and Path(pub_file).exists():
+                priv_pem = Path(priv_file).read_text(encoding="utf-8")
+                pub_pem = Path(pub_file).read_text(encoding="utf-8")
+            kernel_host = Host(
+                guardian,
+                HostConfig(
+                    agent_id="drako-proxy",
+                    store_path=kernel_cfg.get("receipt_store"),
+                    private_pem=priv_pem,
+                    public_pem=pub_pem,
+                    enable_loop_breaker=False,  # proxy owns its LoopBreaker above
+                ),
+            )
+        except Exception as exc:
+            logger.warning("Failed to initialize kernel Host in proxy: %s", exc)
+
+    # SECURITY (P0-5c, 2026-09-04): never CORS "*" on a proxy that forwards
+    # Authorization headers. Localhost by default; override explicitly via
+    # config key `cors_origins` (list) for deployed environments.
+    cors_origins = config.get("cors_origins") or [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
+
+    # SECURITY (5b, 2026-09-04): evidence endpoints (/status, /audit) require a
+    # bearer token — the proxy observes prompts/PII and serves the audit trail.
+    # Token from env DRAKO_PROXY_TOKEN or config key `proxy_token`.
+    # Dev-only bypass: DRAKO_DEV_UNSAFE=1 (loud startup warning, never in prod).
+    proxy_token = os.environ.get("DRAKO_PROXY_TOKEN") or config.get("proxy_token")
+    dev_unsafe = os.environ.get("DRAKO_DEV_UNSAFE") == "1"
+    if not proxy_token and not dev_unsafe:
+        logger.warning(
+            "DRAKO_PROXY_TOKEN unset: /status and /audit will reject all "
+            "requests until a token is configured (or DRAKO_DEV_UNSAFE=1 for local dev)."
+        )
+    if dev_unsafe:
+        logger.warning("DRAKO_DEV_UNSAFE=1: evidence endpoints unauthenticated. Dev only.")
+
+    def _require_evidence_auth(request: Any) -> Any | None:
+        """Return a 401 Response if unauthorized, else None."""
+        from fastapi import Response as _Response
+
+        if dev_unsafe:
+            return None
+        if not proxy_token:
+            return _Response(
+                content=json.dumps({"error": "proxy_token_unset"}),
+                status_code=401,
+                media_type="application/json",
+            )
+        presented = (request.headers.get("Authorization") or "").removeprefix("Bearer ").strip()
+        if not presented or not hmac.compare_digest(presented, proxy_token):
+            return _Response(
+                content=json.dumps({"error": "unauthorized"}),
+                status_code=401,
+                media_type="application/json",
+            )
+        return None
 
     @app.get("/health")
     async def health():
@@ -339,7 +448,10 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
         }
 
     @app.get("/status")
-    async def status():
+    async def status(request: Request):
+        denied = _require_evidence_auth(request)
+        if denied is not None:
+            return denied
         return {
             "proxy": "drako-proxy",
             "version": "2.0.0",
@@ -353,7 +465,10 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
         }
 
     @app.get("/audit")
-    async def get_audit():
+    async def get_audit(request: Request):
+        denied = _require_evidence_auth(request)
+        if denied is not None:
+            return denied
         return {"entries": audit_log[-100:]}  # Last 100 entries
 
     @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
@@ -393,6 +508,53 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
         model = body_dict.get("model", "unknown")
 
         # 4. Run governance pipeline
+        # 4.0 Runaway repetition circuit-breaker (ASI08/ASI10)
+        if loop_breaker is not None:
+            req_fp = call_fingerprint(path, tool_name or model, body_bytes.decode("utf-8", errors="replace"))
+            lv = loop_breaker.record(agent_id or "proxy-anonymous", req_fp)
+            if lv.action != "ok":
+                reason = f"Runaway loop {lv.action}: identical request repeated {lv.count} times"
+                _log_audit(audit_log, agent_id, tool_name, model, "rejected", reason, time.time() - start_time)
+                return Response(
+                    content=json.dumps({
+                        "error": {
+                            "message": f"[Drako] Blocked: {reason}",
+                            "type": "governance_violation",
+                            "code": "drako_loop_breaker",
+                        }
+                    }),
+                    status_code=429,
+                    media_type="application/json",
+                )
+
+        # 4.1 Authority Kernel check (when ACS profile configured)
+        receipt_id: str | None = None
+        if kernel_host is not None and tool_name:
+            k_decision, k_receipt = kernel_host.govern_tool_call(
+                tool_name=tool_name,
+                args=body_dict,
+                side_effect_class="external_comms",
+            )
+            if k_receipt:
+                receipt_id = k_receipt.get("receipt_id")
+            if k_decision.verdict == "deny":
+                _log_audit(audit_log, agent_id, tool_name, model, "rejected", k_decision.reason, time.time() - start_time)
+                headers = {"X-Drako-Receipt-Id": receipt_id} if receipt_id else {}
+                return Response(
+                    content=json.dumps({
+                        "error": {
+                            "message": f"[Drako] Blocked by Authority Kernel: {k_decision.reason}",
+                            "type": "governance_violation",
+                            "code": "drako_kernel_deny",
+                            "policy_id": k_decision.policy_id,
+                            "receipt_id": receipt_id,
+                        }
+                    }),
+                    status_code=403,
+                    headers=headers,
+                    media_type="application/json",
+                )
+
         # 4a. ODD check
         odd_result = _check_odd(agent_id, tool_name, config)
         if odd_result and odd_result["decision"] == "rejected":
@@ -461,8 +623,24 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
                 media_type="application/json",
             )
 
-        # 5. Forward to real API
+        # 5. Forward to real API (SSRF egress check)
         forward_url = f"{target_url}{stripped_path}"
+        egress_domains = config.get("egress", {}).get("allowed_domains") or None
+        try:
+            assert_public_url(forward_url, allowlist=egress_domains)
+        except EgressViolation as exc:
+            _log_audit(audit_log, agent_id, tool_name, model, "rejected", str(exc), time.time() - start_time)
+            return Response(
+                content=json.dumps({
+                    "error": {
+                        "message": f"[Drako] Egress blocked: {exc}",
+                        "type": "governance_violation",
+                        "code": "drako_egress_blocked",
+                    }
+                }),
+                status_code=403,
+                media_type="application/json",
+            )
         forward_headers = dict(request.headers)
         # Remove hop-by-hop headers
         for h in ("host", "x-drako-agent", "transfer-encoding"):
@@ -507,7 +685,7 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
         if response.status_code == 200:
             try:
                 resp_json = response.json()
-                cost = _estimate_cost(model, resp_json)
+                cost = _estimate_cost(model, resp_json, config=config)
                 if cost is not None:
                     cost_key = f"cost_{agent_id or 'unknown'}"
                     session_state[cost_key] = session_state.get(cost_key, 0.0) + cost
@@ -525,6 +703,8 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
         resp_headers.pop("content-encoding", None)
         resp_headers["X-Drako-Proxy"] = "true"
         resp_headers["X-Drako-Latency-Ms"] = str(int(elapsed * 1000))
+        if receipt_id:
+            resp_headers["X-Drako-Receipt-Id"] = receipt_id
         if cost is not None:
             resp_headers["X-Drako-Cost-USD"] = str(cost)
 
@@ -576,9 +756,14 @@ def _log_audit(
     )
 
 
-def run_server(port: int = 8990, host: str = "0.0.0.0",
+def run_server(port: int = 8990, host: str = "127.0.0.1",
                config_path: str = ".drako.yaml") -> None:
-    """Start the proxy server."""
+    """Start the proxy server.
+
+    SECURITY (5b, 2026-09-04): binds loopback by default. Bind 0.0.0.0 only
+    behind an authenticated reverse proxy — never expose the evidence
+    endpoints directly.
+    """
     try:
         import uvicorn
     except ImportError:

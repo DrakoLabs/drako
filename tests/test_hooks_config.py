@@ -11,7 +11,7 @@ class TestHookEntryConfig:
         entry = HookEntryConfig(name="block_deletes")
         assert entry.name == "block_deletes"
         assert entry.timeout_ms == 5000
-        assert entry.action_on_fail == "allow"
+        assert entry.action_on_fail == "block"
         assert entry.priority == 0
 
     def test_condition_entry(self):

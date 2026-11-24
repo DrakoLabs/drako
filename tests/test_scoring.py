@@ -1,8 +1,7 @@
-"""Tests for the scoring module."""
-import pytest
+"""Tests for the scoring module (CRITICAL -10 cap 40, HIGH -5 cap 30, MEDIUM -2 cap 15, LOW -1 cap 5)."""
 
-from drako.cli.scoring import calculate_score, score_to_grade, findings_summary
 from drako.cli.policies.base import Finding
+from drako.cli.scoring import calculate_score, findings_summary, score_to_grade
 
 
 def _finding(severity: str) -> Finding:
@@ -20,55 +19,51 @@ class TestCalculateScore:
         assert calculate_score([]) == 100
 
     def test_one_critical(self):
-        assert calculate_score([_finding("CRITICAL")]) == 85  # 100 - 15
+        assert calculate_score([_finding("CRITICAL")]) == 90  # 100 - 10
 
     def test_one_high(self):
-        assert calculate_score([_finding("HIGH")]) == 92  # 100 - 8
+        assert calculate_score([_finding("HIGH")]) == 95  # 100 - 5
 
     def test_one_medium(self):
-        assert calculate_score([_finding("MEDIUM")]) == 97  # 100 - 3
+        assert calculate_score([_finding("MEDIUM")]) == 98  # 100 - 2
 
     def test_one_low(self):
         assert calculate_score([_finding("LOW")]) == 99  # 100 - 1
 
     def test_critical_cap(self):
-        # 5 CRITICAL = 5 * 15 = 75, but cap is 60
-        findings = [_finding("CRITICAL") for _ in range(5)]
-        assert calculate_score(findings) == 40  # 100 - 60
+        findings = [_finding("CRITICAL") for _ in range(6)]
+        assert calculate_score(findings) == 60  # cap -40
 
     def test_high_cap(self):
-        # 6 HIGH = 6 * 8 = 48, but cap is 40
-        findings = [_finding("HIGH") for _ in range(6)]
-        assert calculate_score(findings) == 60  # 100 - 40
+        findings = [_finding("HIGH") for _ in range(8)]
+        assert calculate_score(findings) == 70  # cap -30
 
     def test_medium_cap(self):
-        # 8 MEDIUM = 8 * 3 = 24, but cap is 20
-        findings = [_finding("MEDIUM") for _ in range(8)]
-        assert calculate_score(findings) == 80  # 100 - 20
+        findings = [_finding("MEDIUM") for _ in range(10)]
+        assert calculate_score(findings) == 85  # cap -15
 
     def test_low_cap(self):
-        # 15 LOW = 15 * 1 = 15, but cap is 10
-        findings = [_finding("LOW") for _ in range(15)]
-        assert calculate_score(findings) == 90  # 100 - 10
+        findings = [_finding("LOW") for _ in range(10)]
+        assert calculate_score(findings) == 95  # cap -5
 
     def test_mixed_severities(self):
         findings = [
-            _finding("CRITICAL"),  # -15
-            _finding("HIGH"),      # -8
-            _finding("MEDIUM"),    # -3
+            _finding("CRITICAL"),  # -10
+            _finding("HIGH"),      # -5
+            _finding("MEDIUM"),    # -2
             _finding("LOW"),       # -1
         ]
-        assert calculate_score(findings) == 73  # 100 - 15 - 8 - 3 - 1
+        assert calculate_score(findings) == 82  # 100 - 18
 
-    def test_minimum_zero(self):
-        # All caps: 60 + 40 + 20 + 10 = 130, score = max(0, 100-130) = 0
+    def test_all_severity_caps(self):
+        # 40 + 30 + 15 + 5 = 90 -> score = 10
         findings = (
-            [_finding("CRITICAL")] * 5
-            + [_finding("HIGH")] * 6
-            + [_finding("MEDIUM")] * 8
-            + [_finding("LOW")] * 15
+            [_finding("CRITICAL")] * 6
+            + [_finding("HIGH")] * 8
+            + [_finding("MEDIUM")] * 10
+            + [_finding("LOW")] * 10
         )
-        assert calculate_score(findings) == 0
+        assert calculate_score(findings) == 10
 
     def test_maximum_100(self):
         assert calculate_score([]) == 100
@@ -107,9 +102,7 @@ class TestFindingsSummary:
             _finding("MEDIUM"),
             _finding("LOW"),
         ]
-        summary = findings_summary(findings)
-        assert summary == {"CRITICAL": 2, "HIGH": 1, "MEDIUM": 3, "LOW": 1}
+        assert findings_summary(findings) == {"CRITICAL": 2, "HIGH": 1, "MEDIUM": 3, "LOW": 1}
 
     def test_empty(self):
-        summary = findings_summary([])
-        assert summary == {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+        assert findings_summary([]) == {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}

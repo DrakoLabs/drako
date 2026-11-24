@@ -16,9 +16,9 @@ import click
 @click.argument("directory", default=".", type=click.Path(exists=True))
 @click.option(
     "--format", "output_format",
-    type=click.Choice(["text", "json", "markdown"]),
+    type=click.Choice(["text", "json", "markdown", "cyclonedx"]),
     default="text",
-    help="Output format (default: text)",
+    help="Output format (default: text; cyclonedx emits CycloneDX 1.7)",
 )
 @click.option(
     "--output", "-o",
@@ -62,6 +62,33 @@ def bom(directory: str, output_format: str, output: str | None) -> None:
         content = format_bom_json(agent_bom, metadata, duration_ms)
     elif output_format == "markdown":
         content = format_bom_markdown(agent_bom, metadata, duration_ms)
+    elif output_format == "cyclonedx":
+        import json as _json
+        from datetime import datetime, timezone
+
+        components = [
+            {"type": "application", "bom-ref": f"agent:{a.name}", "name": a.name, "properties": [{"name": "drako:kind", "value": "agent"}]}
+            for a in agent_bom.agents
+        ] + [
+            {"type": "library", "bom-ref": f"tool:{t.name}", "name": t.name, "properties": [{"name": "drako:kind", "value": "tool"}]}
+            for t in agent_bom.tools
+        ] + [
+            {"type": "machine-learning-model", "bom-ref": f"model:{m.name}", "name": m.name}
+            for m in agent_bom.models
+        ]
+        content = _json.dumps(
+            {
+                "bomFormat": "CycloneDX",
+                "specVersion": "1.7",
+                "version": 1,
+                "metadata": {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "tools": [{"vendor": "DrakoLabs", "name": "drako-bom", "version": "4.0.0"}],
+                },
+                "components": components,
+            },
+            indent=2,
+        )
     else:
         content = format_bom_text(agent_bom, metadata, duration_ms)
 

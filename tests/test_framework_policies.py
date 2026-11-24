@@ -420,8 +420,8 @@ class TestScoringRegression:
                     title="test", message="test"),
         ]
         score = calculate_score(findings)
-        # 100 - 15 - 15 - 8 = 62
-        assert score == 62
+        # 100 - 10 - 10 - 5 = 75
+        assert score == 75
 
     def test_framework_cap_at_30(self):
         """Framework findings should not exceed -30 deduction."""
@@ -430,12 +430,13 @@ class TestScoringRegression:
                     title="t", message="m"),
             Finding(policy_id="FW-AUTOGEN-001", category="Framework", severity="CRITICAL",
                     title="t", message="m"),
-            Finding(policy_id="FW-CREWAI-002", category="Framework", severity="HIGH",
+            Finding(policy_id="FW-CREWAI-002", category="Framework", severity="CRITICAL",
+                    title="t", message="m"),
+            Finding(policy_id="FW-CREWAI-003", category="Framework", severity="CRITICAL",
                     title="t", message="m"),
         ]
         score = calculate_score(findings)
-        # Without cap: 15 + 15 + 8 = 38 deduction → 62
-        # With cap: min(38, 30) = 30 deduction → 70
+        # Without cap: 40 deduction -> 60; with Framework cap (-30) -> 70
         assert score == 70
 
     def test_mixed_framework_and_security(self):
@@ -449,7 +450,5 @@ class TestScoringRegression:
                     title="t", message="m"),
         ]
         score = calculate_score(findings)
-        # Security: 15 deduction
-        # Framework: min(15+15=30, 30) = 30 deduction
-        # Total: 100 - 15 - 30 = 55
-        assert score == 55
+        # Security: 10 deduction; Framework: min(10+10=20, 30) = 20 -> 100 - 30 = 70
+        assert score == 70

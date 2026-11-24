@@ -100,8 +100,8 @@ class FW_MAF_001(FrameworkPolicy):
                     line_number=node.lineno,
                     code_snippet=line_content,
                     fix_snippet=(
-                        "from drako.middleware.maf import with_maf_compliance\n\n"
-                        "agent = with_maf_compliance(agent)\n"
+                        "from drako.adapters.maf import wrap_maf_agent\n\n"
+                        "agent = wrap_maf_agent(agent, host)\n"
                         "# or native: Agent(..., tools=[...], middleware=[...])"
                     ),
                 ))

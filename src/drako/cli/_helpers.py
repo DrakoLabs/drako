@@ -1,12 +1,10 @@
-"""Shared CLI helpers — config resolution and version parsing."""
+"""Shared CLI helpers — local config resolution and version parsing."""
+
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import click
-
-from drako.cli.push_command import _load_client as _raw_load_client
 
 _CONFIG_FILENAME = ".drako.yaml"
 
@@ -41,18 +39,12 @@ def require_config(config_path: str | None) -> str:
     raise SystemExit(1)
 
 
-def load_client_safe(config_path: str | None):
-    """Load DrakoClient, resolving config first (never passes None)."""
-    resolved = require_config(config_path)
-    return _raw_load_client(resolved)
-
-
 def parse_version(value: str) -> int:
-    """Accept 'v3', 'V3', or '3' as version input."""
+    """Accept 'v4', 'V4', or '4' as version input."""
     cleaned = value.strip().lower().lstrip("v")
     try:
         return int(cleaned)
-    except ValueError:
+    except ValueError as exc:
         raise click.BadParameter(
-            f"'{value}' is not a valid version. Use a number like 3 or v3."
-        )
+            f"'{value}' is not a valid version. Use a number like 4 or v4."
+        ) from exc

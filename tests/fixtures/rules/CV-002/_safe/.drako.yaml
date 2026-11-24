@@ -1,0 +1,7 @@
+version: "4.0"
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
+audit:
+  enabled: true
+  cryptographic: true
+  receipt_store: .drako/receipts.jsonl

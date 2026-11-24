@@ -158,15 +158,8 @@ task = Task(description="Research", tools=[my_tool])
         assert results[0].status == ReachabilityStatus.REACHABLE
 
 
-def test_deprecated_shim_still_works_with_warning():
-    """P1-6: old import path keeps working (no breakage) but warns."""
-    import importlib
+def test_legacy_reachability_shim_removed_in_v4():
+    """ADR-0006: deprecated drako.reachability shim removed in v4.0."""
+    import importlib.util
 
-    import drako.reachability as shim
-
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        importlib.reload(shim)  # re-execute to capture the import-time warning
-    assert shim.analyze_reachability is analyze_reachability
-    assert shim.ReachabilityStatus is ReachabilityStatus
-    assert any(issubclass(w.category, DeprecationWarning) for w in caught)
+    assert importlib.util.find_spec("drako.reachability") is None

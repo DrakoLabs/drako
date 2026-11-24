@@ -1,6 +1,10 @@
-"""Drako CLI — entry point."""
+"""Drako CLI — entry point (v4.0 local-first Authority Kernel)."""
 
 from __future__ import annotations
+
+from drako.cli.encoding import configure_output
+
+configure_output()
 
 import click
 
@@ -17,18 +21,22 @@ class _OrderedGroup(click.Group):
 @click.group(
     cls=_OrderedGroup,
     invoke_without_command=True,
-    epilog="Full docs: https://docs.getdrako.com",
+    epilog="Docs & ADRs: https://github.com/DrakoLabs/drako",
 )
 @click.version_option(version=__version__, prog_name="drako")
 @click.pass_context
 def cli(ctx: click.Context) -> None:
-    """Drako — The Trust Layer for AI Agents.
+    """Drako — The Portable Authority Kernel for AI Agents.
 
     \b
-    Getting started:
-      drako scan .     Scan your project for governance issues
-      drako init       Set up governance config
-      drako push       Sync config to the platform
+    Getting started (100% offline, zero API keys):
+      drako scan .            Scan codebase & bootstrap authority map
+      drako init              Create local .drako.yaml + ACS profile
+      drako drift             Detect scope drift vs baseline (ATLAS)
+      drako mcp audit         Audit MCP server configs & mcp.lock pins
+      drako a2a verify        Verify A2A v1.0 JWS Signed Agent Cards
+      drako why <receipt_id>  Inspect provenance subgraph of a decision
+      drako verify            Verify Ed25519 receipt chains offline
 
     \b
     Run drako COMMAND --help for details on any command.
@@ -38,52 +46,45 @@ def cli(ctx: click.Context) -> None:
         ctx.exit(0)
 
 
-# Register sub-commands (lazy imports keep startup fast)
 def _register_commands() -> None:
-    from drako.cli.scan_command import scan
-    from drako.cli.init_command import init
-    from drako.cli.push_command import push
-    from drako.cli.status_command import status
-    from drako.cli.bom_command import bom
+    from drako.cli.a2a_command import a2a
     from drako.cli.baseline_command import baseline
-    from drako.cli.upgrade_command import upgrade
-    from drako.cli.fix_command import fix
-    from drako.cli.validate_command import validate
-    from drako.cli.templates_command import templates
-    from drako.cli.simulate_command import simulate
-    from drako.cli.history_command import history
-    from drako.cli.diff_command import diff
-    from drako.cli.rollback_command import rollback
-    from drako.cli.proxy_command import proxy
-    from drako.cli.serve_command import serve
-    from drako.cli.verify_command import verify
-    from drako.cli.desktop_command import desktop
-    from drako.cli.nocode_command import nocode
+    from drako.cli.bom_command import bom
     from drako.cli.comply_command import comply
+    from drako.cli.desktop_command import desktop
+    from drako.cli.drift_command import drift
+    from drako.cli.fix_command import fix
+    from drako.cli.init_command import init
+    from drako.cli.kernel_command import kernel
     from drako.cli.pin_command import mcp
+    from drako.cli.proxy_command import proxy
+    from drako.cli.scan_command import scan
+    from drako.cli.templates_command import templates
+    from drako.cli.upgrade_command import upgrade
+    from drako.cli.validate_command import validate
+    from drako.cli.verify_command import verify
+    from drako.cli.why_command import why
 
-    # Ordered by user journey: scan → configure → connect → manage
-    cli.add_command(scan)
-    cli.add_command(init)
-    cli.add_command(push)
-    cli.add_command(status)
-    cli.add_command(bom)
-    cli.add_command(baseline)
-    cli.add_command(upgrade)
-    cli.add_command(fix)
-    cli.add_command(validate)
-    cli.add_command(templates)
-    cli.add_command(simulate)
-    cli.add_command(history)
-    cli.add_command(diff)
-    cli.add_command(rollback)
-    cli.add_command(proxy)
-    cli.add_command(serve)
-    cli.add_command(verify)
-    cli.add_command(desktop)
-    cli.add_command(nocode)
-    cli.add_command(comply)
-    cli.add_command(mcp)
+    for cmd in (
+        scan,
+        init,
+        bom,
+        baseline,
+        fix,
+        validate,
+        templates,
+        upgrade,
+        why,
+        verify,
+        drift,
+        mcp,
+        a2a,
+        desktop,
+        proxy,
+        kernel,
+        comply,
+    ):
+        cli.add_command(cmd)
 
 
 _register_commands()

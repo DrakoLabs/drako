@@ -1,62 +1,87 @@
-"""`drako verify` — Verify the integrity of the audit hash chain."""
+"""`drako verify` — Offline cryptographic verification of receipt chains."""
 
 from __future__ import annotations
 
-import click
+import json
+from pathlib import Path
 
-from drako.client import DrakoClient
-from drako.config import DrakoConfig
-from drako.exceptions import DrakoError, ConfigError
+import click
 
 
 @click.command()
-@click.option("--config", "config_path", default=".drako.yaml", help="Path to config file")
-@click.option("--last-n", type=int, default=None, help="Only verify the last N entries")
-def verify(config_path: str, last_n: int | None) -> None:
-    """Verify the integrity of your audit hash chain."""
+@click.argument("receipt_path", required=False, default=None, type=click.Path(exists=True))
+@click.option("--receipt", "receipt_opt", default=None, help="Path to a receipt JSON or JSONL chain file")
+@click.option("--pubkey-file", default=None, help="Ed25519 public key PEM for signature verification")
+@click.option("--format", "output_format", type=click.Choice(["text", "json"]), default="text")
+def verify(
+    receipt_path: str | None,
+    receipt_opt: str | None,
+    pubkey_file: str | None,
+    output_format: str,
+) -> None:
+    """Verify the integrity and Ed25519 signatures of local Drako receipts (100% offline)."""
+    target = receipt_opt or receipt_path or ".drako/receipts.jsonl"
+    path = Path(target)
+    if not path.exists():
+        click.secho(f"  [error]  Receipt file not found: {target}", fg="red", err=True)
+        raise SystemExit(1)
 
-    click.echo()
-    click.secho("  Drako — Audit Chain Verification", fg="cyan", bold=True)
-    click.echo()
+    raw_text = path.read_text(encoding="utf-8").strip()
+    if not raw_text:
+        click.secho("  [error]  Empty receipt file", fg="red", err=True)
+        raise SystemExit(1)
 
     try:
-        config = DrakoConfig.load(config_path)
-        api_key = config.resolve_api_key()
-    except ConfigError as exc:
-        click.echo(click.style("  [error]  ", fg="red") + str(exc))
+        if raw_text.startswith("[") or raw_text.startswith("{"):
+            parsed = json.loads(raw_text)
+            receipts = parsed if isinstance(parsed, list) else [parsed]
+        else:
+            receipts = [json.loads(line) for line in raw_text.splitlines() if line.strip()]
+    except ValueError as exc:
+        click.secho(f"  [error]  Cannot parse receipt JSON/JSONL: {exc}", fg="red", err=True)
         raise SystemExit(1)
 
-    client = DrakoClient(api_key=api_key, endpoint=config.endpoint, tenant_id=config.tenant_id)
-
-    click.echo(click.style("  [verify] ", fg="green") + "Verifying audit chain...")
-
-    try:
-        result = client.verify_chain_sync(last_n=last_n)
-    except DrakoError as exc:
-        click.echo(click.style("  [error]  ", fg="red") + f"Verification failed: {exc}")
+    if not receipts:
+        click.secho("  [error]  No receipts found in file", fg="red", err=True)
         raise SystemExit(1)
 
-    if not isinstance(result, dict):
-        click.echo(click.style("  [error]  ", fg="red") + "Unexpected response from server")
-        raise SystemExit(1)
+    if pubkey_file is None:
+        prev = None
+        for i, r in enumerate(receipts):
+            if r.get("prev_hash") != prev:
+                msg = f"chain broken at index {i}"
+                if output_format == "json":
+                    click.echo(json.dumps({"valid": False, "signatures_verified": False, "broken_index": i, "reason": msg}))
+                else:
+                    click.secho(f"  [error]  {msg}", fg="red")
+                raise SystemExit(1)
+            prev = r.get("payload_hash")
+        if output_format == "json":
+            click.echo(json.dumps({"valid": True, "signatures_verified": False, "count": len(receipts)}))
+        else:
+            click.echo(click.style("  [warn]   ", fg="yellow") + "no --pubkey-file: checked chain links only, signatures UNVERIFIED")
+            click.echo(click.style("  [verify] ", fg="green") + f"chain links contiguous ({len(receipts)} receipt(s)) — signatures UNVERIFIED")
+        return
 
-    is_valid = result.get("valid", False)
-    entries = result.get("entries_checked", 0)
-    chain_head = result.get("chain_head", "N/A")
+    from drako.kernel.receipts import verify_chain, verify_receipt
 
-    if is_valid:
-        click.echo(click.style("  [verify] ", fg="green") + f"Chain is VALID ({entries} entries verified)")
-        click.echo(f"           Chain head: {chain_head}")
+    pub = Path(pubkey_file).read_text(encoding="utf-8")
+    if len(receipts) == 1:
+        ok = verify_receipt(receipts[0], pub)
+        if output_format == "json":
+            click.echo(json.dumps({"valid": ok, "signatures_verified": True, "count": 1}))
+        else:
+            click.echo(click.style("  [verify] ", fg="green" if ok else "red") + ("signature VALID" if ok else "signature INVALID"))
+        if not ok:
+            raise SystemExit(1)
+        return
+
+    ok, idx = verify_chain(receipts, pub)
+    if output_format == "json":
+        click.echo(json.dumps({"valid": ok, "signatures_verified": True, "count": len(receipts), "broken_index": idx}))
+    elif ok:
+        click.echo(click.style("  [verify] ", fg="green") + f"chain VALID ({len(receipts)} receipts, Ed25519 signatures valid)")
     else:
-        click.echo(click.style("  [verify] ", fg="red") + f"Chain is BROKEN ({entries} entries checked)")
-        broken = result.get("broken_links", [])
-        if broken:
-            click.echo(f"           Broken links: {len(broken)}")
-            for link in broken[:5]:
-                click.echo(f"             - {link}")
-        invalid_sigs = result.get("invalid_signatures", [])
-        if invalid_sigs:
-            click.echo(f"           Invalid signatures: {len(invalid_sigs)}")
+        click.echo(click.style("  [verify] ", fg="red") + f"chain BROKEN at index {idx}")
+    if not ok:
         raise SystemExit(1)
-
-    click.echo()

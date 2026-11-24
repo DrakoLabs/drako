@@ -671,7 +671,9 @@ _INJECTION_DEFENSE_PATTERNS = [
 ]
 
 # NOTE (P1-4/U-5, 2026-09-04): suppression is by AST USE (calls_defense),
-# never by substring — a bare import (of anything) silences nothing.
+# never by substring — a bare `import drako` (or any import alone) silences
+# nothing. The earlier _calls_drako_governance helper was folded into
+# calls_defense (single implementation) and removed.
 
 
 def _norm(name: str) -> str:
