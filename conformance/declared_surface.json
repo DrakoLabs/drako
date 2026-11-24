@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "product": "drako",
+  "version": "4.0.0",
+  "component": "drako.kernel.ctk_host.DrakoHarness",
+  "spec_pin": "AGENT-HOOKS-0.1",
+  "ctk_pin": "agent-hooks-sdk==0.1.0a5",
+  "total_vectors": 47,
+  "applicable_vectors": 44,
+  "capability_gated_skips": 3,
+  "excluded_capabilities": [
+    "int64_precision",
+    "bigint_json"
+  ],
+  "supported_verdicts": [
+    "allow",
+    "deny",
+    "transform"
+  ],
+  "fail_closed": true,
+  "claim": "conformant on declared surface (44/44 applicable, 3 capability-gated skips, 0 failures)"
+}
