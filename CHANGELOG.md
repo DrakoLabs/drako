@@ -5,6 +5,34 @@ All notable changes to Drako are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
+## [4.0.0a1] - 2026-11-24
+
+### Added
+- **Zero-Friction Runtime Facade (`drako.guard`, `drako.build_host`)**: one-line offline agent/tool wrapper with fail-closed defaults, glob pattern rules (`allow=["search_*"]`, `deny=["delete_*"]`, deny-wins on tie), and zero disk I/O unless `receipts=` is explicitly passed.
+- **Authority Kernel (`drako.kernel`)**: single fail-closed chokepoint (`Proposal -> Guardian -> Host -> Ed25519 Receipt`), origin-bound trust lattice (`tool:* <= TOOL`, `memory:* <= AGENT`, `ctk:* <= UNTRUSTED`), `OriginAttester`, operator-signed Ed25519 `ConsentToken`s bound to JCS `args_hash`, `MemoryGate` (`ASI06`), MITRE ATLAS `Scope Drift` (`drako drift`), thread-safe repetition `LoopBreaker` (`ASI08`/`ASI10`), and SSRF `egress` chokepoint.
+- **Cryptographic Receipts & Operator/Target Separation**: `drako why <receipt_id>`, offline-default `drako verify`, `drako kernel {keygen, sign-consent, bench}`, in-toto/SLSA v1 export, and Q1 RFC 8032 HMAC `"telemetry"` grading (`verify_receipt_hmac`).
+- **OWASP ACS Conformance (`AGENT-HOOKS-0.1`)**: `conformance/CLAIMS.md` and `conformance/declared_surface.json` (44/44 applicable CTK vectors passing, 3 capability-gated skips, 0 failures).
+- **MCP Guard (`drako.mcp_guard`)**: `mcp.lock` SHA-512 hash-pinning, `admission`, mid-session `tools/list` drift detection (*Deadbugz*), **CycloneDX 1.7 (ECMA-424)** AgBOM (`drako mcp agbom`, `drako bom --format cyclonedx`), and stateless **MCP `2026-07-28` GA** client (`drako mcp check-drift`).
+- **A2A v1.0 Signed Agent Cards (`drako.a2a`)**: RFC 7515 Detached JWS (`EdDSA`) + RFC 8785 JCS (`drako a2a {sign, verify, inspect}`).
+- **Unified Offline Framework Adapters (`drako.adapters`)**: LangGraph, OpenAI Agents SDK, Microsoft Agent Framework (Agent Hooks), Claude Agent SDK (`PreToolUse`), Google ADK (`before_tool_callback`), and CrewAI — all enforcing T-5 re-govern-after-modify with signed `supersedes_receipt_id`.
+- **Skill & Instruction-File Poisoning Scanner**: `drako desktop skills` (`INST-001..005`) scanning `SKILL.md`, `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/*.mdc`, and `.claude/settings*.json`.
+- **EU AI Act Digital Omnibus Alignment (`drako[comply]`)**: Art. 50 (Aug/Dec 2026) and Annex III/I (2027/2028) schedule plus local Ed25519 receipt-chain ingestion for Art. 12 evidence.
+- **Public Architecture Decision Records (`docs/adr/0000` – `0013`)** and full GitHub Actions CI (`test.yml`, `drako-gate.yml`, `publish.yml`).
+- **`drako upgrade --v4`**: idempotent migration from v3 `.drako.yaml` to v4 local-first schema.
+
+### Changed
+- **Relicensed from `BUSL-1.1` to `Apache-2.0`** ([ADR-0012](docs/adr/0012-apache-2-0-license-migration.md)).
+- Consolidated into a single local-first repository (`DrakoLabs/drako`) with zero network calls by default and zero API keys required ([ADR-0001](docs/adr/0001-single-repo-local-first-consolidation.md)).
+- **Read-only `drako scan` by default**: no longer writes `.drako/.last_scan.json` or edits `.gitignore` unless `--save-cache` is explicitly passed; `drako init` runs live in-memory discovery when no cache exists.
+- Proxy server (`drako.proxy.proxy_server`) fixed for FastAPI global annotation resolution (`P0-7`), loopback-bound (`127.0.0.1`), bearer-authenticated on `/status` and `/audit`, and wired to `LoopBreaker`, `egress`, and optional `kernel.Host`.
+- Fixed all 5 pre-broken rule fixtures (`CV-001`, `CV-002`, `HOOK-002`, `HOOK-003`, `COM-005`), scoring test drift, and `tree-sitter` optional lazy imports.
+
+### Removed
+- Retired SaaS client (`DrakoClient`), remote telemetry, `push/status/history/diff/rollback/simulate/serve` CLI commands, `scan --upload`, `scan --share` (`share.py`, `scorecard.py`), SaaS-coupled `middleware/*` (including AutoGen), legacy `src/drako/mcp` (`2024-11-05` + SSE), `simple/` (replaced by `scan --compact`), `nocode/`, research scrapers (`tools/`), and stale marketplace manifests ([ADR-0006](docs/adr/0006-surface-pruning-v4.md)).
+
+---
+
+
 ## [3.0.0] - 2026-04-10
 
 ### Changed

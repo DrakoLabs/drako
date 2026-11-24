@@ -65,10 +65,21 @@ class ComplianceContext:
     governance_score: int = 0
     determinism_score: int = 100
 
-    # Runtime config
+    # Runtime config & Digital Omnibus EU AI Act (Art. 50 + Art. 12 receipts)
     audit_trail_enabled: bool = False
     hitl_configured: bool = False
     hitl_triggers: list[str] = field(default_factory=list)
+    article50_transparency_active: bool = True  # active since 2026-08-02; Art. 50(2) grace ends 2026-12-02
+    article50_disclosure_mechanism: str = ""
+    receipt_evidence: dict[str, Any] = field(default_factory=dict)
+    eu_ai_act_timeline: dict[str, str] = field(
+        default_factory=lambda: {
+            "article_50_transparency": "2026-08-02",
+            "article_50_2_watermarking_grace_end": "2026-12-02",
+            "annex_iii_high_risk": "2027-12-02",
+            "annex_i_embedded_high_risk": "2028-08-02",
+        }
+    )
 
     # Meta
     generated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -94,24 +105,71 @@ def _list(answers: dict[str, Any], key: str) -> list[str]:
     return [str(value)]
 
 
-def _read_runtime_config(directory: Path) -> tuple[bool, bool, list[str]]:
-    """Best-effort: read .drako.yaml audit + HITL info without hard-coupling."""
+def _read_runtime_config(directory: Path) -> tuple[bool, bool, list[str], str]:
+    """Best-effort: read local v4 .drako.yaml audit + HITL + receipt_store path."""
+    cfg_file = directory / ".drako.yaml"
+    if not cfg_file.exists():
+        return False, False, [], ".drako/receipts.jsonl"
     try:
-        from drako.config import load_drako_config
+        from drako.config import DrakoConfig
 
-        config = load_drako_config(directory / ".drako.yaml")
+        config = DrakoConfig.load(str(cfg_file))
     except Exception:
-        return False, False, []
+        return False, False, [], ".drako/receipts.jsonl"
 
-    audit = bool(getattr(config, "audit_trail_enabled", False) or getattr(config, "audit", None))
-    hitl_obj = getattr(config, "hitl", None) or getattr(config, "human_in_the_loop", None)
-    if hitl_obj is None:
-        return audit, False, []
+    audit = bool(getattr(config.audit, "enabled", False))
+    receipt_store = getattr(config.kernel, "receipt_store", None) or getattr(
+        config.audit, "receipt_store", ".drako/receipts.jsonl"
+    )
+    hitl_obj = getattr(config, "hitl", None)
+    if hitl_obj is None or getattr(hitl_obj, "mode", "off") == "off":
+        return audit, False, [], str(receipt_store)
     triggers: list[str] = []
     raw_triggers = getattr(hitl_obj, "triggers", None)
-    if isinstance(raw_triggers, list):
-        triggers = [str(t) for t in raw_triggers]
-    return audit, True, triggers
+    if raw_triggers is not None:
+        triggers.extend(getattr(raw_triggers, "tools", []) or [])
+        triggers.extend(getattr(raw_triggers, "tool_types", []) or [])
+    return audit, True, [str(t) for t in triggers], str(receipt_store)
+
+
+def _read_receipt_evidence(directory: Path, receipt_store: str) -> dict[str, Any]:
+    """Summarize local Ed25519 receipt chain for EU AI Act Art. 12 / Art. 14 evidence."""
+    store_path = Path(receipt_store)
+    if not store_path.is_absolute():
+        store_path = directory / store_path
+    if not store_path.exists():
+        return {"present": False, "count": 0, "chain_contiguous": False}
+    try:
+        from drako.kernel.receipts import ReceiptStore
+
+        receipts = ReceiptStore(str(store_path)).load_all()
+    except Exception:
+        return {"present": False, "count": 0, "chain_contiguous": False}
+
+    prev = None
+    contiguous = True
+    permits = 0
+    denies = 0
+    signers: set[str] = set()
+    for r in receipts:
+        if r.get("prev_hash") != prev:
+            contiguous = False
+        prev = r.get("payload_hash")
+        if r.get("decision") == "permit":
+            permits += 1
+        elif r.get("decision") == "deny":
+            denies += 1
+        if r.get("signer"):
+            signers.add(str(r["signer"]))
+    return {
+        "present": bool(receipts),
+        "store_path": str(store_path),
+        "count": len(receipts),
+        "permits": permits,
+        "denies": denies,
+        "chain_contiguous": contiguous and bool(receipts),
+        "signers": sorted(signers),
+    }
 
 
 def build_context(directory: str | Path = ".") -> ComplianceContext:
@@ -119,7 +177,8 @@ def build_context(directory: str | Path = ".") -> ComplianceContext:
     directory = Path(directory)
     answers = load_answers(directory)
     scan = load_scan_cache(str(directory), max_age_seconds=10 ** 9) or {}
-    audit, hitl, triggers = _read_runtime_config(directory)
+    audit, hitl, triggers, receipt_store = _read_runtime_config(directory)
+    receipt_ev = _read_receipt_evidence(directory, receipt_store)
 
     return ComplianceContext(
         # Identity
@@ -166,10 +225,12 @@ def build_context(directory: str | Path = ".") -> ComplianceContext:
         risk_findings=[],  # last_scan.json keeps only summary; full findings not persisted yet
         governance_score=int(scan.get("score", 0)),
         determinism_score=int(scan.get("determinism_score", 100)),
-        # Runtime
-        audit_trail_enabled=audit,
+        # Runtime & Digital Omnibus EU AI Act evidence
+        audit_trail_enabled=audit or receipt_ev.get("present", False),
         hitl_configured=hitl,
         hitl_triggers=triggers,
+        article50_disclosure_mechanism=_str(answers, "user_notification_mechanism"),
+        receipt_evidence=receipt_ev,
         # Meta
         scan_timestamp=str(scan.get("scanned_at", "")),
     )
