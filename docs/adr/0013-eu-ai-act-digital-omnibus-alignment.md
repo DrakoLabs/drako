@@ -1,0 +1,31 @@
+# ADR-0013: EU AI Act Alignment Post-Digital Omnibus (Art. 50 & Art. 12 Evidence)
+
+- **Status:** Accepted
+- **Date:** 2026-11-24
+
+## Context
+
+The EU **Digital Omnibus on AI** (effective July 2026) updated the enforcement schedule of Regulation (EU) 2024/1689:
+- **Article 50 (Transparency):** Applicable since **August 2, 2026**, with the **Article 50(2)** synthetic-content/watermarking transitional grace period ending **December 2, 2026**.
+- **Annex III Standalone High-Risk AI Systems** (Art. 9, 11, 12, 14): Deferred to **December 2, 2027**.
+- **Annex I Embedded High-Risk AI Systems:** Deferred to **August 2, 2028**.
+
+Meanwhile, `drako.comply.mapping` previously tried to call a nonexistent `load_drako_config()` helper and had no linkage to local Ed25519 receipt chains.
+
+## Decision
+
+1. **Fix `.drako.yaml` loading in `drako.comply.mapping`** using `DrakoConfig.load()` and ingest local `.drako/receipts.jsonl` chains (`_read_receipt_evidence`) to populate verifiable **Article 12 (Record-keeping)** evidence counts, chain contiguity, and signer fingerprints.
+2. **Encode exact Digital Omnibus milestones** (`eu_ai_act_timeline`) and **Article 50** transparency fields (`article50_transparency_active`, `article50_disclosure_mechanism`) directly in `ComplianceContext` and public documentation.
+3. Keep `python-docx` / `weasyprint` strictly inside the optional `drako[comply]` extra.
+
+## Alternatives Considered
+
+- **Retain pre-Omnibus August 2026 High-Risk deadlines:** Factually inaccurate under current EU law and undermines Drako's regulatory honesty principle.
+
+## Consequences
+
+- Teams deploying AI agents in the EU have accurate Article 50 transparency timelines today and tamper-evident Article 12 receipt evidence well ahead of the December 2027 High-Risk deadline.
+
+## Verification
+
+- `tests/comply/test_digital_omnibus_receipts.py` and `tests/comply/test_mapping.py`.

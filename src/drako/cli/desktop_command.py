@@ -81,6 +81,66 @@ def scan(fmt: str, fail_on: str | None, project_dir: str) -> None:
 
 
 @desktop.command()
+@click.argument("directory", default=".", type=click.Path(exists=True))
+@click.option("--format", "fmt", type=click.Choice(["text", "json"]), default="text")
+@click.option(
+    "--fail-on",
+    type=click.Choice(["critical", "high", "medium", "low"], case_sensitive=False),
+    default=None,
+    help="Exit code 1 if any finding meets or exceeds this severity.",
+)
+def skills(directory: str, fmt: str, fail_on: str | None) -> None:
+    """Scan SKILL.md, CLAUDE.md, AGENTS.md, .cursor/rules, and settings for poisoning (INST-001..005)."""
+    from drako.desktop.instruction_rules import scan_instruction_files
+
+    files, findings = scan_instruction_files(directory)
+    if fmt == "json":
+        click.echo(
+            json.dumps(
+                {
+                    "scanned_files": [str(f) for f in files],
+                    "finding_count": len(findings),
+                    "findings": [
+                        {
+                            "rule_id": f.rule_id,
+                            "severity": f.severity,
+                            "owasp_asi": f.owasp_asi,
+                            "file_path": f.file_path,
+                            "line_number": f.line_number,
+                            "title": f.title,
+                            "message": f.message,
+                            "snippet": f.snippet,
+                        }
+                        for f in findings
+                    ],
+                },
+                indent=2,
+            )
+        )
+    else:
+        click.echo()
+        click.secho("  Drako Instruction & Skill File Scan (INST-001..005)", fg="cyan", bold=True)
+        click.echo(f"  Scanned {len(files)} instruction file(s) in {directory}")
+        if not findings:
+            click.secho("  [clean]  No poisoning or supply-chain issues found.", fg="green")
+        for f in findings:
+            color = "red" if f.severity in ("CRITICAL", "HIGH") else "yellow"
+            click.echo(
+                click.style(f"  [{f.severity:8s}] ", fg=color)
+                + f"{f.rule_id} ({f.owasp_asi}) {f.title} — {f.file_path}:{f.line_number}"
+            )
+            if f.snippet:
+                click.echo(f"             {f.snippet}")
+        click.echo()
+
+    if fail_on and findings:
+        order = ["low", "medium", "high", "critical"]
+        thresh = order.index(fail_on.lower())
+        if any(order.index(f.severity.lower()) >= thresh for f in findings):
+            sys.exit(1)
+
+
+@desktop.command()
 @click.option(
     "--format", "fmt",
     type=click.Choice(["text", "json", "markdown"]),
