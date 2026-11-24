@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package + dev/proxy/typescript extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,proxy,typescript]"
+      - name: Run full offline test suite (unit + Hypothesis + fixtures + census)
+        run: pytest tests/ -q --tb=short
+
+  ctk-conformance:
+    name: AGENT-HOOKS-0.1 CTK Conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package + guardian extra
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,guardian]"
+      - name: Verify AGENT-HOOKS-0.1 CTK surface (44/44 applicable)
+        run: pytest tests/test_kernel_ctk.py -v
+
+  core-no-extras-smoke:
+    name: Core Smoke (No Optional Extras)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install core package only (no optional extras)
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Verify lazy imports and core CLI work without optional extras
+        run: |
+          drako --help
+          drako kernel bench --iterations 10 --format json
+          python -c "import drako, drako.kernel.host, drako.mcp_guard, drako.a2a, drako.adapters, drako.ts_parser.parser"
+
+  lint-and-audit:
+    name: Lint, Typecheck & Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lint/audit tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" pip-audit
+      - name: Ruff lint (errors & undefined names)
+        run: ruff check src/drako/kernel src/drako/mcp_guard src/drako/a2a src/drako/adapters src/drako/desktop/instruction_rules.py
+      - name: Dependency vulnerability audit
+        run: pip-audit --desc on || true

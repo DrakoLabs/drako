@@ -1,0 +1,62 @@
+# Reusable PR Governance Gate (Drako v4 — 100% offline, least-privilege)
+# Scans code, coding-agent instruction/skill files, scope drift, and receipts.
+
+name: drako-gate
+
+on:
+  workflow_call:
+    inputs:
+      fail-on:
+        description: "Severity threshold for drako scan / skills (low|medium|high|critical)"
+        required: false
+        type: string
+        default: "high"
+      pubkey-file:
+        description: "Optional Ed25519 public key PEM path for receipt verification"
+        required: false
+        type: string
+        default: ""
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  govern:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Drako v4
+        run: pip install .
+
+      - name: Static governance scan
+        run: drako scan . --format json --fail-on "${{ inputs.fail-on || 'high' }}" > scan.json
+
+      - name: Instruction & Skill file poisoning scan (INST-001..005)
+        run: drako desktop skills . --fail-on "${{ inputs.fail-on || 'high' }}"
+
+      - name: Scope drift check (when ACS profile and scan baseline exist)
+        run: |
+          if [ -f drako-policy.yaml ] && [ -f .drako/.last_scan.json ]; then
+            drako drift --profile drako-policy.yaml --baseline .drako/.last_scan.json
+          else
+            echo "No drako-policy.yaml + baseline pair present; skipping drift gate."
+          fi
+
+      - name: Offline Ed25519 receipt verification (when present)
+        run: |
+          if [ -f .drako/receipts.jsonl ]; then
+            if [ -n "${{ inputs.pubkey-file }}" ] && [ -f "${{ inputs.pubkey-file }}" ]; then
+              drako verify .drako/receipts.jsonl --pubkey-file "${{ inputs.pubkey-file }}"
+            else
+              drako verify .drako/receipts.jsonl
+            fi
+          else
+            echo "No .drako/receipts.jsonl present; skipping receipt verification."
+          fi

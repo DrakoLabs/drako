@@ -1,38 +1,20 @@
 <div align="center">
-<a href="https://getdrako.com/">
-<img width="1500" height="276" alt="drako1" src=".github/assets/drako1.jpg" />
-</a> </div>
-
-<h3 align="center">
-  AI Agent Security & Governance Platform 🐉
-</h3>
-<div align="center">
-  <strong>The governance platform for AI agents that doesn't use AI to decide.</strong>
-  <br>
-  Scans your codebase, scores your governance posture, flags what's reachable, connects findings to known advisories.
-  Free, offline, no account required.
-  <br />
- <strong>Full runtime enforcement when you're ready.</strong>
-  <br /><br />
-  Also scans the AI agents installed in <a href="#desktop-agent-scanning">Claude, Cursor, VS Code, and Windsurf.</a>
+  <h1>Drako 🐉</h1>
+  <p><strong>The Portable Authority Kernel for AI Agents.</strong></p>
+  <p>
+    <em>Every action answers. Receipts, not logs.</em><br />
+    Deterministic governance, origin-bound authority lattice, memory firewall, MCP/A2A guards,
+    and offline-verifiable Ed25519 receipts.<br />
+    <strong>100% local-first. Zero LLM in the loop. Zero API keys. Apache-2.0.</strong>
+  </p>
+  <p>
+    <a href="https://pypi.org/project/drako/"><img src="https://img.shields.io/pypi/v/drako?style=flat-square&color=3776AB&logo=pypi&logoColor=white" alt="PyPI"></a>
+    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=yellow" alt="Python 3.10+"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-2ea44f.svg?style=flat-square" alt="License: Apache-2.0"></a>
+    <a href="conformance/CLAIMS.md"><img src="https://img.shields.io/badge/ACS-AGENT--HOOKS--0.1%20(44%2F44)-6366F1.svg?style=flat-square" alt="AGENT-HOOKS-0.1"></a>
+    <img src="https://img.shields.io/badge/AST%20rules-82%20(99%20checks)-6366F1.svg?style=flat-square" alt="82 rules / 99 checks">
+  </p>
 </div>
-<br />
-<p align="center">
-  <a href="https://pypi.org/project/drako/">
-    <img src="https://img.shields.io/pypi/v/drako?style=flat-square&color=3776AB&logo=pypi&logoColor=white" alt="PyPI">
-  </a>
-  <a href="https://www.python.org/downloads/">
-    <img src="https://img.shields.io/badge/python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=yellow" alt="Python 3.10+">
-  </a>
-  <a href="https://github.com/drakolabs/drako/actions">
-    <img src="https://img.shields.io/badge/tests-1489%20passing-2ea44f.svg?style=flat-square&logo=github-actions&logoColor=white" alt="Tests">
-  </a>
-  <img src="https://img.shields.io/badge/rules-80-6366F1.svg?style=flat-square" alt="Rules">
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-BUSL--1.1-6366F1.svg?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License: BUSL-1.1">
-  </a>
-  <img src="https://img.shields.io/badge/policy%20eval-%3C2ms-6366F1.svg?style=flat-square" alt="Performance">
-</p>
 
 ```bash
 pip install drako && drako scan .
@@ -40,453 +22,142 @@ pip install drako && drako scan .
 
 ---
 
-## Scan for Free
+## Why Drako v4?
 
-<p align="center">
-  <img src=".github/assets/drakoscanner.svg" alt="Drako – AI Agent Security & Governance"  width="900px" style="max-width: 900px;">
-</p>
+Traditional guardrails try to build a model that cannot be fooled. **Drako assumes the model will be fooled** — and constrains what an untrusted input is allowed to authorize while minting a cryptographically signed **Receipt** for every decision.
 
-Two scores, two audiences. **Governance** speaks to security teams — are your agents safe?
-**Determinism** speaks to engineers — will they behave the same way twice?
+### The Authority Charter
+1. **Fooled is expected. Unauthorized is impossible** *(within the kernel boundary — property-tested non-malleability)*.
+2. **Provenance travels with data; authority travels with intent.** Tool outputs (`tool:*`) can never assert `USER` trust.
+3. **AI proposes, human signs.** Irreversible actions require an operator-signed Ed25519 `ConsentToken` bound to the canonical `args_hash` (anti-TOCTOU). Operator private keys never need to touch target agent runtimes.
+4. **Every action answers.** Every `permit`, `deny`, or `modify` mints a hash-chained, Ed25519-signed `drako-receipt/v1` verifiable offline (`drako verify`) and queryable as a provenance graph (`drako why`).
+5. **Open standards, zero vendor lock-in.** Aligned with **OWASP Agentic Top 10 (2026, `ASI01–ASI10`)**, **OWASP LLM Top 10 (2026)**, **OWASP ACS (`AGENT-HOOKS-0.1`)**, **MITRE ATLAS Scope Drift**, **MCP `2026-07-28` GA**, **A2A v1.0 RFC 7515 JWS**, and **CycloneDX 1.7 (ECMA-424)**.
 
-**Reachability** separates real risks from theoretical ones: a dangerous tool no agent actually calls is flagged, not screamed at you.
+---
+
+## 5-Minute Quickstart (100% Offline)
 
 ```bash
-drako scan .                       # Full scan, both scores
-drako scan --details               # Code snippets + fix suggestions
-drako scan --benchmark             # Compare against 100 scanned projects
-drako scan --baseline              # Acknowledge existing issues, only show new ones
-drako scan --format sarif          # GitHub Code Scanning
-drako scan --fail-on critical      # CI gate
-drako scan --share                 # Generate shareable score card
-drako fix --dry-run                # Preview auto-fixes
-drako scan --diff HEAD~1           # Only scan changed files
-drako history                      # view policy snapshot history
-drako diff v2 v3                   # compare policy versions
-drako rollback v2                  # restore previous policy
+# 1. Bootstrap: scan codebase (82 unique AST rules / 99 Python+TS checks) + Agent BOM
+drako scan . --baseline
+drako bom . --format cyclonedx > agent-bom.cdx.json
+
+# 2. Scan coding-agent instruction & skill files (SKILL.md, CLAUDE.md, AGENTS.md, .cursor/rules)
+drako desktop skills . --fail-on high
+
+# 3. Initialize local .drako.yaml + ACS policy profile (pinned to AGENT-HOOKS-0.1)
+drako init --level balanced
+
+# 4. Audit MCP server configs & generate CycloneDX 1.7 AgBOM from mcp.lock
+drako mcp audit
+drako mcp pin @modelcontextprotocol/server-filesystem@1.2.3 --by alice
+drako mcp agbom --format cyclonedx > agbom.cdx.json
+
+# 5. Generate operator Ed25519 keys (keep private key off target agent nodes)
+drako kernel keygen --out-dir .drako/keys --name operator
+
+# 6. Verify scope drift, hermetic benchmarks, and signed receipts offline
+drako drift
+drako kernel bench --iterations 200
+drako verify .drako/receipts.jsonl --pubkey-file .drako/keys/operator.pub
+drako why <receipt_id> --pubkey-file .drako/keys/operator.pub
 ```
 
 ---
 
-## Agent BOM
-
-Standalone inventory. No runtime, no network, pure AST.
-
-```bash
-drako bom .
-```
-
-<p align="center">
-  <img src=".github/assets/agentbom.svg" alt="Drako – AI Agent Security & Governance" width="900px" style="max-width: 900px;">
-</p>
-
-Output formats: `--format text` (default) · `json` · `markdown`
-
----
-
-## Rules
-
-80 deterministic rules across 16 categories. No LLM in the evaluation loop. Same code, same result, every time. [Full rule reference →](docs/rules/index.md)
-
-| Category | Rules | What it catches |
-|----------|-------|-----------------|
-| **Security** | SEC-001 → SEC-011 | Hardcoded keys, prompt injection, code execution, filesystem/network access |
-| **Governance** | GOV-001 → GOV-011 | No audit logging, no HITL, self-modifying prompts, no fallback |
-| **Compliance** | COM-001 → COM-005 | EU AI Act Art. 9, 11, 12, 14 gaps |
-| **Determinism** | DET-001 → DET-007 | Temperature not set, no timeout, no retry, no iteration limit, no seed |
-| **Vendor Concentration** | VCR-001 → VCR-003 | Same vendor across model + framework + cloud + governance layers |
-| **Framework-Specific** | FW-001 → FW-010 | CrewAI delegation risks, AutoGen code exec defaults, LangGraph state issues |
-| **Operational Boundaries** | ODD-001 → ODD-004 | No boundary definition, unrestricted tools, no spend cap |
-| **Magnitude** | MAG-001 → MAG-003 | No spend cap, no rate limit, unclassified data access |
-| **Identity** | ID-001 → ID-003 | Static credentials, shared credentials, no identity |
-| **Multi-Agent** | MULTI-001 → MULTI-004 | No topology, circular deps, no conflict protection |
-| **Hooks** | HOOK-001 → HOOK-003 | No pre-action validation, no session-end gate |
-| **Versioning** | CV-001 → CV-002 | No policy versioning, no audit policy reference |
-| **FinOps** | FIN-001 → FIN-003 | No cost tracking, single model for all tasks, no cache |
-| **Resilience** | RES-001 → RES-002 | No fallback for critical ops, no state preservation |
-| **A2A** | A2A-001 → A2A-003 | No A2A auth, unvalidated inter-agent input |
-| **Best Practices** | BP-001 → BP-005 | Outdated framework, no tests, too many tools |
-
-**Vendor Concentration** rules detect when your model, framework, and governance stack come from the same vendor — flagging audit independence risk that vendor-affiliated tools have no incentive to report.
-
-**Framework-Specific** rules detect known governance gaps in the frameworks you use, including default configurations that ship insecure.
-
-Scoring: start at 100, deduct per finding with caps per category. Grades: **A** (90-100) · **B** (75-89) · **C** (60-74) · **D** (40-59) · **F** (0-39)
-
-> **TypeScript/JavaScript:** 17 additional rules (SEC, GOV, COM, DET, ODD) apply when scanning TS/JS projects.
-
-> Install: `pip install drako[typescript]`
-
----
-
-## Advisories
-
-Drako ships with 25 security advisories in the **DRAKO-ABSS** format (Agent Behavioral Security Standard) — covering OWASP Top 10 for LLMs, MITRE ATLAS techniques, and real CVEs from CrewAI, LangChain, and AutoGen.
-
-Advisories appear inline in scan findings:
-
-```
-SEC-007  Prompt injection vulnerability       (agents/researcher.py)
-         Related: DRAKO-ABSS-2026-001 — System Prompt Extraction
-         Ref: OWASP LLM01:2025, MITRE AML.T0051
-```
-
-Each advisory includes: affected configurations, IOC pattern hashes for runtime matching, taint paths, and remediation mapped to Drako rules.
-
-📄 [Browse advisories →](src/drako/data/advisories/) · [ABSS format spec →](docs/abss-format.md)
-
----
-
-## Baseline
-
-Existing projects get 40+ findings on first scan. The baseline lets teams acknowledge known issues and focus only on **new** ones.
-
-```bash
-drako scan . --baseline            # save current state
-drako scan .                       # only NEW findings from now on
-drako baseline show                # what's baselined
-drako baseline reset               # start fresh
-```
-
-- Score always reflects **all** findings — real posture, not a filtered view
-- CI pass/fail is based on **new findings only**
-- SARIF marks baselined findings as `"baselineState": "unchanged"`
-- Baseline file commits to your repo — shared across the team
-
----
-
-## Observability Dashboard
-
-Drako ships with a **built-in observability dashboard** at [getdrako.com/dashboard](https://getdrako.com/dashboard).
-No external tooling required.
-
-<!-- TODO: Replace with actual screenshot -->
-<!-- Screenshot: /dashboard showing MetricCards, quota bar, governance score trend, tool health grid -->
-
-The command center gives you your full governance posture at a glance — audit entries, verified agents,
-policy blocks, and quota usage — with real-time auto-refresh.
-
-Every agent run produces signals across four dimensions. Drako surfaces them as actionable intelligence,
-not raw logs:
-
-<!-- TODO: Replace with actual screenshot -->
-<!-- Screenshot: /observability showing metrics tab with charts -->
-
-| Dimension | What Drako shows you |
-|---|---|
-| **Health Grade** | Unified A–F score combining latency, error rate, and governance overhead |
-| **Latency** | P50 / P95 / P99 percentiles with full time-series visualization |
-| **Violation Heatmap** | Hour-by-day grid that reveals where and when violations cluster |
-| **Drift Detection** | Automatic identification of behavioral drift across your agent fleet |
-| **Alert Rules** | Configurable thresholds with test-fire capability before going live |
-
-
-### FinOps
-
-Track and optimize your AI spend with per-model and per-agent cost breakdowns.
-
-<!-- TODO: Replace with actual screenshot -->
-<!-- Screenshot: /finops showing cost donut chart and budget tracking -->
-
-**What you get:**
-- **Cost by Model** — See exactly how much each LLM model costs you
-- **Cost by Agent** — Identify your most expensive agents
-- **Budget Tracking** — Set monthly budgets and track burn rate
-- **Cache Hit Rate** — Monitor how effectively your cache reduces costs
-
-> **Deep dive:** See [docs/observability.md](docs/observability.md) for the full architecture, all available metrics, and integration guide.
-
----
-
-
-## Desktop Agent Scanning
-
-Scans the MCP servers declared in your AI coding tools — Claude Desktop, 
-Cursor, VS Code, Windsurf, Claude Code, Codex CLI, Gemini CLI, and Kiro.
-```bash
-drako desktop scan          # Discover + scan all installed AI clients
-drako desktop bom           # Export the BOM from the desktop agents
-drako desktop govern        # Scan + activate proxy protection
-```
-
-8 deterministic rules covering shell/exec capabilities, plaintext credentials, 
-unencrypted transport, elevated privileges, and unrestricted filesystem access. 
-Fully offline and 100% deterministic. No network requests during scanning.
-
-📄 **[Desktop scanning docs →](docs/desktop-scanning.md) View the complete documentation here**
-
----
-
-## Configure
-
-```bash
-drako init                         # generate .drako.yaml from your scan
-```
-
-```yaml
-# .drako.yaml — pre-filled with YOUR agents and tools
-governance_level: autopilot        # autopilot | balanced | strict
-
-agents:
-  researcher:
-    source: agents/researcher.py
-tools:
-  web_search:
-    type: read
-  code_runner:
-    type: execute                  # ⚠ flagged CRITICAL by scan
-
-policies:
-  odd:
-    researcher:
-      permitted_tools: [web_search, file_reader]
-      forbidden_tools: [code_runner]
-  dlp:
-    mode: enforce
-  circuit_breaker:
-    failure_threshold: 5
-  hitl:
-    triggers:
-      tool_types: [write, execute, payment]
-      spend_above_usd: 100.00
-```
-
-**Autopilot** reads your scan, generates the config, starts in audit mode. When ready: `drako upgrade --balanced` enables enforcement.
-
-Industry templates: `drako init --template fintech` · `healthcare` · `eu-ai-act` · `startup` · `enterprise`
-
-📄 [Full config reference →](docs/config.md) · [Policy templates →](docs/policy-templates.md)
-
----
-
-## Runtime Enforcement
-
-One line to protect agents in production:
+## Runtime Authority Kernel in Python
 
 ```python
-from drako import govern
-crew = govern(crew)    # every tool call passes through enforcement
+from drako.kernel import ACS_SPEC_PIN
+from drako.kernel.authority import Label, TrustLevel
+from drako.kernel.envelope import Guardian
+from drako.kernel.host import Host, HostConfig
+from drako.kernel.receipts import generate_keypair, verify_receipt
+
+priv, pub = generate_keypair()
+profile = {
+    "spec_pin": ACS_SPEC_PIN,
+    "default_effect": "deny",
+    "tools": {
+        "search_docs": {"id": "rule:search", "effect": "allow"},
+        "delete_volume": {"id": "rule:delete", "effect": "deny", "approval_liftable": True},
+    },
+}
+
+host = Host(
+    Guardian(profile),
+    HostConfig(agent_id="research-bot", store_path=".drako/receipts.jsonl", private_pem=priv, public_pem=pub),
+)
+
+# Tool output is capped at TOOL trust; cannot authorize irreversible side effects
+decision, receipt = host.govern_tool_call(
+    "search_docs",
+    {"q": "owasp asi06"},
+    provenance=[Label("user:prompt", TrustLevel.USER, frozenset({"read"}))],
+    side_effect_class="read",
+)
+assert decision.verdict == "permit" and verify_receipt(receipt, pub)
+
+# Memory Firewall (OWASP ASI06): denies sourceless, immortal, or tool-laundered writes
+mem_decision, mem_receipt = host.govern_memory_write(
+    "session-memory",
+    [Label("memory:verified", TrustLevel.AGENT, frozenset({"memory_write"}), ttl_seconds=3600)],
+)
 ```
 
-Every tool call goes through a 13-stage pipeline before executing. If a tool is forbidden, carries PII, exceeds spend caps, matches a known threat, or needs human approval — blocked before it runs.
+### Unified Offline Framework Adapters
+All adapters translate framework calls directly into `drako.kernel.Host` with zero external network dependencies and enforce the **T-5 re-govern-after-modify + loop-guard** invariant:
 
-### Key capabilities
-
-- 🔒 **DLP** — Presidio-based PII/PCI scanning. Critical PII blocked before reaching downstream APIs.
-- 👤 **Human-in-the-Loop** — Agent pauses on high-risk actions, escalates to human. Configurable triggers. EU AI Act Art. 14.
-- ⚡ **Circuit Breaker** — Per-agent AND per-tool. One failing tool doesn't kill the whole agent.
-- 📋 **Audit Trail** — SHA-256 hash chain with Ed25519 signatures. Tamper-evident, exportable, regulator-ready.
-- 🌐 **Collective Intelligence** — Anonymous IOC sharing across deployments. One detection protects everyone. Sub-5s propagation.
-
-📄 [Full runtime docs →](docs/runtime-capabilities.md) — covers all 20 capabilities including Trust Score, Intent Fingerprinting, ODD Enforcement, Magnitude Limits, FinOps, Secure A2A, Topology Monitoring, Chaos Engineering, Observability, Alerting, and OTEL/SIEM Export.
-
----
-
-## Out-of-process proxy
-
-Zero code changes. The agent can't bypass what doesn't run in its process.
-
-```bash
-drako proxy start
-export OPENAI_BASE_URL=http://localhost:8990/openai/v1
-```
-
-📄 [Proxy docs →](docs/proxy-mode.md) · [Docker + Helm →](deploy/)
-
----
-
-## Autopilot Mode
-
-Zero-config governance. One command, smart defaults from your scan.
-
-```bash
-drako init                     # autopilot (default) — audit-first
-drako init --balanced          # enforcement active with escape hatches
-drako init --strict            # maximum governance for enterprise
-drako init --manual            # full YAML with all sections
-drako init --template fintech  # start from industry template
-```
-
-Autopilot analyzes your project and generates a `.drako.yaml` pre-configured with:
-
-- **ODD**: Each agent locked to its discovered tools
-- **DLP**: Audit mode (logging PII, not blocking yet)
-- **Circuit Breaker**: Threshold 5 failures / 60s window
-- **HITL**: Active for write/execute tools (auto-allow on timeout)
-- **FinOps**: Cost tracking enabled
-
-Everything starts in audit mode. When you're ready for enforcement:
-
-```bash
-drako upgrade --balanced    # DLP enforce, ODD enforce, HITL reject on timeout
-drako upgrade --strict      # + intent verification, cryptographic audit, magnitude enforce
-```
-
----
-
-
-## CI/CD
-
-### GitHub Action
-
-The [Drako GitHub Action](.github/actions/drako-scan/) posts inline PR comments on the exact lines where issues are found, uploads SARIF to Code Scanning, and gates merges on governance score.
-
-```yaml
-# .github/workflows/drako.yml
-name: Drako Governance
-on: [push, pull_request]
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install drako
-      - run: drako scan . --format sarif > results.sarif
-      - run: drako scan . --fail-on critical --threshold 70
-      - uses: github/codeql-action/upload-sarif@v3
-        with: { sarif_file: results.sarif }
-        if: always()
-```
-
-### Pre-commit hook
-
-```yaml
-# .pre-commit-config.yaml
-- repo: https://github.com/DrakoLabs/Drako
-  hooks:
-    - id: drako-scan
-```
-
----
-## Supported Frameworks
-
-| Framework | Detection | Specific Rules |
-|-----------|-----------|----------------|
-| **CrewAI** | AST | FW-001 → FW-003 (code exec, memory isolation, delegation) |
-| **LangGraph** | AST | FW-004 → FW-005 (unrestricted ToolNode, no checkpointing) |
-| **AutoGen** | AST | FW-006 → FW-007 (LocalCommandLineCodeExecutor, no output validation) |
-| **Semantic Kernel** | AST | FW-008 → FW-009 (auto-imported plugins, no cost guard) |
-| **PydanticAI** | Import | FW-010 (untyped tool returns) |
-| **LlamaIndex** | Import | General rules |
-| **LangChain** | Import | General rules |
-| **TypeScript/JavaScript** | Tree-sitter | LangChain.js, Vercel AI SDK, Mastra, AutoGen.js (`pip install drako[typescript]`) |
-
----
-
-## EU AI Act
-
-High-risk system rules take effect **August 2, 2026**.
-
-| Article | Requirement | How Drako covers it |
-|---------|-------------|---------------------|
-| Art. 9 | Risk management | 97 scan rules, ODD enforcement, magnitude limits |
-| Art. 11 | Technical documentation | Agent BOM, compliance reports, context versioning |
-| Art. 12 | Record-keeping | Cryptographic audit trail with policy snapshot references |
-| Art. 14 | Human oversight | HITL checkpoints, programmable hooks, escalation policies |
-
-📄 [Compliance report generation →](docs/compliance.md)
-
----
-
-## Performance
-
-80 rules, 10,000 iterations, `time.perf_counter_ns()`, after 1,000 warmup:
-
-| Scenario | P50 | P99 |
+| Framework | Module | Integration Surface |
 |---|---|---|
-| Single rule | **0.031ms** | 0.08ms |
-| Full scan (80 rules) | **2.1ms** | 3.8ms |
-| Batch (100 tool calls) | **1.79ms** | 2.8ms |
-
-Governance overhead: **<0.3%** of a typical LLM call.
+| **LangGraph** | `drako.adapters.langgraph` | `wrap_tool_node(node_fn, host)` |
+| **OpenAI Agents SDK** | `drako.adapters.openai_agents` | `wrap_openai_agent(agent, host)` |
+| **Microsoft Agent Framework** | `drako.adapters.maf` | `wrap_maf_agent(agent, host)` *(Agent Hooks boundary)* |
+| **Claude Agent SDK** | `drako.adapters.claude_agent` | `wrap_claude_agent(options, host)` *(`PreToolUse` hook)* |
+| **Google ADK** | `drako.adapters.google_adk` | `wrap_adk_agent(agent, host)` *(`before_tool_callback`)* |
+| **CrewAI** | `drako.adapters.crewai` | `wrap_crew(crew, host)` |
+| **Local HTTP Proxy** | `drako proxy start` | Loopback `127.0.0.1:8990`, `LoopBreaker`, `egress`, optional `Host` |
 
 ---
 
-## Policy Templates
+## Protocol & Supply-Chain Security (Q4 2026)
 
-Industry-specific governance presets. Start from a template, override what you need.
+| Capability | Command / Module | Standard / Threat Covered |
+|---|---|---|
+| **Static AST Governance** | `drako scan .` | **82 unique rules (99 checks: 82 Python + 17 TypeScript)** across 16 categories |
+| **Skill & Instruction Scanner** | `drako desktop skills .` | **`INST-001..005`** for `SKILL.md`, `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/*.mdc` (`ASI01`/`ASI04`/`ASI05`) |
+| **MCP Supply-Chain & Drift** | `drako mcp {audit, pin, agbom, check-drift}` | `mcp.lock` SHA-512 pinning, mid-session `tools/list` drift (*Deadbugz*), **CycloneDX 1.7 (ECMA-424)**, **MCP `2026-07-28` GA** stateless client |
+| **A2A v1.0 Signed Agent Cards** | `drako a2a {sign, verify, inspect}` | **RFC 7515 Detached JWS (EdDSA) + RFC 8785 JCS** (`ASI07`) |
+| **Memory Firewall** | `drako.kernel.memory_gate` | Mandatory origin + bounded TTL + `AGENT` floor regressed against **MPBench** (`ASI06`) |
+| **Runaway Loop Breaker** | `drako.kernel.loop_breaker` | Repetition-based circuit breaker stopping Denial-of-Wallet loops (`ASI08`/`ASI10`) |
+| **SSRF Egress Guard** | `drako.kernel.egress` | Fail-closed public-IP + per-hop redirect validation (`ToolHive` class) |
+| **ACS CTK Conformance** | `conformance/CLAIMS.md` | **Conformant on declared surface (`AGENT-HOOKS-0.1`: 44/44 applicable, 3 capability-gated skips, 0 failures)** |
+| **EU AI Act Pack (`[comply]`)** | `drako comply` | Digital Omnibus schedule (**Art. 50** active Aug 2, 2026 / watermarking grace ends Dec 2, 2026; **Annex III High-Risk** Dec 2, 2027; **Annex I** Aug 2, 2028) + local Ed25519 receipts for **Art. 12** |
+
+---
+
+## Optional Extras
 
 ```bash
-drako templates list              # show available templates
-drako templates show fintech      # preview a template
-drako init --template healthcare  # init with template
-```
-
-Available templates:
-
-| Template | Focus |
-|----------|-------|
-| **base** | Sensible defaults for any project |
-| **fintech** | PCI compliance, spend caps, strict DLP |
-| **healthcare** | HIPAA alignment, PHI detection, audit trails |
-| **eu-ai-act** | EU AI Act Articles 9, 11, 12, 14 compliance |
-| **startup** | Lightweight audit-first governance |
-| **enterprise** | Maximum governance, intent verification, A2A security |
-
-Templates support inheritance via `extends:`:
-
-```yaml
-# .drako.yaml
-extends: fintech
-governance_level: balanced
-# Your overrides here — template provides the base
+pip install "drako[guardian]"     # AGENT-HOOKS-0.1 CTK + Rust JCS canonicalizer
+pip install "drako[proxy]"        # Local loopback HTTP/LLM proxy (FastAPI + Uvicorn)
+pip install "drako[typescript]"   # Tree-sitter TypeScript/JavaScript AST scanner
+pip install "drako[comply]"       # EU AI Act DOCX/PDF pack generation
 ```
 
 ---
 
-## See It in Action
+## Documentation & Architecture Decision Records
 
-```bash
-git clone https://github.com/drakolabs/drako.git
-cd drako/examples/demo-crewai
-pip install drako
-drako scan .
-```
-
-The demo project has intentional governance gaps and scores ~35 (Grade F). See what Drako finds.
-
----
-
-## Roadmap
-
-- **Beyond Python** — Go SDK next. TypeScript/JavaScript already supported. If it makes a tool call, Drako governs it.
-- **Compliance packages** — SOC 2 Type II audit evidence, ISO 42001 templates.
-
-**Drako is actively developed and moving fast.** If you're
-deploying AI agents to production,
-[watch the repo](https://github.com/drakolabs/drako)
-— or better, run the scan and see what it finds.
-📄 [Full roadmap →](ROADMAP.md)
-
----
-
-## Known limitations
-
-Honest limits, documented instead of hidden — a documented limit is
-engineering; a hidden one is your next CVE.
-
-- **DNS-rebinding TOCTOU (egress guard).** The scanner-side egress check is
-  resolve→check→connect, which is racy by nature: a hostile DNS can answer
-  differently at connect time. Mitigations applied today: per-redirect-hop
-  revalidation, no credentials forwarded on redirect, short timeouts. The
-  full fix — an egress proxy with DNS pinning — is a tracked P2 item.
-- **Heuristic reachability is string-match, not dataflow.** `analyze_reachability`
-  reports capability adjacency, not proven call paths. Treat it as triage,
-  not proof.
-- **Delayed threat-intel feed on Starter.** Starter workspaces receive the
-  collective IOC feed with a 24h delay; paid plans get it realtime. Every
-  tenant is still protected — paid plans are protected *faster*.
+- **[Architecture Overview](docs/architecture.md)** — 4-layer local-first design
+- **[Authority Kernel Reference](docs/authority-kernel.md)** — Lattice, Memory Gate, Signed `ConsentToken`, Ed25519 Receipts, Q1 HMAC grading
+- **[OWASP 2026 Threat Mapping](docs/owasp-2026-mapping.md)** — `ASI01–ASI10` & `LLM01–LLM10:2026`
+- **[Known Limitations](docs/known-limitations.md)** — Honest boundaries (in-process hooks, DNS TOCTOU, heuristic reachability, AgentDyn)
+- **[Migration Guide (v3 → v4)](docs/migration-v4.md)** — `drako upgrade --v4` & breaking changes
+- **[Architecture Decision Records (ADR-0000 – ADR-0013)](docs/adr/README.md)** — Every architectural, protocol, pruning, and licensing decision
 
 ---
 
 ## License
 
-BUSL-1.1. Free to use in production. Cannot offer governance capabilities as a competing hosted service. Converts to Apache 2.0 four years after release. See [LICENSE](LICENSE).
-
----
-
-## Contributing
-
-Every rule requires a positive fixture, a negative fixture, and a standard reference. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Licensed under the **[Apache License 2.0](LICENSE)** (`Apache-2.0`). See [ADR-0012](docs/adr/0012-apache-2-0-license-migration.md).
