@@ -1,26 +1,33 @@
-# Compliance Reports
+# Compliance Reports (EU AI Act & Digital Omnibus)
 
-Drako maps scan findings to EU AI Act articles and generates structured compliance gap reports. The compliance report shows which regulatory requirements your AI system satisfies and which need remediation.
+Drako maps static scan findings and local cryptographic Ed25519 receipts (`.drako/receipts.jsonl`) to EU AI Act articles (Regulation 2024/1689, aligned with the EU AI Act Digital Omnibus schedule) and generates structured offline compliance bundles.
+
+- **Article 50 transparency:** active `2026-08-02` (Article 50(2) watermarking grace period ending `2026-12-02`)
+- **Annex III high-risk systems:** `2027-12-02`
+- **Annex I embedded high-risk systems:** `2028-08-02`
 
 ---
 
 ## Generating a Compliance Report
 
 ```bash
-# Terminal output (default)
+# Terminal output (default — 100% offline, read-only)
 drako scan .
 
 # JSON — machine-readable, includes compliance fields
 drako scan . --format json
 
-# SARIF — GitHub Code Scanning compatible
+# SARIF 2.1.0 — GitHub Code Scanning compatible
 drako scan . --format sarif > results.sarif
 
-# Compliance summary only (terminal)
+# Detailed compliance & impact breakdown
 drako scan . --details
+
+# Generate EU AI Act compliance evidence bundle (requires `pip install 'drako[comply]'`)
+drako comply generate --all
 ```
 
-The compliance rules (COM-001 through COM-006) are included in every scan. The terminal report surfaces them alongside security and governance findings, with EU AI Act article references and fix snippets.
+The compliance rules (`COM-001` through `COM-006`) run in every offline scan alongside security, governance, and framework rules.
 
 ---
 
@@ -28,279 +35,179 @@ The compliance rules (COM-001 through COM-006) are included in every scan. The t
 
 ### COM-001 — No Automatic Logging
 
-**Severity:** HIGH
-**EU AI Act:** Article 12 (Record-keeping)
-**Article summary:** High-risk AI systems must keep logs automatically. Logs must be retained for at least 6 months unless other law requires longer retention.
+**Severity:** HIGH  
+**EU AI Act:** Article 12 (Record-keeping)  
+**Requirement:** High-risk AI systems must automatically record events for traceability across their operational lifetime.
 
-**What Drako checks:** Scans Python source files for logging infrastructure patterns:
-- `audit_log`, `audit_trail`, `with_compliance`, `drako`
-- `GovernanceMiddleware`, `ComplianceMiddleware`, `log_action`
-- `structlog`, `logging.getLogger`
-
-**Fails when:** No logging infrastructure is detected in any Python source file.
-
-**Regulatory exposure:** Fines up to €15M or 3% of worldwide annual revenue.
+**What Drako checks:** Scans Python source files for local audit logging or v4 Authority Kernel usage (`guard`, `build_host`, `wrap_*`, `AuthorityKernel`, `ReceiptStore`, `audit_log`, `structlog`, `logging.getLogger`) and `.drako.yaml` (`audit.enabled: true` / `receipt_store:`).
 
 **Fix:**
 ```python
-from drako import with_compliance
+from drako import guard
 
-# Drako middleware provides EU AI Act compliant audit logging automatically.
-# All agent actions, decisions, and tool calls are logged.
-crew = with_compliance(my_crew)
+# Record tamper-evident Ed25519 hash-chained receipts locally (EU AI Act Art. 12)
+safe_agent = guard(my_agent, allow=["search_*"], receipts=".drako/receipts.jsonl")
+```
+
+Verify recorded receipts offline at any time:
+```bash
+drako verify .drako/receipts.jsonl --pubkey-file .drako/keys/host.pub
 ```
 
 ---
 
 ### COM-002 — No Human Oversight Mechanism
 
-**Severity:** HIGH
-**EU AI Act:** Article 14 (Human oversight)
-**Article summary:** High-risk AI systems must be designed to allow effective human oversight. Humans must be able to intervene and override decisions.
+**Severity:** HIGH  
+**EU AI Act:** Article 14 (Human oversight)  
+**Requirement:** High-risk AI systems must enable effective human intervention and override before irreversible actions execute.
 
-**What Drako checks:** Scans Python source files for human oversight patterns:
-- `human_in_the_loop`, `hitl`, `require_approval`, `human_approval`
-- `ask_human`, `confirm_action`, `manual_review`, `human_oversight`
-- `supervisor`, `review_queue`
-
-**Fails when:** Agents exist in the project but no human oversight mechanism is detected.
-
-**Regulatory exposure:** Fines up to €15M. Enforcement action if an AI system causes harm without human oversight.
+**What Drako checks:** Scans Python source files for human oversight / consent gates (`approval_required`, `ConsentToken`, `sign_consent_token`, `human_in_the_loop`, `hitl`, `require_approval`, `drako.guard`, `build_host`) and `.drako.yaml` / `drako-policy.yaml` (`hitl.mode: enforce` or `tiers.irreversible: consent`).
 
 **Fix:**
 ```python
-from drako import with_compliance
+from drako import guard
 
-crew = with_compliance(my_crew, config_path=".drako.yaml")
+# Require operator-signed Ed25519 ConsentToken before high-impact tools execute
+safe_agent = guard(
+    my_agent,
+    allow=["search_*"],
+    approval_required=["write_file", "send_email"],
+)
 ```
 
 ```yaml
-# .drako.yaml — configure HITL policies
-policies:
-  hitl:
-    mode: enforce
-    triggers:
-      tool_types: [write, execute, payment]
+# .drako.yaml — flat v4 top-level schema
+hitl:
+  mode: enforce
+  triggers:
+    tool_types: [write, execute, payment]
+  approval_timeout_minutes: 30
+  timeout_action: reject
 ```
 
 ---
 
 ### COM-003 — No Technical Documentation
 
-**Severity:** MEDIUM
+**Severity:** MEDIUM  
 **EU AI Act:** Article 11 (Technical documentation)
-**Article summary:** Before a high-risk AI system is placed on the market, providers must draw up technical documentation demonstrating the system meets requirements.
 
-**What Drako checks:** Looks for documentation indicators:
-- `docs/` directory (non-empty)
-- `doc/` or `documentation/` directory (non-empty)
-- `README.md` or `README.rst` containing references to "agent", "ai", "llm", or "model"
-- `ARCHITECTURE.md`
+**What Drako checks:** Presence of a non-empty `docs/`, `doc/`, or `documentation/` directory, `ARCHITECTURE.md`, or a `README.md` / `README.rst` referencing AI/agent components.
 
-**Fails when:** None of the above exist or the README doesn't mention AI components.
-
-**Fix:** Create a `docs/` directory with at minimum:
-
+**Fix:**
 ```bash
 mkdir -p docs
-# docs/architecture.md   — System design and component overview
-# docs/agents.md         — Agent inventory, capabilities, and limitations
-# docs/risk-assessment.md — Risk analysis (required by Art. 9)
+# docs/architecture.md     — System design and component overview
+# docs/agents.md           — Agent inventory (generate via `drako bom . --format markdown`)
+# docs/risk-assessment.md  — Risk analysis (Art. 9)
 ```
-
-The Agent BOM (`drako bom .`) can generate the agent inventory section automatically.
 
 ---
 
 ### COM-004 — No Risk Management Documentation
 
-**Severity:** MEDIUM
+**Severity:** MEDIUM  
 **EU AI Act:** Article 9 (Risk management system)
-**Article summary:** Providers of high-risk AI systems must implement a risk management system covering the entire lifecycle of the system.
 
-**What Drako checks:** Looks for risk assessment files:
-- `RISK_ASSESSMENT.md`
-- `risk_assessment.md`
-- `docs/risk-assessment.md`
-- `docs/risk_assessment.md`
-- `docs/risks.md`
+**What Drako checks:** Presence of `RISK_ASSESSMENT.md`, `risk_assessment.md`, `docs/risk-assessment.md`, `docs/risk_assessment.md`, or `docs/risks.md`, or risk management metadata in configuration files.
 
-Also checks config/doc content for: `risk_assessment`, `risk_management`, `risk_level`, `threat_model`.
-
-**Fails when:** No risk documentation file exists and no risk management references are found.
-
-**Fix:** Create `RISK_ASSESSMENT.md` covering:
-
-1. Identification of known and foreseeable risks (misuse, technical failures, safety)
-2. Risk estimation and evaluation
-3. Risk mitigation measures
-4. Residual risk evaluation after mitigation
-5. Agent-specific risks (tool access, data handling, autonomous decisions)
+**Fix:** Document known and foreseeable agent risks, tool access boundaries, data handling controls, and residual risk acceptance criteria in `docs/risk-assessment.md`.
 
 ---
 
 ### COM-005 — No Agent BOM / Inventory
 
-**Severity:** MEDIUM
-**Reference:** OWASP LLM Top 10
-**Article summary:** Without a component inventory, you cannot track which AI models, tools, and permissions your agents use — making vulnerability response impossible.
+**Severity:** MEDIUM  
+**EU AI Act:** Article 11 / OWASP Agentic Top 10
 
-**What Drako checks:** Looks for BOM files:
-- `.drako.yaml` or `drako.yaml`
-- `agent-bom.json` or `agent_bom.json`
-- `AGENT_BOM.md`
-
-**Fails when:** None of the above exist.
+**What Drako checks:** Presence of `.drako.yaml`, `drako.yaml`, `agent-bom.json`, `agent_bom.json`, or `AGENT_BOM.md`.
 
 **Fix:**
 ```bash
 pip install drako
 drako init
-
-# This creates .drako.yaml with:
-# - Agent inventory (discovered via AST)
-# - Tool registry with types
-# - Model usage tracking
-# - Governance policies
+drako bom . --format cyclonedx > agent-bom.cdx.json
 ```
-
-Run `drako bom .` to generate a standalone BOM in text, JSON, or Markdown format.
 
 ---
 
-### COM-006 — No HITL for High-Risk Actions
+### COM-006 — No HITL Checkpoint for High-Risk Actions
 
-**Severity:** CRITICAL
+**Severity:** CRITICAL  
 **EU AI Act:** Article 14 (Human oversight)
-**Article summary:** Humans must retain meaningful control over high-risk AI decisions. Autonomous execution of destructive actions without a checkpoint is a direct Art. 14 violation.
 
-**What Drako checks:**
-1. Identifies tools with side-effect names: `delete`, `write`, `remove`, `send`, `pay`, `transfer`, `execute`, `deploy`, `publish`, `drop`, `post`, `push`, `submit`, `update`, `modify`, `create`, `insert`
-2. If such tools exist, checks for HITL configuration in `.drako.yaml` or HITL patterns in Python source
-
-**Fails when:** Side-effect tools exist but no HITL checkpoint is configured.
-
-**Regulatory exposure:** Liability for autonomous AI harm. Enforcement actions under EU AI Act.
+**What Drako checks:** Identifies tools with destructive or side-effect names (`delete`, `write`, `remove`, `send`, `pay`, `transfer`, `execute`, `deploy`, `publish`, `drop`, etc.) and verifies that HITL enforcement (`hitl:` or `irreversible: consent`) or code-level oversight exists.
 
 **Fix:**
 ```yaml
 # .drako.yaml
-policies:
-  hitl:
-    mode: enforce
-    triggers:
-      tool_types:
-        - write
-        - execute
-        - payment
-      trust_score_below: 60
-      spend_above_usd: 100.00
-    approval_timeout_minutes: 30
-    timeout_action: reject
+hitl:
+  mode: enforce
+  triggers:
+    tool_types:
+      - write
+      - execute
+      - payment
+    trust_score_below: 60
+    spend_above_usd: 100.0
+  approval_timeout_minutes: 30
+  timeout_action: reject
 ```
 
 ---
 
-## Compliance Score and Grading
+## CI/CD Gating
 
-The compliance rules contribute to the overall governance score:
-
-| Severity | Score Deduction |
-|----------|----------------|
-| CRITICAL | 20 points |
-| HIGH | 10 points |
-| MEDIUM | 5 points |
-| LOW | 2 points |
-
-**Letter grades:**
-
-| Grade | Score |
-|-------|-------|
-| A | 90–100 |
-| B | 75–89 |
-| C | 60–74 |
-| D | 40–59 |
-| F | 0–39 |
-
-A project failing COM-001 (HIGH) and COM-006 (CRITICAL) loses 30 points before counting any security or governance findings.
-
----
-
-## CI/CD Integration
-
-Gate deployments on compliance status:
+Gate pull requests offline on severity and determinism thresholds:
 
 ```bash
-# Fail on any critical findings (including COM-006)
+# Fail on any critical finding (including COM-006)
 drako scan . --fail-on critical
 
-# Fail if governance score drops below 70
-drako scan . --threshold 70
+# Fail on high or critical findings
+drako scan . --fail-on high
 
-# Both — fail on critical OR low score
-drako scan . --fail-on critical --threshold 70
-```
+# Fail if determinism score drops below 70
+drako scan . --fail-on critical --threshold-det 70
 
-Export for regulators:
+# Export SARIF for GitHub Code Scanning
+drako scan . --format sarif --fail-on critical > compliance-report.sarif
 
-```bash
-# SARIF — for GitHub Code Scanning and security tooling
-drako scan . --format sarif > compliance-report.sarif
-
-# JSON — for custom dashboards and automated pipelines
+# Export JSON for audit pipelines
 drako scan . --format json > compliance-report.json
-```
-
-The JSON output includes a `compliance` field with per-article status:
-
-```json
-{
-  "score": 72,
-  "grade": "C",
-  "compliance": {
-    "eu_ai_act": {
-      "art_9": "FAIL",
-      "art_11": "PASS",
-      "art_12": "FAIL",
-      "art_14": "FAIL"
-    }
-  },
-  "findings": [...]
-}
 ```
 
 ---
 
 ## Policy Templates for Compliance
 
-The `eu-ai-act` template pre-configures all four Article requirements:
+Initialize directly from the `eu-ai-act` v4 template:
 
 ```bash
 drako init --template eu-ai-act
+drako validate .drako.yaml
 ```
 
-This sets:
+This applies:
+- `kernel.default_effect: deny` with `tiers.irreversible: consent`
 - `audit.cryptographic: true` + `retention_days: 3650` (Art. 12 — 10 years)
 - `hitl.mode: enforce` + `timeout_action: reject` (Art. 14)
-- `dlp.mode: enforce` (Art. 9 risk management)
-- `odd.enforcement_mode: enforce` (Art. 9 operational boundaries)
+- `dlp.mode: enforce` + `intent_verification.mode: enforce` (Art. 9)
+- `a2a.mode: enforce` + `require_signed_cards: true`
 
-See [Policy Templates →](policy-templates.md) for the full template configuration.
+See [Policy Templates →](policy-templates.md) for all six presets.
 
 ---
 
-## Baseline Workflow for Compliance
+## Baseline Workflow
 
-For existing projects with pre-existing compliance gaps:
+For existing repositories with known compliance debt:
 
 ```bash
-# Save current state as baseline (known gaps)
+# Save acknowledged findings as baseline
 drako scan . --baseline
 
-# From now on, only new gaps are flagged in CI
-drako scan .
-
-# Governance score still reflects ALL findings — real posture, not filtered
+# Subsequent scans flag only newly introduced gaps in CI
+drako scan . --fail-on high
 ```
-
-Use the baseline to focus remediation efforts on new issues while working through the backlog systematically.

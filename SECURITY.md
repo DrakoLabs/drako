@@ -2,14 +2,16 @@
 
 ## Supported Versions
 
-Drako follows a rapid release model. Only the latest **2.x** branch receives security updates.
+Drako follows an active release model. Security updates are delivered on the current **4.x** branch.
 
-| Version       | Supported          | Security Updates |
-|---------------|--------------------|------------------|
-| 2.x (latest)  | ✅ Yes             | ✅ Yes           |
-| 1.x           | ❌ No (EOL)        | ❌ No            |
+| Version        | Supported     | Security Updates |
+|----------------|---------------|------------------|
+| 4.x (current)  | Yes           | Yes              |
+| 3.x            | No (EOL)      | No               |
+| 2.x            | No (EOL)      | No               |
+| 1.x            | No (EOL)      | No               |
 
-Always use the latest stable release from [PyPI](https://pypi.org/project/drako/) or the
+Always install from [PyPI](https://pypi.org/project/drako/) or verify releases on the
 [GitHub Releases](https://github.com/DrakoLabs/drako/releases) page.
 
 ---
@@ -20,24 +22,21 @@ The following components are **in scope** for security reports:
 
 | Component | Examples of relevant issues |
 |---|---|
-| **Static scan engine** | Critical false negatives in SEC-\*, GOV-\*, COM-\*, FW-\* rules; rule bypass via AST manipulation |
-| **Runtime enforcement pipeline** | Tool call bypass, DLP evasion, HITL bypass, ODD boundary escape |
-| **Out-of-process proxy** | Request/response tampering, auth bypass, credential exposure in transit |
-| **Audit trail** | SHA-256 chain break, Ed25519 signature forgery, log injection, tamper-evident log bypass |
-| **Collective Intelligence / IOC sharing** | Poisoning, spoofing, amplification, data exfiltration via IOC payloads |
-| **Desktop agent scanning** | MCP config parsing exploits, privilege escalation, shell injection |
-| **CLI & configuration** | Arbitrary code execution via `.drako.yaml`, path traversal, insecure defaults |
-| **Policy versioning / rollback** | Snapshot corruption, unauthorized rollback, policy downgrade attacks |
-| **DRAKO-ABSS advisory format** | Advisory injection, hash collision in IOC pattern matching |
-| **Trust Score & Intent Fingerprinting** | Score manipulation, fingerprint collision |
+| **Authority Kernel** | Origin trust ceiling bypass, taint lattice escape, glob deny-wins bypass, `ConsentToken` verification bypass |
+| **Memory Gate (ASI06)** | Untrusted write quarantine bypass, persistent memory poisoning across trust boundaries |
+| **Ed25519 Receipts & JCS** | RFC 8785 JCS canonicalization mismatch, SHA-256 hash-chain break, Ed25519 signature forgery, `drako verify` false pass |
+| **MCP Guard** | `mcp.lock` hash-pinning bypass, `tools/list` schema drift evasion, SSRF in `MCPGAClient`, argv confusion |
+| **A2A JWS** | Detached RFC 7515 EdDSA JWS verification bypass, SSRF in `fetch_and_verify_agent_card` |
+| **Instruction Scanner (`INST-001..005`)** | Bypassing `drako desktop skills` detection for prompt hijack, secret exfiltration, or remote shell execution |
+| **Local Enforcement Proxy** | Loopback/CORS bypass, `/status` or `/audit` bearer auth (`DRAKO_PROXY_TOKEN`) bypass, `LoopBreaker` or `EgressGuard` bypass |
+| **Static Scan Engine & CLI** | Critical false negatives or AST bypasses in `SEC-*`, `GOV-*`, `COM-*`, `FW-*` rules; path traversal or code execution via `.drako.yaml` |
 
 The following are **out of scope**:
 
-- Vulnerabilities in third-party dependencies (report these upstream; mention them to us if you believe they affect Drako specifically)
-- Issues already disclosed in a published DRAKO-ABSS advisory
-- Findings from automated scanners submitted without a reproduction case
-- Social engineering or phishing attacks against DrakoLabs personnel
-- Governance score disagreements (i.e., "I think rule X is too strict") — use GitHub Discussions instead
+- Vulnerabilities in third-party dependencies (report upstream and notify us if Drako is specifically impacted)
+- Findings from automated scanners submitted without a minimal reproduction case
+- Social engineering or phishing against maintainers
+- Policy strictness debates — use GitHub Issues or Discussions instead
 
 ---
 
@@ -45,38 +44,30 @@ The following are **out of scope**:
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-### Preferred channel
+### Primary Channel
 
 Use **[GitHub Private Vulnerability Reporting](https://github.com/DrakoLabs/drako/security/advisories/new)**
-(the "Report a vulnerability" button in the Security tab). This creates an encrypted, private thread
-directly with the maintainers and is our fastest path to triage.
+(the **"Report a vulnerability"** button in the repository's **Security** tab). This creates an
+encrypted, private advisory thread directly with the maintainers and is the fastest path to triage.
 
-### Fallback
+### What to Include
 
-If GitHub PVR is unavailable or you prefer email:
+Please provide:
 
-📧 **hello@getdrako.com**
-
-### What to include
-
-A useful report significantly reduces our triage time. Please provide:
-
-```
+```text
 1. Affected component and version (`drako --version`)
-2. Description of the vulnerability and its security impact
-   (confidentiality / integrity / availability / safety of governed agents)
-3. Step-by-step reproduction instructions
-4. Environment details (OS, Python version, framework if relevant)
+2. Description of the vulnerability and security impact
+3. Step-by-step reproduction instructions or minimal PoC
+4. Environment details (OS, Python version, agent framework if relevant)
 5. Expected vs. actual behavior
-6. Suggested fix or mitigation (if you have one)
-7. PoC, logs, SARIF output, or screenshots where applicable
+6. Suggested fix or mitigation (if available)
 ```
 
-For **runtime bypass** or **proxy** issues, include the `.drako.yaml` config and a minimal
-agent snippet that triggers the behavior.
+For **Authority Kernel**, **adapter**, or **proxy** issues, include the `.drako.yaml` / `drako-policy.yaml`
+configuration and a minimal reproduction snippet.
 
-For **audit trail** issues, include the exported audit log and any relevant output from
-`drako history` or `drako diff`.
+For **receipt chain** issues, include the `.drako/receipts.jsonl` file and the output of
+`drako verify .drako/receipts.jsonl --pubkey-file <pub.pem>`.
 
 ---
 
@@ -84,90 +75,60 @@ For **audit trail** issues, include the exported audit log and any relevant outp
 
 | Stage | Target |
 |---|---|
-| Acknowledgment | ≤ 48 hours |
-| Initial triage & severity assessment | ≤ 5 business days |
-| Patch or mitigation for Critical / High | ≤ 14 days from confirmation |
+| Acknowledgment | <= 48 hours |
+| Initial triage & severity assessment | <= 5 business days |
+| Patch or mitigation for Critical / High | <= 14 days from confirmation |
 | Patch or mitigation for Medium / Low | Next scheduled release |
 | Public disclosure | Coordinated — after patch is available, with reporter's consent |
 
 We follow **coordinated disclosure**. We will not disclose your report publicly until a fix is
 available, and we will credit you in the advisory unless you prefer to remain anonymous.
 
-If we are unable to reproduce the issue or determine it is not a vulnerability, we will explain
-our reasoning. You are welcome to provide additional information to reopen the case.
-
 ---
 
 ## Severity Classification
 
-We use **CVSS v3.1** as a baseline and adjust for AI-agent-specific impact. In addition to
-standard CIA triad scoring, we consider:
+We use **CVSS v3.1** as a baseline, adjusted for AI-agent authority impact:
 
-- **Agent safety impact**: Can the vulnerability cause an AI agent to take unintended real-world
-  actions (financial transactions, code execution, data exfiltration)?
-- **Audit integrity**: Does the vulnerability undermine the tamper-evident audit trail or allow
-  log injection that survives independent verification?
-- **Governance bypass**: Can the vulnerability allow a governed agent to execute a tool call that
-  policy explicitly forbids?
-- **Collective Intelligence abuse**: Can the vulnerability be used to poison IOC feeds across
-  multiple Drako deployments?
+- **Authority / Kernel bypass**: Can an untrusted input or tool call cross a trust boundary or execute a denied tool?
+- **Cryptographic receipt integrity**: Can an attacker forge Ed25519 receipts or tamper with a hash chain undetected by `drako verify`?
+- **Protocol supply-chain bypass**: Can a mutated MCP server (`mcp.lock` / `tools/list`) or unsigned A2A Agent Card slip past admission?
+- **Proxy isolation**: Can an unauthenticated client read `/audit` / `/status` or trigger SSRF via the proxy?
 
 | Severity | Examples |
 |---|---|
-| **Critical** | Runtime enforcement bypass, Ed25519 forgery, proxy auth bypass, IOC feed poisoning |
-| **High** | DLP bypass for Critical PII, HITL suppression, audit chain break, arbitrary code via config |
-| **Medium** | False negative in a SEC-\* or FW-\* rule class, Trust Score manipulation, path traversal |
-| **Low** | Scan result information leakage, low-impact rule gaps, desktop scan parser issues |
+| **Critical** | Authority Kernel enforcement bypass, Ed25519/JWS signature forgery, `ConsentToken` bypass, proxy auth bypass |
+| **High** | Memory Gate quarantine bypass, `mcp.lock` pin bypass, SSRF egress bypass, arbitrary code execution via config |
+| **Medium** | False negative in `SEC-*` / `INST-*` / `FW-*` rule classes, `LoopBreaker` evasion, path traversal |
+| **Low** | Non-sensitive scan metadata leakage, minor CLI edge cases |
 
 ---
 
 ## Security Advisories
 
-Confirmed vulnerabilities are published as **DRAKO-ABSS advisories**
-([format spec](https://github.com/DrakoLabs/drako/blob/main/docs/abss-format.md)) in the
-[GitHub Security Advisories](https://github.com/DrakoLabs/drako/security/advisories) tab
-and referenced in the [CHANGELOG](https://github.com/DrakoLabs/drako/blob/main/CHANGELOG.md).
-
-Advisory identifiers follow the format: `DRAKO-ABSS-YYYY-NNN`
-
-You can subscribe to advisory notifications by **watching** this repository and selecting
-*"Security alerts"* in your notification settings.
-
----
-
-## Hall of Fame
-
-We are grateful to the security researchers who help keep Drako and the AI agents it governs safe.
-Reporters of confirmed Critical or High vulnerabilities will be credited here (with permission).
-
-*No entries yet — be the first.*
+Confirmed vulnerabilities are published in the
+[GitHub Security Advisories](https://github.com/DrakoLabs/drako/security/advisories) tab and
+referenced in [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
 ## Hardening Drako in Your Environment
 
-While not a substitute for reporting vulnerabilities, the following practices reduce your attack
-surface:
-
-- Pin to a specific Drako version in CI and verify the PyPI SHA256 hash
-- Commit your `.drako.yaml` to version control and use `drako history` and `drako diff`
-  to detect unauthorized policy changes; use `drako rollback` to restore a known-good state
-- Run the proxy in a dedicated network namespace or container; do not expose port 8990 publicly
-- Enable `dlp.mode: enforce` before production deployment, not just `audit`
-- Use `drako scan --fail-on critical` as a hard CI gate, not just advisory
-- Use `drako scan --baseline` to track new findings separately from acknowledged ones,
-  so regressions are never silently absorbed into the baseline
+- Pin a specific Drako version in CI and verify package hashes.
+- Commit `.drako.yaml`, `drako-policy.yaml`, and `mcp.lock` to version control; run `drako drift` in CI to catch unauthorized scope widening.
+- Keep the operator signing key (`drako kernel keygen`) strictly separated from runtime receipt-signing keys and outside agent-accessible paths.
+- Bind `drako proxy start` to `127.0.0.1` (default) and always set `DRAKO_PROXY_TOKEN` before exposing `/status` or `/audit`.
+- Gate PRs with `drako scan . --fail-on critical` and `drako desktop skills . --fail-on high`.
+- Verify local audit trails offline with `drako verify .drako/receipts.jsonl --pubkey-file <pub.pem>`.
 
 ---
 
 ## Out-of-Scope Conduct
 
-The following actions are **not permitted** during security research and will not be considered
-good-faith disclosure regardless of findings:
+The following actions are **not permitted** during security research:
 
-- Accessing, modifying, or exfiltrating data from production systems or customer deployments
-- Denial-of-service attacks against getdrako.com or the Collective Intelligence infrastructure
-- Testing against third-party systems or agents that have not granted explicit permission
+- Accessing, modifying, or exfiltrating data from production systems or third-party deployments
+- Testing against third-party systems or agents without explicit authorization
 - Publishing vulnerability details before coordinated disclosure is complete
 
 ---

@@ -10,7 +10,7 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [
-    { name = "DrakoLabs", email = "hello@getdrako.com" },
+    { name = "DrakoLabs" },
 ]
 keywords = [
     "ai-governance",
