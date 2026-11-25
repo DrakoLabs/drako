@@ -135,6 +135,8 @@ def format_sarif(
         "determinism_grade": result.determinism_grade,
     }
 
+    from drako import __version__ as drako_version
+
     sarif = {
         "$schema": _SARIF_SCHEMA,
         "version": _SARIF_VERSION,
@@ -142,8 +144,8 @@ def format_sarif(
             "tool": {
                 "driver": {
                     "name": "Drako",
-                    "informationUri": "https://getdrako.com",
-                    "version": "0.1.0",
+                    "informationUri": "https://github.com/DrakoLabs/drako",
+                    "version": drako_version,
                     "rules": rules,
                 },
             },

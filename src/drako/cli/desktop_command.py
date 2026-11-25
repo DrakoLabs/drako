@@ -358,6 +358,8 @@ def _output_json(
 
 def _output_sarif(bom: DesktopBOM, findings: list[MCPFinding]) -> None:
     """SARIF 2.1.0 output for CI/CD integration."""
+    from drako import __version__ as drako_version
+
     sarif = {
         "$schema": (
             "https://docs.oasis-open.org/sarif/sarif/v2.1.0/"
@@ -369,7 +371,8 @@ def _output_sarif(bom: DesktopBOM, findings: list[MCPFinding]) -> None:
                 "tool": {
                     "driver": {
                         "name": "drako-desktop",
-                        "version": "2.5.0",
+                        "informationUri": "https://github.com/DrakoLabs/drako",
+                        "version": drako_version,
                         "rules": [
                             {
                                 "id": f"MCP-{i:03d}",

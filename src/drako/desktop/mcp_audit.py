@@ -1,4 +1,4 @@
-"""`drako mcp audit` — audit configured MCP servers (P1-07, Sprint 2 P1).
+"""`drako mcp audit` — audit configured MCP servers against mcp.lock.
 
 The pin (`drako mcp pin`) fixes what SHOULD run; audit inspects what
 IS configured: desktop client configs + project .mcp.json, crossed

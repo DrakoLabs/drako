@@ -1,31 +1,21 @@
 """
-mcp.lock — hash-pin for NPX MCP servers (Sprint 2 #1, 2026-09-04).
+mcp.lock — cryptographic hash-pin lockfile for NPX MCP servers.
 
-Closes the U-6 unnamed risk: `npx -y <pkg>` auto-installs from the npm
-registry WITHOUT A PIN — the bytes installed today are not provably the
-bytes approved yesterday (postmark-mcp class). This module is the fix
-that legitimizes `-y`:
+Prevents floating `npx -y <pkg>` auto-installs from silently swapping
+package bytes between approval and execution:
 
-- `mcp.lock` (JSON, server-side, path via DRAKO_MCP_LOCK or default
-  ./mcp.lock) maps package name → {version, integrity, pinned_at, pinned_by}.
-- Enforcement (in NPXMCPExecutor.start): the argv uses the PINNED
-  `name@version` (never a floating spec), and the registry integrity for
-  that exact version (`npm view name@version dist.integrity --json`) must
-  match the lock — mismatch or missing entry fails CLOSED.
-- No lock file at all = interim posture (warning, install floating):
-  allowed ONLY until this Sprint 2 item lands; after that, server boot
-  with DRAKO_MCP_ENFORCE_PIN=1 (default) refuses to start pool entries
-  for unpinned packages.
+- `mcp.lock` (JSON, path via DRAKO_MCP_LOCK or default ./mcp.lock) maps
+  package name → {version, integrity, pinned_at, pinned_by}.
+- Enforcement uses the PINNED `name@version` (never a floating spec), and
+  the registry integrity for that exact version (`npm view name@version
+  dist.integrity --json`) must match the lock — mismatch or missing entry
+  fails CLOSED.
+- When `DRAKO_MCP_ENFORCE_PIN=1` (default), unpinned packages are refused.
 
 `integrity` is the npm `dist.integrity` string (`sha512-<base64>`), the
 same field npm itself verifies on install. Generation is an operator/CI
-step: `drako mcp pin <package[@version]>` (SDK side) or hand-editing the
-JSON — both record WHO pinned and WHEN (auditability of the trust
-decision: the name remains the trust decision, now with a hash).
-
-Deliberately OUT of scope for v1: transitive dependency pinning
-(use npm's own lockfile inside prebuilt server images for that),
-Sigstore provenance verification, and a server registry/admission UI.
+step: `drako mcp pin <package[@version]>` or hand-editing the JSON —
+both record WHO pinned and WHEN (auditability of the trust decision).
 """
 
 from __future__ import annotations
@@ -45,10 +35,8 @@ LOCK_VERSION = 1
 DEFAULT_LOCK_PATH = Path("mcp.lock")
 NPM_VIEW_TIMEOUT_SECONDS = 15.0
 
-# P0-hunt (2026-09-10): the lock file is operator-trust, but a malformed
-# or hostile entry must not become argv confusion. Versions are exact
-# pins (no ranges); names must already have passed _PACKAGE_RE at the
-# executor layer — re-checked here for defense in depth.
+# Validate version and package names strictly so a malformed lock entry cannot
+# cause argv confusion (exact pins only, no ranges).
 _VERSION_RE = re.compile(r"^[0-9A-Za-z][0-9A-Za-z._~+\-]*$")
 _NAME_RE = re.compile(
     r"^(@[a-z0-9-~][a-z0-9-._~]*/)?[a-z0-9-~][a-z0-9-._~]*$"

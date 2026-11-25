@@ -1,7 +1,7 @@
 {
   "version": 1,
   "generated_at": "2026-03-19T00:00:00Z",
-  "_comment": "Synthetic dataset. Will be replaced with real data from the Public Agent Governance Index.",
+  "_comment": "Bundled anonymized reference dataset for offline governance score percentile comparisons.",
   "projects_scanned": 100,
   "distribution": {
     "scores": [

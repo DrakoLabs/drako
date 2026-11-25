@@ -14,8 +14,8 @@ inputs, deny-closed:
    resistance at the admission layer, enforced again at spawn).
 
 Pure function over caller-supplied lock mapping ({package: spec}) so
-the kernel stays transport-agnostic; the backend executor is the
-enforcement point that re-verifies integrity at spawn time.
+the kernel stays transport-agnostic; the runtime executor re-verifies
+integrity at spawn time.
 """
 
 from __future__ import annotations
