@@ -7,42 +7,73 @@
 
 governance_level: strict
 
-policies:
-  odd:
-    enforcement_mode: enforce
-    default_policy: deny
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
+  default_effect: deny
+  tiers:
+    read: auto
+    write: consent
+    external_comms: consent
+    irreversible: consent
 
-  magnitude:
-    max_spend_per_action_usd: 100.00
-    max_spend_per_session_usd: 500.00
-    max_records_per_action: 50
+loop_breaker:
+  enabled: true
+  trip_threshold: 5
+  window_seconds: 300.0
 
-  dlp:
-    mode: enforce
-    sensitivity: high
+dlp:
+  mode: enforce
 
-  hitl:
-    mode: enforce
-    triggers:
-      tool_types: [payment, write, execute]
-      spend_above_usd: 50.00
-      trust_score_below: 70
-    timeout_action: reject
-    approval_timeout_minutes: 15
+hitl:
+  mode: enforce
+  triggers:
+    tool_types: [payment, write, execute]
+    spend_above_usd: 50.0
+    trust_score_below: 70
+    records_above: 50
+  timeout_action: reject
+  approval_timeout_minutes: 15
 
-  intent_verification:
-    mode: enforce
-    required_for:
-      tool_types: [payment, write]
-    anti_replay: true
+intent_verification:
+  mode: enforce
+  required_for:
+    tool_types: [payment, write]
+  anti_replay: true
+  intent_ttl_seconds: 300
 
-  circuit_breaker:
-    agent_level:
-      failure_threshold: 3
-      time_window_seconds: 60
-      recovery_timeout_seconds: 120
+circuit_breaker:
+  agent_level:
+    failure_threshold: 3
+    time_window_seconds: 300
+    recovery_timeout_seconds: 120
 
-  audit:
+audit:
+  enabled: true
+  cryptographic: true
+  receipt_store: .drako/receipts.jsonl
+  retention_days: 365
+
+finops:
+  tracking:
     enabled: true
-    cryptographic: true
-    retention_days: 365
+  budgets:
+    daily_usd: 100.0
+    monthly_usd: 2500.0
+
+a2a:
+  mode: enforce
+  require_signed_cards: true
+  worm_detection:
+    enabled: true
+    scan_inter_agent_messages: true
+    max_propagation_depth: 3
+    circular_reference_block: true
+
+mcp:
+  lockfile: mcp.lock
+  enforce_pin: true
+  allow_auto_install: false
+  protocol_version: "2026-07-28"
+
+egress:
+  allowed_domains: []

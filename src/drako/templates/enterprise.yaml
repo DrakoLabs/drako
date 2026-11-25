@@ -1,5 +1,5 @@
 # Drako Policy Template: Enterprise Maximum Governance
-# For organizations requiring the strictest compliance posture.
+# For organizations requiring the strictest local-first compliance posture.
 #
 # Usage:
 #   extends: enterprise
@@ -7,54 +7,74 @@
 
 governance_level: strict
 
-policies:
-  odd:
-    enforcement_mode: enforce
-    default_policy: deny
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
+  default_effect: deny
+  tiers:
+    read: auto
+    write: consent
+    external_comms: consent
+    irreversible: consent
 
-  magnitude:
-    max_spend_per_action_usd: 25.00
-    max_spend_per_session_usd: 100.00
-    max_records_per_action: 25
-    enforcement_mode: enforce
+loop_breaker:
+  enabled: true
+  trip_threshold: 5
+  window_seconds: 300.0
 
-  dlp:
-    mode: enforce
-    sensitivity: high
+dlp:
+  mode: enforce
 
-  hitl:
-    mode: enforce
-    triggers:
-      tool_types: [write, execute, payment, network]
-      trust_score_below: 80
-      spend_above_usd: 10.00
-    timeout_action: reject
-    approval_timeout_minutes: 15
+hitl:
+  mode: enforce
+  triggers:
+    tool_types: [write, execute, payment, network]
+    trust_score_below: 80
+    spend_above_usd: 10.0
+    records_above: 25
+  timeout_action: reject
+  approval_timeout_minutes: 15
 
-  intent_verification:
-    mode: enforce
-    required_for:
-      tool_types: [payment, write, execute]
-    anti_replay: true
-    intent_ttl_seconds: 120
+intent_verification:
+  mode: enforce
+  required_for:
+    tool_types: [payment, write, execute]
+  anti_replay: true
+  intent_ttl_seconds: 120
 
-  circuit_breaker:
-    agent_level:
-      failure_threshold: 3
-      time_window_seconds: 60
-      recovery_timeout_seconds: 180
+circuit_breaker:
+  agent_level:
+    failure_threshold: 3
+    time_window_seconds: 300
+    recovery_timeout_seconds: 180
 
-  audit:
+audit:
+  enabled: true
+  cryptographic: true
+  receipt_store: .drako/receipts.jsonl
+  retention_days: 365
+
+finops:
+  tracking:
     enabled: true
-    cryptographic: true
-    retention_days: 365
+  budgets:
+    daily_usd: 25.0
+    monthly_usd: 500.0
 
-  a2a:
-    mode: enforce
-    auth:
-      method: did_exchange
-      auto_rotate: true
-      rotation_hours: 12
-
-  topology:
+a2a:
+  mode: enforce
+  require_signed_cards: true
+  worm_detection:
     enabled: true
+    scan_inter_agent_messages: true
+    max_propagation_depth: 3
+    circular_reference_block: true
+    block_suspicious: true
+
+mcp:
+  lockfile: mcp.lock
+  enforce_pin: true
+  allow_auto_install: false
+  protocol_version: "2026-07-28"
+
+egress:
+  allowed_domains: []

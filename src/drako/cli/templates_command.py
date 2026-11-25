@@ -6,9 +6,12 @@ import click
 import yaml
 
 
-@click.group()
-def templates() -> None:
+@click.group(invoke_without_command=True)
+@click.pass_context
+def templates(ctx: click.Context) -> None:
     """Manage policy templates."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(list_templates)
 
 
 @templates.command("list")
@@ -49,7 +52,7 @@ def show_template(name: str) -> None:
         data = load_template(name)
     except Exception as exc:
         click.secho(f"  [error]  {exc}", fg="red")
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     click.echo()
     click.secho(f"  Template: {name}", fg="cyan", bold=True)
