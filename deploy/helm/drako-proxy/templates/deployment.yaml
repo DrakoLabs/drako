@@ -27,31 +27,39 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
+            - name: DRAKO_PROXY_HOST
+              value: {{ .Values.config.bindHost | quote }}
             - name: DRAKO_PROXY_PORT
               value: {{ .Values.service.port | quote }}
-            - name: DRAKO_ENDPOINT
-              value: {{ .Values.config.endpoint | quote }}
-            - name: DRAKO_GOVERNANCE_LEVEL
-              value: {{ .Values.config.governanceLevel | quote }}
+            - name: DRAKO_CONFIG_PATH
+              value: {{ .Values.config.configPath | quote }}
             {{- if .Values.config.existingSecret }}
-            - name: DRAKO_API_KEY
+            - name: DRAKO_PROXY_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.config.existingSecret }}
                   key: {{ .Values.config.existingSecretKey }}
-            {{- else if .Values.config.apiKey }}
-            - name: DRAKO_API_KEY
+            {{- else if .Values.config.proxyToken }}
+            - name: DRAKO_PROXY_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: {{ include "drako-proxy.fullname" . }}-secret
-                  key: DRAKO_API_KEY
+                  key: DRAKO_PROXY_TOKEN
             {{- end }}
-          {{- if .Values.drakoConfig }}
+          {{- if or .Values.drakoConfig .Values.drakoPolicy }}
           volumeMounts:
+            {{- if .Values.drakoConfig }}
             - name: config
               mountPath: /app/.drako.yaml
               subPath: .drako.yaml
               readOnly: true
+            {{- end }}
+            {{- if .Values.drakoPolicy }}
+            - name: config
+              mountPath: /app/drako-policy.yaml
+              subPath: drako-policy.yaml
+              readOnly: true
+            {{- end }}
           {{- end }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
@@ -59,7 +67,7 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      {{- if .Values.drakoConfig }}
+      {{- if or .Values.drakoConfig .Values.drakoPolicy }}
       volumes:
         - name: config
           configMap:

@@ -16,14 +16,14 @@ jobs:
       pull-requests: write
       security-events: write  # Required for SARIF upload
     steps:
-      - uses: actions/checkout@v4
-      - uses: angelnicolasc/drako-scan@v1
+      - uses: actions/checkout@v7
+      - uses: DrakoLabs/drako/.github/actions/drako-scan@main
 ```
 
 ## Full Configuration
 
 ```yaml
-- uses: angelnicolasc/drako-scan@v1
+- uses: DrakoLabs/drako/.github/actions/drako-scan@main
   with:
     path: '.'                # Directory to scan
     threshold: '70'          # Fail if score is below 70
@@ -59,7 +59,7 @@ jobs:
 ### Using Outputs
 
 ```yaml
-- uses: angelnicolasc/drako-scan@v1
+- uses: DrakoLabs/drako/.github/actions/drako-scan@main
   id: scan
 - run: echo "Score is ${{ steps.scan.outputs.score }} (${{ steps.scan.outputs.grade }})"
 ```
@@ -154,4 +154,4 @@ drako scan . --benchmark        # Include benchmark comparison
 
 ## License
 
-MIT
+Apache-2.0

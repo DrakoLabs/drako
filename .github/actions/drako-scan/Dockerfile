@@ -1,10 +1,10 @@
 FROM python:3.12-slim
 
-LABEL maintainer="angelnicolasc"
-LABEL org.opencontainers.image.source="https://github.com/angelnicolasc/drako-scan"
+LABEL maintainer="DrakoLabs"
+LABEL org.opencontainers.image.source="https://github.com/DrakoLabs/drako"
 
 RUN pip install --no-cache-dir drako requests && \
-    apt-get update && apt-get install -y --no-install-recommends jq && \
+    apt-get update && apt-get install -y --no-install-recommends curl jq && \
     rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /entrypoint.sh

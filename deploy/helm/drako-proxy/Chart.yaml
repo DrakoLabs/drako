@@ -1,17 +1,18 @@
 apiVersion: v2
 name: drako-proxy
-description: Drako governance proxy for AI agents
+description: Drako v4 local-first Authority Kernel enforcement proxy for AI agents
 type: application
-version: 1.0.0
-appVersion: "2.0.0"
+version: 2.0.0
+appVersion: "4.0.0a1"
 keywords:
   - ai-governance
   - agent-security
+  - authority-kernel
   - proxy
   - compliance
-home: https://getdrako.com
+home: https://github.com/DrakoLabs/drako
 sources:
-  - https://github.com/angelnicolasc/drako
+  - https://github.com/DrakoLabs/drako
 maintainers:
-  - name: Drako
-    email: hello@getdrako.com
+  - name: DrakoLabs
+    url: https://github.com/DrakoLabs/drako

@@ -6,6 +6,11 @@ name: drako-gate
 on:
   workflow_call:
     inputs:
+      drako-package:
+        description: "Package spec to install (default: drako; pass '.' for in-repo self-tests)"
+        required: false
+        type: string
+        default: "drako"
       fail-on:
         description: "Severity threshold for drako scan / skills (low|medium|high|critical)"
         required: false
@@ -33,7 +38,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Drako v4
-        run: pip install .
+        run: pip install "${{ inputs.drako-package || 'drako' }}"
 
       - name: Static governance scan
         run: drako scan . --format json --fail-on "${{ inputs.fail-on || 'high' }}" > scan.json
@@ -41,12 +46,12 @@ jobs:
       - name: Instruction & Skill file poisoning scan (INST-001..005)
         run: drako desktop skills . --fail-on "${{ inputs.fail-on || 'high' }}"
 
-      - name: Scope drift check (when ACS profile and scan baseline exist)
+      - name: Scope drift check (when ACS policy profile exists)
         run: |
-          if [ -f drako-policy.yaml ] && [ -f .drako/.last_scan.json ]; then
-            drako drift --profile drako-policy.yaml --baseline .drako/.last_scan.json
+          if [ -f drako-policy.yaml ]; then
+            drako drift --profile drako-policy.yaml
           else
-            echo "No drako-policy.yaml + baseline pair present; skipping drift gate."
+            echo "No drako-policy.yaml present; skipping drift gate."
           fi
 
       - name: Offline Ed25519 receipt verification (when present)

@@ -1,4 +1,4 @@
-{{- if .Values.drakoConfig }}
+{{- if or .Values.drakoConfig .Values.drakoPolicy }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,6 +6,12 @@ metadata:
   labels:
     {{- include "drako-proxy.labels" . | nindent 4 }}
 data:
+  {{- if .Values.drakoConfig }}
   .drako.yaml: |
     {{- .Values.drakoConfig | nindent 4 }}
+  {{- end }}
+  {{- if .Values.drakoPolicy }}
+  drako-policy.yaml: |
+    {{- .Values.drakoPolicy | nindent 4 }}
+  {{- end }}
 {{- end }}

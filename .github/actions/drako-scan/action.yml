@@ -1,6 +1,6 @@
 name: 'Drako Governance Scan'
-description: 'Scan AI agent code for governance gaps. Posts findings as PR review comments.'
-author: 'angelnicolasc'
+description: 'Scan AI agent code offline for governance gaps and post findings as PR review comments.'
+author: 'DrakoLabs'
 branding:
   icon: 'shield'
   color: 'purple'
