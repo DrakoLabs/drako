@@ -50,7 +50,7 @@ def scan(fmt: str, fail_on: str | None, project_dir: str) -> None:
     """Discover all desktop AI agents and scan for security issues."""
     bom = discover_agents(project_dir=project_dir)
 
-    if bom.total_mcp_servers == 0:
+    if bom.total_mcp_servers == 0 and fmt == "text":
         click.echo("\n  No MCP servers found on this machine.")
         click.echo("  Drako scans configs for: Claude Desktop, Cursor, VS Code,")
         click.echo("  Windsurf, Claude Code, Codex, Gemini CLI, Kiro.\n")

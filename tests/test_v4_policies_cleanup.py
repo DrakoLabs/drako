@@ -116,10 +116,16 @@ def test_sarif_metadata_uses_github_uri_and_live_version(tmp_path: Path):
     assert driver["informationUri"] == "https://github.com/DrakoLabs/drako"
 
 
-def test_desktop_sarif_uses_live_version():
+def test_desktop_sarif_uses_live_version(monkeypatch):
+    from drako.desktop.discovery import DesktopBOM
+
+    monkeypatch.setattr(
+        "drako.cli.desktop_command.discover_agents",
+        lambda project_dir=".": DesktopBOM(platform="linux", agents=[]),
+    )
     runner = CliRunner()
     res = runner.invoke(cli, ["desktop", "scan", "--format", "sarif"])
-    assert res.exit_code in (0, 1), res.output
+    assert res.exit_code == 0, res.output
     sarif = json.loads(res.output)
     driver = sarif["runs"][0]["tool"]["driver"]
     assert driver["version"] == __version__
