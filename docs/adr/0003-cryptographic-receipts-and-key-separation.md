@@ -24,7 +24,7 @@ Security teams, developers, and EU AI Act Art. 12 auditors consistently face the
 ## Alternatives Considered
 
 - **Unsigned JSON logs / HMAC-only logs:** Repudiable by any entity with access to the log store or shared secret.
-- **Proprietary cloud audit store:** Removed with SaaS retirement (ADR-0001).
+- **Centralized remote audit store:** Introduces network dependency and external custody; conflicts with v4 local-first architecture (ADR-0001).
 
 ## Consequences
 

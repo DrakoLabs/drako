@@ -1,9 +1,8 @@
 """Closed AST grammar for policy conditions (kernel-canonical evaluator).
 
-Same security contract as backend hook_service.evaluate_condition, ported so
-the SDK kernel has zero backend imports (single-source target P2-9: backend
-delegates here). No Call nodes, no dunders, SyntaxError caught. Names resolve
-only against the provided context.
+Self-contained, zero-dependency policy condition evaluator: no Call nodes, no
+dunders, and SyntaxError caught fail-closed. Names resolve only against the
+provided context.
 """
 
 from __future__ import annotations

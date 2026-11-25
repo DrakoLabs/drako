@@ -5,7 +5,7 @@
 
 ## Context
 
-Real-world runaway agent incidents in 2026 (Cursor >$1,300/hr, Replit >$600/4d) exposed a blind spot in failure-based circuit breakers: an agent trapped in a loop repeats the *identical* tool or model call hundreds of times while every single call returns HTTP 200 OK. Separately, the legacy proxy in `drako/` ran uncoupled from the Authority Kernel and previously carried a critical FastAPI annotation bug (`422` on all handlers) and hardcoded 2025 pricing tables.
+Real-world runaway agent incidents in 2026 (Cursor >$1,300/hr, Replit >$600/4d) exposed a blind spot in failure-based circuit breakers: an agent trapped in a loop repeats the *identical* tool or model call hundreds of times while every single call returns HTTP 200 OK. Separately, the v3 HTTP proxy operated independently from the Authority Kernel with static model pricing.
 
 ## Decision
 

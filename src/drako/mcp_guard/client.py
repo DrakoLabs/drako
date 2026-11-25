@@ -1,6 +1,6 @@
 """Stateless MCP 2026-07-28 GA HTTP client with SSRF guard and tools/list drift detection.
 
-DB-free, local-first client extracted and hardened from P0-01 + P1-01:
+Local-first, database-free client:
   - Defaults to `MCP-Protocol-Version: 2026-07-28` (stateless core).
   - Emits self-describing routing headers (`Mcp-Method`, `Mcp-Name`) so
     stateless gateways can route without stateful sessions.

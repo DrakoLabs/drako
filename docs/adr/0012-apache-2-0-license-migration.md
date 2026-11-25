@@ -5,20 +5,20 @@
 
 ## Context
 
-In September 2026, `drako` adopted `BUSL-1.1` (Business Source License) solely to prevent commercial cloning of a planned managed SaaS backend (`agentmesh-backend`). With the permanent retirement of the SaaS backend (ADR-0001), retaining a source-available license creates three major liabilities with zero offsetting benefit:
+Drako previously shipped under `BUSL-1.1` (Business Source License, source-available). With v4.0 moving to a fully open, local-first security kernel (ADR-0001), moving to an OSI-approved permissive open-source license removes adoption barriers across three dimensions:
 
-1. **Enterprise & developer procurement friction:** Security teams routinely block non-OSI licenses in CI/CD toolchains and runtime dependencies.
-2. **Ecosystem misalignment in Q4 2026:** Every peer infrastructure security project ships under a permissive OSI license — OWASP Agent Control Standard (`Apache-2.0`), `snyk/agent-scan` (`Apache-2.0`), `microsoft/agent-governance-toolkit` (`MIT`), and OpenAI/Cisco `shirudo-dev/shirudo` (`BSD-2-Clause`, Nov 2026).
-3. **Upstream contribution hygiene:** Contributing Guardian samples or adapters back to OWASP ACS (`Apache-2.0`) required awkward per-file license splits under BUSL.
+1. **Enterprise & developer procurement:** Security teams routinely restrict non-OSI licenses in CI/CD toolchains and runtime dependencies.
+2. **Ecosystem alignment:** Peer agent-security infrastructure ships under permissive OSI licenses — OWASP Agent Control Standard (`Apache-2.0`), `snyk/agent-scan` (`Apache-2.0`), `microsoft/agent-governance-toolkit` (`MIT`), and `shirudo-dev/shirudo` (`BSD-2-Clause`).
+3. **Upstream & community collaboration:** Contributing adapters, conformance tests, or policy examples back to OWASP ACS (`Apache-2.0`) is frictionless under a matching permissive license.
 
 ## Decision
 
-Relicense `DrakoLabs/drako` from `BUSL-1.1` to **Apache License 2.0 (`Apache-2.0`)** effective with `v4.0.0`, updating `LICENSE`, `pyproject.toml` (`license = "Apache-2.0"`, OSI classifier), and `README.md`.
+Relicense `DrakoLabs/drako` from `BUSL-1.1` to **Apache License 2.0 (`Apache-2.0`)** effective with `v4.0.0`, making the entire project 100% open source and free for personal, commercial, and CI/CD use. Update `LICENSE`, `pyproject.toml` (`license = "Apache-2.0"`, OSI classifier), and `README.md`.
 
 ## Alternatives Considered
 
-- **Retain `BUSL-1.1`:** Protects a SaaS product that no longer exists while penalizing open-source adoption.
-- **Dual-license (Apache core + BUSL advanced):** Adds REUSE/SPDX maintenance overhead without a commercial control plane to protect.
+- **Retain `BUSL-1.1`:** Creates legal review friction for enterprise and open-source adopters of a local-first library.
+- **Dual-license (Apache core + source-available extensions):** Adds licensing complexity and contributor friction for minimal benefit.
 
 ## Consequences
 

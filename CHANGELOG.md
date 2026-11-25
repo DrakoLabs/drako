@@ -22,13 +22,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ### Changed
 - **Relicensed from `BUSL-1.1` to `Apache-2.0`** ([ADR-0012](docs/adr/0012-apache-2-0-license-migration.md)).
-- Consolidated into a single local-first repository (`DrakoLabs/drako`) with zero network calls by default and zero API keys required ([ADR-0001](docs/adr/0001-single-repo-local-first-consolidation.md)).
+- Moved to a 100% local-first architecture (`DrakoLabs/drako`) with zero network calls by default and zero API keys required ([ADR-0001](docs/adr/0001-single-repo-local-first-consolidation.md)).
 - **Read-only `drako scan` by default**: no longer writes `.drako/.last_scan.json` or edits `.gitignore` unless `--save-cache` is explicitly passed; `drako init` runs live in-memory discovery when no cache exists.
-- Proxy server (`drako.proxy.proxy_server`) fixed for FastAPI global annotation resolution (`P0-7`), loopback-bound (`127.0.0.1`), bearer-authenticated on `/status` and `/audit`, and wired to `LoopBreaker`, `egress`, and optional `kernel.Host`.
-- Fixed all 5 pre-broken rule fixtures (`CV-001`, `CV-002`, `HOOK-002`, `HOOK-003`, `COM-005`), scoring test drift, and `tree-sitter` optional lazy imports.
+- Proxy server (`drako.proxy.proxy_server`) hardened for FastAPI annotation resolution, loopback-only default binding (`127.0.0.1`), bearer authentication on `/status` and `/audit`, and wired to `LoopBreaker`, `egress`, and optional `kernel.Host`.
+- Updated rule fixtures (`CV-001`, `CV-002`, `HOOK-002`, `HOOK-003`, `COM-005`), scoring tests, and lazy optional `tree-sitter` imports.
 
 ### Removed
-- Retired SaaS client (`DrakoClient`), remote telemetry, `push/status/history/diff/rollback/simulate/serve` CLI commands, `scan --upload`, `scan --share` (`share.py`, `scorecard.py`), SaaS-coupled `middleware/*` (including AutoGen), legacy `src/drako/mcp` (`2024-11-05` + SSE), `simple/` (replaced by `scan --compact`), `nocode/`, research scrapers (`tools/`), and stale marketplace manifests ([ADR-0006](docs/adr/0006-surface-pruning-v4.md)).
+- Removed remote API client (`DrakoClient`), remote telemetry, `push/status/history/diff/rollback/simulate/serve` CLI commands, `scan --upload`, `scan --share` (`share.py`, `scorecard.py`), remote-coupled `middleware/*` (including AutoGen), legacy `src/drako/mcp` (`2024-11-05` + SSE), `simple/` (replaced by `scan --compact`), `nocode/`, auxiliary scripts (`tools/`), and legacy manifests ([ADR-0006](docs/adr/0006-surface-pruning-v4.md)).
 
 ---
 

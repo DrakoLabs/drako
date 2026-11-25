@@ -5,7 +5,7 @@
 
 ## Context
 
-Multi-agent lateral propagation incidents (e.g., mid-2026 agent-to-agent worms) proved that topological or DB-based trust is insufficient: spoofing an agent's endpoint or capabilities hijacks downstream peers. The prior backend implementation (`a2a_cards.py`) used a custom dict envelope `{"card": ..., "signature": ..., "signer": "intent:<tenant>"}` tied to SQLAlchemy tenant rows, which was incompatible with the Linux Foundation / AAIF **A2A Protocol v1.0** specification.
+Multi-agent lateral propagation incidents (e.g., mid-2026 agent-to-agent worms) proved that topological or unverified endpoint trust is insufficient: spoofing an agent's endpoint or capabilities hijacks downstream peers. Ad-hoc JSON signature envelopes break interoperability across agent ecosystems; the Linux Foundation / AAIF **A2A Protocol v1.0** specification standardizes cryptographic agent identity via detached JWS signatures.
 
 ## Decision
 
@@ -17,7 +17,7 @@ Implement `drako.a2a.cards` strictly compliant with **A2A v1.0 `AgentCardSignatu
 
 ## Alternatives Considered
 
-- **Port the custom backend dict envelope verbatim:** Breaks interoperability with standard A2A v1.0 clients and JOSE verifiers.
+- **Custom JSON signature envelope:** Breaks interoperability with standard A2A v1.0 clients and JOSE verifiers.
 
 ## Consequences
 
