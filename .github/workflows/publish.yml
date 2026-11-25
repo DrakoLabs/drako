@@ -41,5 +41,9 @@ jobs:
         with:
           name: dist
           path: dist/
-      - name: Publish package to PyPI (Trusted Publishing)
+      - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dist/
