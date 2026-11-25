@@ -10,8 +10,9 @@ the existing answers dict — re-runs are cheap.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Iterable
+from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import Any
 
 import click
 

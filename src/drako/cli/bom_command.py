@@ -6,7 +6,6 @@ evaluation — just an inventory of agents, tools, models, and permissions.
 
 from __future__ import annotations
 
-import sys
 import time
 
 import click
@@ -35,8 +34,8 @@ def bom(directory: str, output_format: str, output: str | None) -> None:
 
     No governance rules are evaluated — this is a pure inventory tool.
     """
-    from drako.cli.discovery import collect_project_files, detect_frameworks
     from drako.cli.bom import generate_bom
+    from drako.cli.discovery import collect_project_files, detect_frameworks
 
     start = time.monotonic()
 
@@ -53,9 +52,9 @@ def bom(directory: str, output_format: str, output: str | None) -> None:
 
     # Phase 3: Format output
     from drako.cli.formats.bom_fmt import (
-        format_bom_text,
         format_bom_json,
         format_bom_markdown,
+        format_bom_text,
     )
 
     if output_format == "json":

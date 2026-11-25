@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from drako.cli.bom import AgentBOM
@@ -68,7 +68,7 @@ class BasePolicy(ABC):
 
 def find_function_node(
     content: str, func_name: str
-) -> Optional[Union[ast.FunctionDef, ast.AsyncFunctionDef]]:
+) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
     """Locate a FunctionDef/AsyncFunctionDef by name via AST (P1-4, 2026-09-04).
 
     Single canonical implementation for all policies. The old per-rule regex
@@ -87,7 +87,7 @@ def find_function_node(
     return None
 
 
-def function_body_text(content: str, func_name: str) -> Optional[str]:
+def function_body_text(content: str, func_name: str) -> str | None:
     """Exact source of the named function body (None if not found)."""
     node = find_function_node(content, func_name)
     if node is None:

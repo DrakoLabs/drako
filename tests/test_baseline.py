@@ -1,13 +1,13 @@
 """Tests for the baseline system (fingerprinting, filtering, CLI commands)."""
 import json
-import pytest
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from drako.cli.baseline import Baseline, fingerprint
-from drako.cli.policies.base import Finding
 from drako.cli.main import cli
+from drako.cli.policies.base import Finding
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -188,9 +188,9 @@ class TestBaselineCommand:
 
 class TestBaselineSarif:
     def test_sarif_baseline_state(self):
-        from drako.cli.scanner import run_scan
-        from drako.cli.formats.sarif import format_sarif
         from drako.cli.baseline import fingerprint as fp
+        from drako.cli.formats.sarif import format_sarif
+        from drako.cli.scanner import run_scan
 
         result = run_scan(str(FIXTURES / "crewai_basic"))
         if not result.findings:

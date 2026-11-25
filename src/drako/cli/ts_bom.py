@@ -83,10 +83,7 @@ _EXEC_FUNCTIONS = frozenset({"exec", "execSync", "spawn", "spawnSync", "execFile
 
 
 def _is_ts_file(path: str) -> bool:
-    for ext in _TS_EXTENSIONS:
-        if path.endswith(ext):
-            return True
-    return False
+    return any(path.endswith(ext) for ext in _TS_EXTENSIONS)
 
 
 # ---------------------------------------------------------------------------

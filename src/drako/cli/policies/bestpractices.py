@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING
 
 from drako.cli.policies.base import BasePolicy, Finding
@@ -107,7 +106,7 @@ class BP002(BasePolicy):
 
         # Check if there are any test files
         test_files = [
-            p for p in metadata.file_contents.keys()
+            p for p in metadata.file_contents
             if p.endswith(".py") and ("test_" in p or "_test.py" in p or p.startswith("tests/"))
         ]
 
@@ -224,7 +223,7 @@ class BP005(BasePolicy):
                     message=f'Agent "{agent.name}" has {len(agent.tools)} tools registered (recommend < 10). Too many tools reduce accuracy.',
                     file_path=agent.file_path,
                     line_number=agent.line_number,
-                    fix_snippet=f'# Split tools across specialized sub-agents\nresearch_agent = Agent(\n    name="researcher",\n    tools=[search_web, read_url],  # 2 tools\n)\nwriter_agent = Agent(\n    name="writer",\n    tools=[write_file, format_text],  # 2 tools\n)',
+                    fix_snippet='# Split tools across specialized sub-agents\nresearch_agent = Agent(\n    name="researcher",\n    tools=[search_web, read_url],  # 2 tools\n)\nwriter_agent = Agent(\n    name="writer",\n    tools=[write_file, format_text],  # 2 tools\n)',
                 ))
 
         return findings

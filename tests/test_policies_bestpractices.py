@@ -1,11 +1,12 @@
 """Tests for best practices policy rules (BP-001 through BP-005)."""
-import pytest
 from pathlib import Path
 
-from drako.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata, FrameworkInfo
-from drako.cli.bom import generate_bom, AgentBOM, DetectedAgent
+from drako.cli.bom import AgentBOM, generate_bom
+from drako.cli.discovery import ProjectMetadata
 from drako.cli.policies.bestpractices import (
-    BP001, BP002, BP003, BP004, BP005,
+    BP002,
+    BP003,
+    BP005,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"

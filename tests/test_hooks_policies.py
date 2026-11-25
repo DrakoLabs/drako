@@ -1,9 +1,8 @@
 """Tests for programmable hooks policy rules (HOOK-001, HOOK-002, HOOK-003)."""
-import pytest
 from pathlib import Path
 
+from drako.cli.bom import AgentBOM, generate_bom
 from drako.cli.discovery import ProjectMetadata
-from drako.cli.bom import generate_bom, AgentBOM
 from drako.cli.policies.hooks import HOOK001, HOOK002, HOOK003
 
 

@@ -10,10 +10,10 @@ import pytest
 
 from drako import govern
 from drako.adapters.claude_agent import ClaudeAgentAdapter, wrap_claude_agent
-from drako.adapters.crewai import CrewAIAdapter, wrap_crew
-from drako.adapters.google_adk import GoogleADKAdapter, wrap_adk_agent
+from drako.adapters.crewai import wrap_crew
+from drako.adapters.google_adk import wrap_adk_agent
 from drako.adapters.maf import MAFAdapter, wrap_maf_agent
-from drako.adapters.openai_agents import OpenAIAgentsAdapter, wrap_openai_agent
+from drako.adapters.openai_agents import OpenAIAgentsAdapter
 from drako.exceptions import PolicyViolationError
 from drako.kernel import ACS_SPEC_PIN
 from drako.kernel.envelope import Guardian

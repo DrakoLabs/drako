@@ -4,13 +4,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from drako.cli.policies.determinism import DETERMINISM_POLICIES, DET001, DET002, DET003, DET004, DET005, DET006, DET007
-from drako.cli.bom import AgentBOM, DetectedAgent, DetectedTool
-from drako.cli.discovery import ProjectMetadata, FrameworkInfo
-from drako.cli.scoring import calculate_determinism_score, calculate_score, score_to_grade
-
+from drako.cli.bom import AgentBOM, DetectedAgent
+from drako.cli.discovery import ProjectMetadata
+from drako.cli.policies.determinism import (
+    DET001,
+    DET002,
+    DET003,
+    DET004,
+    DET005,
+    DET006,
+    DET007,
+    DETERMINISM_POLICIES,
+)
+from drako.cli.scoring import calculate_determinism_score, calculate_score
 
 # ---------------------------------------------------------------------------
 # Helpers

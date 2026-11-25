@@ -2,7 +2,8 @@
 
 from drako.kernel.authority import Label, TrustLevel, verify_consent_token
 from drako.kernel.receipts import generate_keypair, verify_receipt
-from drako.testing import MockConsentResolver, MockHITLResolver, test_mode as drako_test_mode
+from drako.testing import MockConsentResolver, MockHITLResolver
+from drako.testing import test_mode as drako_test_mode
 
 
 def test_mock_consent_resolver_signs_only_approved_tools():

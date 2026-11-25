@@ -11,9 +11,9 @@ import pytest
 
 agent_hooks = pytest.importorskip("agent_hooks", reason="drako[guardian] not installed")
 
-from agent_hooks.ctk.runner import load_vectors, run_vectors
+from agent_hooks.ctk.runner import load_vectors, run_vectors  # noqa: E402
 
-from drako.kernel.ctk_host import DrakoDomainGuard, DrakoHarness
+from drako.kernel.ctk_host import DrakoDomainGuard, DrakoHarness  # noqa: E402
 
 
 def test_conformance_no_failures():

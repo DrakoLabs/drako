@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
 
+from drako.cli.bom import AgentBOM, DetectedAgent, DetectedTool
+from drako.cli.discovery import ProjectMetadata
 from drako.heuristic_reachability import (
     ReachabilityStatus,
-    ToolReachability,
     analyze_reachability,
 )
-from drako.cli.bom import AgentBOM, DetectedAgent, DetectedTool, DetectedModel, DetectedPrompt
-from drako.cli.discovery import ProjectMetadata, FrameworkInfo
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -109,7 +109,7 @@ def upgrade(to_v4: bool, level: str | None, config_path: str, yes: bool) -> None
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError as exc:
         click.secho(f"  [error]  Invalid YAML: {exc}", fg="red")
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     if not isinstance(raw, dict):
         click.secho("  [error]  Expected a YAML mapping.", fg="red")

@@ -2,14 +2,12 @@
 
 import base64
 import hashlib
-import json
 
 from drako.mcp_guard import (
     AdmissionDecision,
     admit,
     agbom_to_cyclonedx,
     canonical_snapshot,
-    lock_hash,
 )
 
 LOCK = {"a-tool": "a-tool@1.0.0", "b-tool": "b-tool@2.0.0"}

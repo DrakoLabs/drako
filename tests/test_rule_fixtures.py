@@ -15,8 +15,10 @@ Directory convention for test-specific auxiliary files:
 import json
 import shutil
 import tempfile
-import pytest
 from pathlib import Path
+
+import pytest
+
 from drako.cli.scanner import run_scan
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "rules"

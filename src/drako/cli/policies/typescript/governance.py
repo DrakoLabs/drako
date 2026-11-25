@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from drako.cli.policies.base import BasePolicy, Finding
-from drako.cli.policies.typescript._utils import get_parser, is_ts_file
+from drako.cli.policies.typescript._utils import is_ts_file
 
 if TYPE_CHECKING:
     from drako.cli.bom import AgentBOM

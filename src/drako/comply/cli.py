@@ -75,7 +75,7 @@ def generate_cmd(article: str | None, all_articles: bool, output: str,
             if fmt in ("pdf", "both"):
                 written.append(generate_pdf(art, ctx, output_dir))
         except ImportError as exc:
-            raise click.UsageError(str(exc))
+            raise click.UsageError(str(exc)) from exc
 
     for path in written:
         click.echo(f"Wrote {path}")

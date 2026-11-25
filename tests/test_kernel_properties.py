@@ -6,7 +6,8 @@ Claim level: property-tested, never "proven". Seeds fixed for determinism.
 from __future__ import annotations
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from drako.kernel.authority import (
     Label,

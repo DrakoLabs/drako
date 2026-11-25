@@ -17,9 +17,8 @@ from drako.kernel.authority import (
     verify_consent_token,
 )
 from drako.kernel.egress import EgressViolation, assert_public_url, resolve_redirect
-from drako.kernel.envelope import Guardian, Proposal, args_hash
+from drako.kernel.envelope import Guardian, args_hash
 from drako.kernel.host import Host, HostConfig
-from drako.kernel.loop_breaker import LoopBreaker, call_fingerprint
 from drako.kernel.receipts import (
     _canonical,
     generate_keypair,

@@ -25,10 +25,10 @@ def test_disclaimer_appears_in_pdf_html() -> None:
     pytest.importorskip("weasyprint")
     from drako.comply.generators.pdf_generator import render_html
 
-    from .conftest import sample_ctx  # type: ignore  # noqa: F401
-
     # Build a minimal context inline to avoid fixture dependency here.
     from drako.comply.mapping import ComplianceContext
+
+    from .conftest import sample_ctx  # type: ignore  # noqa: F401
 
     ctx = ComplianceContext(system_name="X", system_version="1")
     for article in (9, 11, 12, 14):

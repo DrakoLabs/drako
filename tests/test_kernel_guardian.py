@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from drako.kernel import authority as auth
-from drako.kernel.authority import Label, TrustLevel, merge, may_influence
+from drako.kernel.authority import Label, TrustLevel, may_influence, merge
 from drako.kernel.envelope import Guardian, Proposal, args_hash
 from drako.kernel.eval import UnsafeExpressionError, evaluate_condition
 from drako.kernel.policies import ProfileError, compile_profile, guardian_from_yaml
@@ -20,7 +19,6 @@ from drako.kernel.receipts import (
     verify_chain,
     verify_receipt,
 )
-
 
 PROFILE_YAML = """
 spec_pin: AGENT-HOOKS-0.1
@@ -203,7 +201,7 @@ def test_receipt_sign_verify_chain():
 
 
 def test_receipt_never_unsigned():
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         mint_receipt(decision="maybe", policy_id="p", reason="x", tool_name="t",
                      agent_id="a", args_hash="h", private_pem="x", public_pem="y")
 

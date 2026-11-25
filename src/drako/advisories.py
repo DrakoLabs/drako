@@ -10,7 +10,7 @@ import hashlib
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 try:
     import yaml  # type: ignore[import-untyped]

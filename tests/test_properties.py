@@ -7,13 +7,14 @@ Run: pytest tests/test_properties.py -v --hypothesis-show-statistics
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
 
-from hypothesis import given, strategies as st, settings, assume
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from drako.cli.policies.base import Finding
-from drako.cli.scoring import calculate_score, score_to_grade, findings_summary
-
+from drako.cli.scoring import calculate_score, findings_summary, score_to_grade
+from drako.proxy.proxy_server import _check_dlp, _check_magnitude, _check_odd
+from drako.templates import deep_merge
 
 # ===================================================================
 # Strategies — reusable generators for common types
@@ -197,7 +198,6 @@ def test_summary_total_equals_input_length(findings: list[Finding]):
 # PROPERTY: Template deep merge
 # ===================================================================
 
-from drako.templates import deep_merge
 
 dict_st = st.fixed_dictionaries({
     "a": st.integers(),
@@ -249,7 +249,6 @@ def test_deep_merge_does_not_mutate(d: dict):
 # PROPERTY: ODD governance (proxy module)
 # ===================================================================
 
-from drako.proxy.proxy_server import _check_odd
 
 
 @given(
@@ -322,7 +321,6 @@ def test_odd_off_mode_never_rejects(agent: str, tool: str):
 # PROPERTY: Magnitude checks (proxy module)
 # ===================================================================
 
-from drako.proxy.proxy_server import _check_magnitude
 
 
 @given(max_actions=st.integers(min_value=1, max_value=100))
@@ -365,7 +363,6 @@ def test_magnitude_above_limit_rejected(max_actions: int):
 # PROPERTY: DLP checks (proxy module)
 # ===================================================================
 
-from drako.proxy.proxy_server import _check_dlp
 
 
 @given(

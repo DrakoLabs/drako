@@ -9,12 +9,12 @@ from __future__ import annotations
 from io import StringIO
 from typing import TYPE_CHECKING
 
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
+from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
-from rich.syntax import Syntax
-from rich import box
 
 if TYPE_CHECKING:
     from drako.benchmark import BenchmarkResult
@@ -103,7 +103,7 @@ def _render_findings_section(
                 finding_text.append(f"{location}\n", style="dim")
 
             if f.code_snippet:
-                finding_text.append(f"  Found: ", style="dim")
+                finding_text.append("  Found: ", style="dim")
                 finding_text.append(f"{f.code_snippet}\n", style="dim italic")
 
             console.print(finding_text, end="")
@@ -119,7 +119,7 @@ def _render_findings_section(
                 console.print()
 
             if f.fix_snippet:
-                console.print(f"  [bold green]Fix:[/bold green]")
+                console.print("  [bold green]Fix:[/bold green]")
                 console.print(Syntax(
                     f.fix_snippet,
                     "python",
@@ -254,7 +254,6 @@ def render_report(
 
     # ---- Reachability summary (HEURISTIC string-match, not dataflow) ----
     if reachability:
-        from drako.heuristic_reachability import ReachabilityStatus
         r_counts = {"reachable": 0, "potentially_reachable": 0, "unreachable": 0}
         for tr in reachability:
             r_counts[tr.status.value] += 1
@@ -266,7 +265,7 @@ def render_report(
                 r_parts.append(f"[yellow]{r_counts['potentially_reachable']} potentially reachable[/yellow]")
             if r_counts["unreachable"]:
                 r_parts.append(f"[dim]{r_counts['unreachable']} unreachable[/dim]")
-            console.print(f"\U0001f517 Tool Reachability: " + " \u2502 ".join(r_parts))
+            console.print("\U0001f517 Tool Reachability: " + " \u2502 ".join(r_parts))
             console.print()
 
     # ---- Split findings into vulnerabilities and recommendations ----
@@ -331,7 +330,7 @@ def render_report(
             summary_parts.append(f"[{color}]{vuln_counts[sev]} {sev.lower()}[/{color}]")
 
     if summary_parts:
-        console.print(f"\U0001f4c8 Summary: " + " \u2502 ".join(summary_parts))
+        console.print("\U0001f4c8 Summary: " + " \u2502 ".join(summary_parts))
         if rec_findings:
             console.print(f"   [dim]{len(rec_findings)} recommendation{'s' if len(rec_findings) != 1 else ''} (do not affect score)[/dim]")
     elif not rec_findings:

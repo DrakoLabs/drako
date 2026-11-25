@@ -43,7 +43,7 @@ class FIN001(BasePolicy):
         has_llm_calls = False
         has_cost_tracking = False
 
-        for path, content in metadata.source_files.items():
+        for _path, content in metadata.source_files.items():
             for pat in llm_patterns:
                 if pat in content:
                     has_llm_calls = True
@@ -93,7 +93,7 @@ class FIN002(BasePolicy):
             "gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash",
         ]
 
-        for path, content in metadata.source_files.items():
+        for _path, content in metadata.source_files.items():
             for model in known_models:
                 if model in content:
                     model_refs.add(model)
@@ -149,7 +149,7 @@ class FIN003(BasePolicy):
         ]
 
         has_cache = False
-        for path, content in metadata.source_files.items():
+        for _path, content in metadata.source_files.items():
             for pat in cache_patterns:
                 if pat in content:
                     has_cache = True

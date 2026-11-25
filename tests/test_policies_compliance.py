@@ -1,11 +1,11 @@
 """Tests for compliance policy rules (COM-001 through COM-005)."""
-import pytest
 from pathlib import Path
 
-from drako.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata
-from drako.cli.bom import generate_bom, AgentBOM
+from drako.cli.bom import AgentBOM, generate_bom
+from drako.cli.discovery import ProjectMetadata, collect_project_files, detect_frameworks
 from drako.cli.policies.compliance import (
-    COM001, COM002, COM003, COM004, COM005,
+    COM001,
+    COM005,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"

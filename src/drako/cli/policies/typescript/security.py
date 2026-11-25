@@ -285,19 +285,21 @@ class SEC004TS(BasePolicy):
                 continue
 
             for call in parser.find_function_calls(tree):
-                if call.name in ("fetch", "request") or call.full_name.endswith((".get", ".post", ".put", ".delete")):
-                    if "axios" in call.full_name or call.name == "fetch":
-                        findings.append(self._finding(
-                            f"Network call `{call.full_name}` without domain allowlist",
-                            file_path=rel_path,
-                            line_number=call.line,
-                            code_snippet=f"{call.full_name}({call.args_text[:50]})",
-                            fix_snippet=(
-                                "Restrict URLs to an allowlist:\n"
-                                "const ALLOWED = ['api.openai.com'];\n"
-                                "if (!ALLOWED.some(d => url.includes(d))) throw new Error('Blocked');"
-                            ),
-                        ))
+                if (
+                    call.name in ("fetch", "request")
+                    or call.full_name.endswith((".get", ".post", ".put", ".delete"))
+                ) and ("axios" in call.full_name or call.name == "fetch"):
+                    findings.append(self._finding(
+                        f"Network call `{call.full_name}` without domain allowlist",
+                        file_path=rel_path,
+                        line_number=call.line,
+                        code_snippet=f"{call.full_name}({call.args_text[:50]})",
+                        fix_snippet=(
+                            "Restrict URLs to an allowlist:\n"
+                            "const ALLOWED = ['api.openai.com'];\n"
+                            "if (!ALLOWED.some(d => url.includes(d))) throw new Error('Blocked');"
+                        ),
+                    ))
 
         return findings
 

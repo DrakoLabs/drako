@@ -1,6 +1,5 @@
 """Tests for the `drako bom` CLI command."""
 import json
-import pytest
 from pathlib import Path
 
 from click.testing import CliRunner

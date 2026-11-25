@@ -11,7 +11,7 @@ from drako.adapters.langgraph import (
 )
 from drako.kernel.host import Host, HostConfig
 from drako.kernel.policies import guardian_from_yaml
-from drako.kernel.receipts import generate_keypair, verify_chain, verify_receipt
+from drako.kernel.receipts import generate_keypair, verify_chain
 
 PROFILE = """
 spec_pin: AGENT-HOOKS-0.1

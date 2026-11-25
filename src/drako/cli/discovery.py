@@ -410,11 +410,10 @@ def _detect_from_imports(file_contents: dict[str, str]) -> dict[str, FrameworkIn
                     top = alias.name.split(".")[0]
                     if top in _FRAMEWORK_IMPORTS:
                         module = top
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    top = node.module.split(".")[0]
-                    if top in _FRAMEWORK_IMPORTS:
-                        module = top
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                top = node.module.split(".")[0]
+                if top in _FRAMEWORK_IMPORTS:
+                    module = top
 
             if module:
                 fw_name = _FRAMEWORK_IMPORTS[module]

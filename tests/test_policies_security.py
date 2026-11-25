@@ -1,11 +1,14 @@
 """Tests for security policy rules (SEC-001 through SEC-007)."""
-import pytest
 from pathlib import Path
 
-from drako.cli.discovery import collect_project_files, detect_frameworks, ProjectMetadata
-from drako.cli.bom import generate_bom, AgentBOM
+from drako.cli.bom import AgentBOM, generate_bom
+from drako.cli.discovery import ProjectMetadata, collect_project_files, detect_frameworks
 from drako.cli.policies.security import (
-    SEC001, SEC002, SEC003, SEC004, SEC005, SEC006, SEC007,
+    SEC001,
+    SEC003,
+    SEC005,
+    SEC006,
+    SEC007,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"

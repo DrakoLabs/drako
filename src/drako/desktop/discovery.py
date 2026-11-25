@@ -23,9 +23,10 @@ import json
 import os
 import platform
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 
 @dataclass
@@ -37,7 +38,7 @@ class MCPServerConfig:
     args: list[str] = field(default_factory=list)
     env: dict[str, str] = field(default_factory=dict)
     transport: str = "stdio"
-    url: Optional[str] = None
+    url: str | None = None
     source_file: str = ""
     client: str = ""
 

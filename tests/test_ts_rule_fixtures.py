@@ -10,9 +10,9 @@ Requires ``pip install drako[typescript]`` (tree-sitter).
 import json
 import shutil
 import tempfile
+from pathlib import Path
 
 import pytest
-from pathlib import Path
 
 from drako.ts_parser._compat import ts_available
 

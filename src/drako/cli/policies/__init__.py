@@ -11,24 +11,24 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from drako.cli.policies.base import Finding
-from drako.cli.policies.security import SECURITY_POLICIES
-from drako.cli.policies.governance import GOVERNANCE_POLICIES
-from drako.cli.policies.compliance import COMPLIANCE_POLICIES
-from drako.cli.policies.bestpractices import BEST_PRACTICE_POLICIES
-from drako.cli.policies.operational import OPERATIONAL_POLICIES
-from drako.cli.policies.magnitude import MAGNITUDE_POLICIES
-from drako.cli.policies.identity import IDENTITY_POLICIES
-from drako.cli.policies.versioning import VERSIONING_POLICIES
-from drako.cli.policies.hooks import HOOKS_POLICIES
-from drako.cli.policies.finops import FINOPS_POLICIES
-from drako.cli.policies.resilience import RESILIENCE_POLICIES
 from drako.cli.policies.a2a import A2A_POLICIES
-from drako.cli.policies.multiagent import MULTIAGENT_POLICIES
-from drako.cli.policies.vendor_concentration import VCR_POLICIES
-from drako.cli.policies.frameworks import FRAMEWORK_POLICIES
+from drako.cli.policies.base import Finding
+from drako.cli.policies.bestpractices import BEST_PRACTICE_POLICIES
+from drako.cli.policies.compliance import COMPLIANCE_POLICIES
 from drako.cli.policies.determinism import DETERMINISM_POLICIES
+from drako.cli.policies.finops import FINOPS_POLICIES
+from drako.cli.policies.frameworks import FRAMEWORK_POLICIES
+from drako.cli.policies.governance import GOVERNANCE_POLICIES
+from drako.cli.policies.hooks import HOOKS_POLICIES
+from drako.cli.policies.identity import IDENTITY_POLICIES
+from drako.cli.policies.magnitude import MAGNITUDE_POLICIES
+from drako.cli.policies.multiagent import MULTIAGENT_POLICIES
+from drako.cli.policies.operational import OPERATIONAL_POLICIES
+from drako.cli.policies.resilience import RESILIENCE_POLICIES
+from drako.cli.policies.security import SECURITY_POLICIES
 from drako.cli.policies.typescript import TS_POLICIES
+from drako.cli.policies.vendor_concentration import VCR_POLICIES
+from drako.cli.policies.versioning import VERSIONING_POLICIES
 
 if TYPE_CHECKING:
     from drako.cli.bom import AgentBOM

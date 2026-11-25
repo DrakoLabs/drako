@@ -45,10 +45,7 @@ def collect(directory: str | Path = ".", output_dir: str | Path = "comply-output
             rows.append(ArticleStatus(article, None, None, "NOT GENERATED"))
             continue
         age = (datetime.now() - last).days if last else None
-        if scan_mtime and scan_mtime > last:
-            state = "STALE — regenerate"
-        else:
-            state = "up-to-date"
+        state = "STALE — regenerate" if scan_mtime and scan_mtime > last else "up-to-date"
         rows.append(ArticleStatus(article, last, age, state))
     return rows
 

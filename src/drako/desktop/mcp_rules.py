@@ -23,7 +23,7 @@ MCP-008     HIGH      Multiple high-risk capabilities combined
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from drako.desktop.discovery import DesktopBOM, MCPServerConfig
 
@@ -198,46 +198,53 @@ def _evaluate_server(server: MCPServerConfig) -> list[MCPFinding]:
         has_sensitive_fragment = any(
             s in key_lower for s in _SENSITIVE_KEY_FRAGMENTS
         )
-        if has_sensitive_fragment and value:
-            # Allow environment variable references
-            if not value.startswith("${") and not value.startswith("$"):
-                findings.append(MCPFinding(
-                    rule_id="MCP-005",
-                    severity="CRITICAL",
-                    title="Credentials stored in plaintext MCP config",
-                    description=(
-                        f"Server '{server.name}' has credential '{key}' "
-                        f"stored as plaintext in the config file. Anyone "
-                        f"with access to this file can read the credential."
-                    ),
-                    server_name=server.name,
-                    client=server.client,
-                    config_file=server.source_file,
-                    remediation=(
-                        f"Use environment variable references instead: "
-                        f'"{key}": "${{{key.upper()}}}" and set the '
-                        f"value in your shell profile or secrets manager."
-                    ),
-                ))
-                break  # one finding per server for credentials
-
-    # MCP-006: SSE/HTTP transport without TLS
-    if server.transport in ("sse", "streamable-http") and server.url:
-        if server.url.startswith("http://") and "localhost" not in server.url:
+        if (
+            has_sensitive_fragment
+            and value
+            and not value.startswith("${")
+            and not value.startswith("$")
+        ):
             findings.append(MCPFinding(
-                rule_id="MCP-006",
-                severity="HIGH",
-                title="MCP server using unencrypted transport",
+                rule_id="MCP-005",
+                severity="CRITICAL",
+                title="Credentials stored in plaintext MCP config",
                 description=(
-                    f"Server '{server.name}' communicates over HTTP "
-                    f"(not HTTPS) to {server.url}. All data including "
-                    f"prompts and tool results is transmitted in cleartext."
+                    f"Server '{server.name}' has credential '{key}' "
+                    f"stored as plaintext in the config file. Anyone "
+                    f"with access to this file can read the credential."
                 ),
                 server_name=server.name,
                 client=server.client,
                 config_file=server.source_file,
-                remediation="Use HTTPS for all non-localhost MCP connections.",
+                remediation=(
+                    f"Use environment variable references instead: "
+                    f'"{key}": "${{{key.upper()}}}" and set the '
+                    f"value in your shell profile or secrets manager."
+                ),
             ))
+            break  # one finding per server for credentials
+
+    # MCP-006: SSE/HTTP transport without TLS
+    if (
+        server.transport in ("sse", "streamable-http")
+        and server.url
+        and server.url.startswith("http://")
+        and "localhost" not in server.url
+    ):
+        findings.append(MCPFinding(
+            rule_id="MCP-006",
+            severity="HIGH",
+            title="MCP server using unencrypted transport",
+            description=(
+                f"Server '{server.name}' communicates over HTTP "
+                f"(not HTTPS) to {server.url}. All data including "
+                f"prompts and tool results is transmitted in cleartext."
+            ),
+            server_name=server.name,
+            client=server.client,
+            config_file=server.source_file,
+            remediation="Use HTTPS for all non-localhost MCP connections.",
+        ))
 
     # MCP-007: Server running with elevated command
     if server.command in _ELEVATED_COMMANDS:
