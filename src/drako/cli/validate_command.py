@@ -41,17 +41,36 @@ def validate(file: str) -> None:
 
     _ok("YAML parseable")
 
-    # Flag legacy v3 SaaS fields clearly
-    legacy_keys = [k for k in ("api_key", "api_key_env", "endpoint") if k in data]
+    # Flag all retired v3 fields clearly
+    _retired_v3_keys = (
+        "api_key", "api_key_env", "endpoint", "governance", "bft", "chaos", "topology",
+    )
+    legacy_keys = [k for k in _retired_v3_keys if k in data]
     if legacy_keys:
         warnings.append(
-            f"Deprecated v3 SaaS key(s) present: {', '.join(legacy_keys)} — run `drako upgrade --v4`"
+            f"Deprecated v3 key(s) present: {', '.join(legacy_keys)} — run `drako upgrade --v4`"
         )
+
+    # Resolve template inheritance (`extends:`) before schema validation
+    resolved_data = data
+    if data.get("extends"):
+        from drako.exceptions import ConfigError
+        from drako.templates import deep_merge, load_template
+
+        try:
+            template_data = load_template(str(data["extends"]))
+            resolved_data = deep_merge(template_data, data)
+            _ok(f"Template inherited ({data['extends']})")
+        except ConfigError as exc:
+            errors.append(f"Template resolution failed: {exc}")
+            _err(f"Template resolution: {exc}")
+            _summary(errors, warnings)
+            sys.exit(1)
 
     try:
         from drako.config import DrakoConfig
 
-        config = DrakoConfig.model_validate(data)
+        config = DrakoConfig.model_validate(resolved_data)
         _ok("Schema valid")
     except Exception as exc:
         errors.append(f"Schema validation failed: {exc}")

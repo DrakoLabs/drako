@@ -7,35 +7,61 @@
 
 governance_level: balanced
 
-policies:
-  odd:
-    enforcement_mode: audit
-    default_policy: allow
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
+  default_effect: deny
+  tiers:
+    read: auto
+    write: audit
+    external_comms: audit
+    irreversible: consent
 
-  magnitude:
-    max_spend_per_action_usd: 20.00
-    max_spend_per_session_usd: 100.00
-    max_records_per_action: 200
+loop_breaker:
+  enabled: true
+  trip_threshold: 10
+  window_seconds: 300.0
 
-  dlp:
-    mode: audit
+dlp:
+  mode: audit
 
-  hitl:
-    mode: audit
-    triggers:
-      tool_types: [payment, execute]
-    timeout_action: allow
-    approval_timeout_minutes: 60
+hitl:
+  mode: audit
+  triggers:
+    tool_types: [payment, execute]
+    records_above: 200
+  timeout_action: allow
+  approval_timeout_minutes: 60
 
-  intent_verification:
-    mode: "off"
+intent_verification:
+  mode: "off"
 
-  circuit_breaker:
-    agent_level:
-      failure_threshold: 10
-      time_window_seconds: 120
-      recovery_timeout_seconds: 30
+circuit_breaker:
+  agent_level:
+    failure_threshold: 10
+    time_window_seconds: 180
+    recovery_timeout_seconds: 30
 
-  audit:
+audit:
+  enabled: true
+  cryptographic: true
+  receipt_store: .drako/receipts.jsonl
+  retention_days: 30
+
+finops:
+  tracking:
     enabled: true
-    retention_days: 30
+  budgets:
+    daily_usd: 100.0
+
+a2a:
+  mode: audit
+  require_signed_cards: true
+
+mcp:
+  lockfile: mcp.lock
+  enforce_pin: true
+  allow_auto_install: false
+  protocol_version: "2026-07-28"
+
+egress:
+  allowed_domains: []

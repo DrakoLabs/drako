@@ -7,6 +7,7 @@ without modifying any files.
 
 from __future__ import annotations
 
+import ast
 import difflib
 import sys
 from pathlib import Path
@@ -80,6 +81,17 @@ def fix(directory: str, dry_run: bool, framework: str | None) -> None:
             continue
 
         patched = original.replace(finding.code_snippet, finding.fix_snippet, 1)
+
+        if file_path.suffix == ".py":
+            try:
+                ast.parse(patched, filename=str(file_path))
+            except SyntaxError as exc:
+                click.secho(
+                    f"  [skip] {finding.policy_id}: patch would produce invalid Python syntax ({exc.msg})",
+                    fg="yellow",
+                )
+                skipped += 1
+                continue
 
         # Generate unified diff
         rel_path = str(file_path)

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import signal
-import sys
 from pathlib import Path
 
 import click
@@ -19,7 +18,7 @@ def proxy() -> None:
 
 @proxy.command("start")
 @click.option("--port", default=8990, type=int, help="Port to listen on")
-@click.option("--host", default="0.0.0.0", help="Host to bind to")
+@click.option("--host", default="127.0.0.1", help="Host to bind to (default: loopback 127.0.0.1)")
 @click.option("--config", "config_path", default=".drako.yaml", help="Config file path")
 @click.option("--daemon", "-d", is_flag=True, help="Run as background daemon")
 def start(port: int, host: str, config_path: str, daemon: bool) -> None:
@@ -36,12 +35,12 @@ def start(port: int, host: str, config_path: str, daemon: bool) -> None:
     # Check dependencies
     try:
         import fastapi  # noqa: F401
-        import uvicorn  # noqa: F401
         import httpx  # noqa: F401
+        import uvicorn  # noqa: F401
     except ImportError as exc:
         click.secho(f"  [error]  Missing dependency: {exc.name}", fg="red")
         click.echo("           Install with: " + click.style("pip install 'drako[proxy]'", fg="cyan"))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     click.echo(click.style("  [config] ", fg="green") + f"Using {config_path}")
     click.echo(click.style("  [proxy]  ", fg="green") + f"Starting on {host}:{port}")

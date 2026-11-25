@@ -7,6 +7,7 @@ zero API keys, zero telemetry prompts.
 
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 from typing import Any
@@ -16,14 +17,50 @@ import yaml
 
 _CONFIG_FILENAME = ".drako.yaml"
 _POLICY_FILENAME = "drako-policy.yaml"
+_PAYMENT_KEYWORDS = ("pay", "payment", "transfer", "charge", "invoice", "wire", "withdraw", "refund")
+
+
+def classify_tool_type(tool: Any) -> str:
+    """Derive canonical Drako v4 tool type from a DetectedTool or scan-cache dict."""
+    if isinstance(tool, dict):
+        name = str(tool.get("name", "")).lower()
+        has_code = bool(tool.get("has_code_execution", False))
+        has_fs = bool(tool.get("has_filesystem_access", False))
+        has_net = bool(tool.get("has_network_access", False))
+        explicit = tool.get("type") or tool.get("category")
+    else:
+        name = str(getattr(tool, "name", "")).lower()
+        has_code = bool(getattr(tool, "has_code_execution", False))
+        has_fs = bool(getattr(tool, "has_filesystem_access", False))
+        has_net = bool(getattr(tool, "has_network_access", False))
+        explicit = getattr(tool, "type", None) or getattr(tool, "category", None)
+
+    if has_code:
+        return "execute"
+    if any(kw in name for kw in _PAYMENT_KEYWORDS):
+        return "payment"
+    if has_fs:
+        return "write"
+    if has_net:
+        return "network"
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit.strip().lower()
+    return "read"
+
+
+def expected_effect_for_tool(tool_type: str, governance_level: str = "balanced") -> str:
+    """Return baseline ACS effect ('allow' or 'deny') for a tool type & posture."""
+    if tool_type in ("payment", "execute"):
+        return "deny"
+    if tool_type == "write" and governance_level == "strict":
+        return "deny"
+    return "allow"
 
 
 def _restrict_permissions(path: Path) -> None:
     """Apply owner-only permissions (0600) on POSIX platforms."""
-    try:
+    with contextlib.suppress(OSError):
         os.chmod(path, 0o600)
-    except OSError:
-        pass
 
 
 def _build_v4_config(
@@ -32,6 +69,7 @@ def _build_v4_config(
     framework: str,
     governance_level: str,
     extends: str | None,
+    explicit_level: bool = False,
     detected_agents: dict[str, dict[str, str]],
     detected_tools: dict[str, dict[str, str]],
     profile_path: str | None,
@@ -40,11 +78,24 @@ def _build_v4_config(
     cfg: dict[str, Any] = {
         "version": "4.0",
         "project_id": project_id,
-        "governance_level": governance_level,
-        "framework": framework,
     }
     if extends:
         cfg["extends"] = extends
+        if explicit_level:
+            cfg["governance_level"] = governance_level
+        cfg["framework"] = framework
+        cfg["kernel"] = {
+            "spec_pin": "AGENT-HOOKS-0.1",
+            "profile_path": profile_path or _POLICY_FILENAME,
+        }
+        if detected_agents:
+            cfg["agents"] = detected_agents
+        if detected_tools:
+            cfg["detected_tools"] = detected_tools
+        return cfg
+
+    cfg["governance_level"] = governance_level
+    cfg["framework"] = framework
     cfg["kernel"] = {
         "spec_pin": "AGENT-HOOKS-0.1",
         "default_effect": default_effect,
@@ -97,16 +148,15 @@ def _build_acs_profile(
     tools_section: dict[str, Any] = {}
     for name, info in detected_tools.items():
         ttype = info.get("type", "read")
-        if ttype in ("payment", "execute"):
-            effect = "deny"
-            reason = f"High-impact tool '{name}' ({ttype}) requires explicit operator consent"
-            liftable = True
-        elif ttype == "write" and governance_level == "strict":
-            effect = "deny"
-            reason = f"Strict mode: write tool '{name}' requires explicit approval"
+        effect = expected_effect_for_tool(ttype, governance_level)
+        if effect == "deny":
+            reason = (
+                f"High-impact tool '{name}' ({ttype}) requires explicit operator consent"
+                if ttype in ("payment", "execute")
+                else f"Strict mode: {ttype} tool '{name}' requires explicit approval"
+            )
             liftable = True
         else:
-            effect = "allow"
             reason = f"Baseline-discovered {ttype} tool '{name}'"
             liftable = False
         tools_section[name] = {
@@ -134,8 +184,8 @@ def _build_acs_profile(
     "--level",
     "governance_level",
     type=click.Choice(["autopilot", "balanced", "strict"], case_sensitive=False),
-    default="balanced",
-    help="Initial governance posture (default: balanced / fail-closed)",
+    default=None,
+    help="Initial governance posture (default: balanced, or inherited from --template)",
 )
 @click.option("--template", "extends", default=None, help="Optional policy template to inherit (e.g. fintech, eu-ai-act)")
 @click.option("--config", "config_path", default=_CONFIG_FILENAME, help="Output config path (default: .drako.yaml)")
@@ -143,7 +193,7 @@ def _build_acs_profile(
 @click.option("--yes", "-y", is_flag=True, help="Overwrite existing files without prompting")
 def init(
     framework: str | None,
-    governance_level: str,
+    governance_level: str | None,
     extends: str | None,
     config_path: str,
     profile_path: str,
@@ -153,41 +203,61 @@ def init(
     cfg_file = Path(config_path)
     prof_file = Path(profile_path)
 
+    # Validate --template before touching disk
+    template_data: dict[str, Any] | None = None
+    if extends:
+        from drako.exceptions import ConfigError
+        from drako.templates import load_template
+
+        try:
+            template_data = load_template(extends)
+        except ConfigError as exc:
+            raise click.ClickException(str(exc)) from exc
+
+    explicit_level = governance_level is not None
+    effective_level = (
+        governance_level.lower()
+        if governance_level is not None
+        else str((template_data or {}).get("governance_level", "balanced")).lower()
+    )
+
     click.echo()
     click.secho("  Drako Init — Local-First Authority Kernel Setup", fg="cyan", bold=True)
     click.echo()
 
-    if cfg_file.exists() and not yes:
-        if not click.confirm(f"  {cfg_file} already exists. Overwrite?", default=False):
-            click.echo("  Aborted.")
-            return
+    if cfg_file.exists() and not yes and not click.confirm(f"  {cfg_file} already exists. Overwrite?", default=False):
+        click.echo("  Aborted.")
+        return
 
     project_id = Path.cwd().name or "default"
     detected_fw = framework or "generic"
     detected_agents: dict[str, dict[str, str]] = {}
     detected_tools: dict[str, dict[str, str]] = {}
 
-    # Reuse cached scan results if available; otherwise run lightweight discovery
+    # Reuse cached scan results if available; otherwise run offline live discovery
     from drako.cli.scan_cache import load_scan_cache
 
     cached = load_scan_cache(".")
     if cached:
-        if not framework and cached.get("frameworks"):
-            fw0 = cached["frameworks"][0]
-            detected_fw = fw0.get("name", "generic") if isinstance(fw0, dict) else str(fw0)
+        if not framework:
+            if cached.get("framework"):
+                detected_fw = str(cached["framework"])
+            elif cached.get("frameworks"):
+                fw0 = cached["frameworks"][0]
+                detected_fw = fw0.get("name", "generic") if isinstance(fw0, dict) else str(fw0)
         for a in cached.get("agents", []):
             name = a.get("name") if isinstance(a, dict) else str(a)
             if name:
                 detected_agents[name] = {
                     "source": a.get("file_path", "") if isinstance(a, dict) else "",
-                    "description": a.get("role", "") if isinstance(a, dict) else "",
+                    "description": (a.get("role") or a.get("description") or "") if isinstance(a, dict) else "",
                 }
         for t in cached.get("tools", []):
             name = t.get("name") if isinstance(t, dict) else str(t)
             if name:
                 detected_tools[name] = {
                     "source": t.get("file_path", "") if isinstance(t, dict) else "",
-                    "type": t.get("category", "read") if isinstance(t, dict) else "read",
+                    "type": classify_tool_type(t) if isinstance(t, dict) else "read",
                 }
         click.echo(
             click.style("  [scan]   ", fg="green")
@@ -195,9 +265,9 @@ def init(
         )
     else:
         try:
-            from drako.cli.scanner import scan_directory
+            from drako.cli.scanner import run_scan
 
-            live = scan_directory(".")
+            live = run_scan(".")
             if not framework and live.bom.frameworks:
                 detected_fw = live.bom.frameworks[0].name
             for a in live.bom.agents:
@@ -210,8 +280,12 @@ def init(
                 if t.name:
                     detected_tools[t.name] = {
                         "source": t.file_path or "",
-                        "type": getattr(t, "category", "read") or "read",
+                        "type": classify_tool_type(t),
                     }
+            click.echo(
+                click.style("  [scan]   ", fg="green")
+                + f"Discovered {len(detected_agents)} agent(s), {len(detected_tools)} tool(s) ({detected_fw})"
+            )
         except Exception:
             try:
                 from drako.utils.detection import detect_frameworks
@@ -225,8 +299,9 @@ def init(
     cfg_doc = _build_v4_config(
         project_id=project_id,
         framework=detected_fw,
-        governance_level=governance_level.lower(),
+        governance_level=effective_level,
         extends=extends,
+        explicit_level=explicit_level,
         detected_agents=detected_agents,
         detected_tools=detected_tools,
         profile_path=str(prof_file),
@@ -245,7 +320,7 @@ def init(
 
     if not prof_file.exists() or yes:
         prof_doc = _build_acs_profile(
-            governance_level=governance_level.lower(),
+            governance_level=effective_level,
             detected_tools=detected_tools,
         )
         prof_header = (

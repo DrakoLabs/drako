@@ -14,6 +14,7 @@ Agent configuration (env vars):
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import hmac
 import json
@@ -68,8 +69,13 @@ def _load_config(config_path: str = ".drako.yaml") -> dict[str, Any]:
         return {}
 
     try:
-        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except (yaml.YAMLError, OSError) as exc:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        if isinstance(raw, dict) and raw.get("extends"):
+            from drako.templates import deep_merge, load_template
+
+            raw = deep_merge(load_template(str(raw["extends"])), raw)
+        return raw if isinstance(raw, dict) else {}
+    except Exception as exc:
         logger.error("Failed to load config: %s", exc)
         return {}
 
@@ -256,7 +262,6 @@ def _check_hitl(tool_name: str | None, config: dict[str, Any]) -> dict[str, Any]
 
     triggers = hitl.get("triggers", {})
     trigger_tools = triggers.get("tools", [])
-    trigger_types = triggers.get("tool_types", [])
 
     # For proxy mode, we can only check tool names directly
     if tool_name in trigger_tools:
@@ -319,11 +324,11 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
     try:
         from fastapi import FastAPI, Request, Response
         from fastapi.middleware.cors import CORSMiddleware
-    except ImportError:
+    except ImportError as exc:
         raise ImportError(
             "FastAPI is required for the proxy. Install with: "
             "pip install 'drako[proxy]'"
-        )
+        ) from exc
 
     # NOTE (2026-09-04): this module uses `from __future__ import annotations`
     # and fastapi is an OPTIONAL import scoped to this function — so handler
@@ -456,7 +461,7 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
             return denied
         return {
             "proxy": "drako-proxy",
-            "version": "2.0.0",
+            "version": _drako_version,
             "config_loaded": bool(config),
             "governance_level": config.get("governance_level", "custom"),
             "targets": TARGETS,
@@ -499,10 +504,8 @@ def create_app(config_path: str = ".drako.yaml") -> Any:
         body_bytes = await request.body()
         body_dict: dict[str, Any] = {}
         if body_bytes:
-            try:
+            with contextlib.suppress(json.JSONDecodeError):
                 body_dict = json.loads(body_bytes)
-            except json.JSONDecodeError:
-                pass
 
         # 3. Extract governance context
         agent_id = request.headers.get("X-Drako-Agent")
@@ -768,11 +771,11 @@ def run_server(port: int = 8990, host: str = "127.0.0.1",
     """
     try:
         import uvicorn
-    except ImportError:
+    except ImportError as exc:
         raise ImportError(
             "uvicorn is required for the proxy. Install with: "
             "pip install 'drako[proxy]'"
-        )
+        ) from exc
 
     app = create_app(config_path)
     logger.info("Starting Drako Proxy on %s:%d", host, port)
