@@ -1,4 +1,4 @@
-"""MAF (Microsoft Agent Framework) governance rules (F-1, Sprint 2).
+"""MAF (Microsoft Agent Framework) governance rules.
 
 Verified against agent_framework 1.0 GA: Agent(client, instructions,
 tools=[...], middleware=[...]); per-run middleware via
@@ -23,9 +23,10 @@ def _call_name(node: ast.Call) -> str:
 
 
 def _uses_governance(tree: ast.AST) -> bool:
-    """Drako MAF wrapper or native middleware present anywhere."""
+    """Drako MAF adapter or native middleware present anywhere."""
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and _call_name(node) in (
+            "wrap_maf_agent", "wrap_agent", "guard",
             "with_maf_compliance", "drako_maf_middleware",
             "agent_middleware", "function_middleware", "chat_middleware",
         ):

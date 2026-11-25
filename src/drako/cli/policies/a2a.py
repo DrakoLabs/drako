@@ -1,4 +1,4 @@
-"""A2A (Agent-to-Agent) security policy rules — Sprint 5.
+"""A2A (Agent-to-Agent) security policy rules (A2A-001 through A2A-003).
 
 A2A-001: No agent-to-agent authentication configured
 A2A-002: Agent accepts unvalidated input from other agents
@@ -23,7 +23,8 @@ if TYPE_CHECKING:
 
 _A2A_AUTH_PATTERNS = re.compile(
     r"(?:mutual_auth|mtls|did_exchange|agent_auth|channel_auth|"
-    r"verify_agent_identity|a2a.*auth|agent_credential|peer_verify)",
+    r"verify_agent_identity|a2a.*auth|agent_credential|peer_verify|"
+    r"require_signed_cards|verify_agent_card|sign_agent_card)",
     re.IGNORECASE,
 )
 
@@ -61,13 +62,12 @@ class A2A001(BasePolicy):
                 f"instructions into the communication chain (prompt worm attack)."
             ),
             fix_snippet=(
-                "# Add A2A authentication in .drako.yaml:\n"
+                "# Enforce EdDSA JWS signed A2A Agent Cards in .drako.yaml:\n"
+                "#   drako kernel keygen --out .drako/keys\n"
+                "#   drako a2a sign agent-card.json --key .drako/keys/private.pem\n"
                 "a2a:\n"
                 "  mode: enforce\n"
-                "  auth:\n"
-                "    method: did_exchange\n"
-                "    auto_rotate: true\n"
-                "    rotation_hours: 24\n"
+                "  require_signed_cards: true\n"
                 "  worm_detection:\n"
                 "    enabled: true\n"
                 "    scan_inter_agent_messages: true\n"

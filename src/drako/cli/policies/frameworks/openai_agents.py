@@ -1,4 +1,4 @@
-"""OpenAI Agents SDK governance rules (F-1, Sprint 2).
+"""OpenAI Agents SDK governance rules.
 
 Verified against openai-agents-python: Agent(input_guardrails=[...],
 output_guardrails=[...]); @input_guardrail / @output_guardrail build
@@ -25,6 +25,7 @@ def _call_name(node: ast.Call) -> str:
 def _has_drako_guardrail(tree: ast.AST) -> bool:
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and _call_name(node) in (
+            "wrap_openai_agent", "wrap_agent", "guard",
             "make_drako_input_guardrail", "make_drako_output_guardrail",
         ):
             return True

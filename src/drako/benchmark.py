@@ -1,9 +1,7 @@
 """Benchmark comparison system for Drako scan results.
 
-Compares a project's governance score against an anonymized dataset
-of scanned AI agent projects. The dataset is static and shipped with
-the package — it will be replaced with real data from the Public Agent
-Governance Index.
+Compares a project's governance score against a bundled anonymized
+reference dataset of scanned AI agent projects (100% offline).
 
 All computation is pure (no I/O in compute_benchmark). Dataset loading
 is lazy and cached.

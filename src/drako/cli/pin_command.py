@@ -1,10 +1,10 @@
-"""`drako mcp pin` — record a hash-pin for an MCP server (Sprint 2 #1).
+"""`drako mcp pin` — record a hash-pin for an MCP server.
 
 Reads the package's exact version + npm dist.integrity from the registry
 (operator/CI step, network expected) and writes it into mcp.lock, the
-file the backend enforces at spawn (pinned argv + integrity match,
-fail-closed). The operator running this command IS the trust decision —
-pinned_by records who/what approved these bytes.
+lockfile enforced locally at admission/spawn (pinned argv + integrity
+match, fail-closed). The operator running this command IS the trust
+decision — pinned_by records who/what approved these bytes.
 """
 
 from __future__ import annotations
@@ -33,18 +33,18 @@ def _npm_field(spec: str, field: str) -> str:
             ["npm", "view", spec, field, "--json"],
             capture_output=True, text=True, timeout=30,
         )
-    except FileNotFoundError:
-        raise click.ClickException("npm not found — install Node.js first")
-    except subprocess.TimeoutExpired:
-        raise click.ClickException(f"npm view timed out for {spec}")
+    except FileNotFoundError as exc:
+        raise click.ClickException("npm not found — install Node.js first") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise click.ClickException(f"npm view timed out for {spec}") from exc
     if proc.returncode != 0:
         raise click.ClickException(
             f"npm view failed for {spec}: {proc.stderr.strip()[:200]}"
         )
     try:
         value = json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        raise click.ClickException(f"npm view returned non-JSON for {spec}")
+    except json.JSONDecodeError as exc:
+        raise click.ClickException(f"npm view returned non-JSON for {spec}") from exc
     if not isinstance(value, str) or not value:
         raise click.ClickException(f"no {field} for {spec}")
     return value
@@ -56,6 +56,7 @@ def mcp() -> None:
 
 
 from drako.cli.audit_command import audit as _audit  # noqa: E402
+
 mcp.add_command(_audit)
 
 
@@ -74,8 +75,8 @@ def pin(package: str, lock_path: str, pinned_by: str) -> None:
     if not name:
         raise click.ClickException(f"refusing empty package spec {package!r}")
     if not requested:
-        # P0-hunt (2026-09-10): pinning a mutable tag is TOFU on
-        # whatever the registry serves RIGHT NOW. Loud, not silent.
+        # Pinning a mutable tag is TOFU on whatever the registry serves right
+        # now; warn loudly so operators prefer explicit @x.y.z versions.
         click.secho(
             "  [warn]   no @version given — resolving 'latest' and pinning "
             "whatever the registry serves now (TOFU). Prefer an explicit "
@@ -96,7 +97,7 @@ def pin(package: str, lock_path: str, pinned_by: str) -> None:
         try:
             data = json.loads(lock_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as e:
-            raise click.ClickException(f"existing lock unreadable: {e}")
+            raise click.ClickException(f"existing lock unreadable: {e}") from e
         if data.get("version") != _LOCK_VERSION:
             raise click.ClickException(
                 f"existing lock version {data.get('version')} != {_LOCK_VERSION}"
@@ -179,5 +180,5 @@ def check_drift_cmd(endpoint: str, baseline_hash: str | None, allow_private: boo
         fp = check_tools_drift(baseline_hash, tools, endpoint)
     except (EgressViolation, MCPClientError, ToolsDriftError) as exc:
         click.secho(f"  [FAIL] {exc}", fg="red", err=True)
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
     click.echo(json.dumps({"endpoint": endpoint, "tool_count": len(tools), "fingerprint": fp, "drift": False}, indent=2))

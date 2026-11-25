@@ -1,4 +1,4 @@
-"""Drako CTK host: AGENT-HOOKS-0.1 conformance harness (Sprint 1, route A).
+"""Drako CTK host: AGENT-HOOKS-0.1 conformance harness.
 
 Implements the agent_hooks Harness protocol with a scripted agent loop that
 mirrors the reference host semantics (emission order, enforcement via raised

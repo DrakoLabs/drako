@@ -1,14 +1,13 @@
 """Policy template registry and inheritance utilities.
 
 Templates are industry-specific .drako.yaml presets that users can
-extend via ``extends: fintech`` in their own config. The SDK resolves
-inheritance client-side before pushing the resolved config to the backend.
+extend via ``extends: fintech`` in their own config. Drako resolves
+template inheritance locally via ``DrakoConfig.load()``.
 """
 
 from __future__ import annotations
 
 import copy
-from importlib import resources
 from pathlib import Path
 from typing import Any
 

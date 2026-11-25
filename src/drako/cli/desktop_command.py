@@ -50,7 +50,7 @@ def scan(fmt: str, fail_on: str | None, project_dir: str) -> None:
     """Discover all desktop AI agents and scan for security issues."""
     bom = discover_agents(project_dir=project_dir)
 
-    if bom.total_mcp_servers == 0:
+    if bom.total_mcp_servers == 0 and fmt == "text":
         click.echo("\n  No MCP servers found on this machine.")
         click.echo("  Drako scans configs for: Claude Desktop, Cursor, VS Code,")
         click.echo("  Windsurf, Claude Code, Codex, Gemini CLI, Kiro.\n")
@@ -358,6 +358,8 @@ def _output_json(
 
 def _output_sarif(bom: DesktopBOM, findings: list[MCPFinding]) -> None:
     """SARIF 2.1.0 output for CI/CD integration."""
+    from drako import __version__ as drako_version
+
     sarif = {
         "$schema": (
             "https://docs.oasis-open.org/sarif/sarif/v2.1.0/"
@@ -369,7 +371,8 @@ def _output_sarif(bom: DesktopBOM, findings: list[MCPFinding]) -> None:
                 "tool": {
                     "driver": {
                         "name": "drako-desktop",
-                        "version": "2.5.0",
+                        "informationUri": "https://github.com/DrakoLabs/drako",
+                        "version": drako_version,
                         "rules": [
                             {
                                 "id": f"MCP-{i:03d}",
