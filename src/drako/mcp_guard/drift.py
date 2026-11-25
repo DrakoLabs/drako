@@ -1,5 +1,5 @@
 """
-tools/list runtime drift detection (P0-01, 2026-09-10).
+tools/list runtime drift detection.
 
 Deadbugz (Pillar/CSA 02-sep-2026, Omnafy 09-sep-2026) proved the gap:
 a server benign for the first 3 calls, then mutating tools/list (and

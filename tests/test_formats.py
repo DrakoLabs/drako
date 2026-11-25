@@ -1,12 +1,11 @@
 """Tests for output format generators (JSON, SARIF, Badge)."""
 import json
-import pytest
 from pathlib import Path
 
-from drako.cli.scanner import run_scan
+from drako.cli.formats.badge import generate_badge_svg
 from drako.cli.formats.json_fmt import format_json
 from drako.cli.formats.sarif import format_sarif
-from drako.cli.formats.badge import generate_badge_svg
+from drako.cli.scanner import run_scan
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

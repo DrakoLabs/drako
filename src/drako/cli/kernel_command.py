@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import platform
@@ -37,10 +38,8 @@ def keygen(out_dir: str, name: str, force: bool) -> None:
     priv_pem, pub_pem = generate_keypair()
     priv_path.write_text(priv_pem, encoding="utf-8")
     pub_path.write_text(pub_pem, encoding="utf-8")
-    try:
+    with contextlib.suppress(OSError):
         os.chmod(priv_path, 0o600)
-    except OSError:
-        pass
 
     click.echo(click.style("  [keygen] ", fg="green") + f"Private key: {priv_path} (mode 0600 — keep off target agent nodes)")
     click.echo(click.style("  [keygen] ", fg="green") + f"Public key:  {pub_path}")

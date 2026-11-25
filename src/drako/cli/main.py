@@ -6,9 +6,9 @@ from drako.cli.encoding import configure_output
 
 configure_output()
 
-import click
+import click  # noqa: E402
 
-from drako import __version__
+from drako import __version__  # noqa: E402
 
 
 class _OrderedGroup(click.Group):

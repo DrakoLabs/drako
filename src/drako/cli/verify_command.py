@@ -39,7 +39,7 @@ def verify(
             receipts = [json.loads(line) for line in raw_text.splitlines() if line.strip()]
     except ValueError as exc:
         click.secho(f"  [error]  Cannot parse receipt JSON/JSONL: {exc}", fg="red", err=True)
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     if not receipts:
         click.secho("  [error]  No receipts found in file", fg="red", err=True)

@@ -32,7 +32,7 @@ def audit(lock_path: str, project_dir: str, output_format: str) -> None:
             lock = data.get("servers", {}) or {}
         except (json.JSONDecodeError, OSError) as e:
             click.secho(f"  [error]  lock unreadable: {e}", fg="red")
-            raise SystemExit(1)
+            raise SystemExit(1) from e
 
     findings: dict[str, list[str]] = {}
     for finding in evaluate_mcp_rules(bom):

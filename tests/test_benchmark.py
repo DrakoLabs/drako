@@ -1,15 +1,14 @@
 """Tests for the benchmark comparison system."""
 import json
-import pytest
 from pathlib import Path
 
 from click.testing import CliRunner
 
 from drako.benchmark import (
     BenchmarkResult,
+    _reset_cache,
     compute_benchmark,
     load_dataset,
-    _reset_cache,
 )
 from drako.cli.main import cli
 from drako.cli.report import render_benchmark_panel_to_string
@@ -180,8 +179,8 @@ class TestLoadDataset:
 
 class TestBenchmarkJSON:
     def test_json_includes_benchmark(self):
-        from drako.cli.scanner import run_scan
         from drako.cli.formats.json_fmt import format_json
+        from drako.cli.scanner import run_scan
 
         result = run_scan(str(FIXTURES / "crewai_basic"))
         ds = _mini_dataset()
@@ -195,8 +194,8 @@ class TestBenchmarkJSON:
         assert "grade_distribution" in data["benchmark"]
 
     def test_json_without_benchmark_has_no_key(self):
-        from drako.cli.scanner import run_scan
         from drako.cli.formats.json_fmt import format_json
+        from drako.cli.scanner import run_scan
 
         result = run_scan(str(FIXTURES / "crewai_basic"))
         output = format_json(result)

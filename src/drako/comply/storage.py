@@ -12,7 +12,6 @@ from typing import Any
 
 import yaml
 
-
 COMPLY_FILE = Path(".drako") / "comply.yaml"
 
 

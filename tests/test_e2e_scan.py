@@ -1,11 +1,10 @@
 """End-to-end integration tests for the full scan pipeline."""
 import json
-import pytest
 from pathlib import Path
 
-from drako.cli.scanner import run_scan
 from drako.cli.formats.json_fmt import format_json
 from drako.cli.formats.sarif import format_sarif
+from drako.cli.scanner import run_scan
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

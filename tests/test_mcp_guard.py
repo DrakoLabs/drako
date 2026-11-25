@@ -12,14 +12,12 @@ from drako.kernel.egress import EgressViolation
 from drako.mcp_guard import (
     LockError,
     MCPGAClient,
-    PinnedServer,
     ToolsDriftError,
     agbom_to_cyclonedx,
     canonical_snapshot,
     check_pin,
     check_tools_drift,
     empty_lock,
-    fingerprint_tools,
     load_lock,
     lock_hash,
 )

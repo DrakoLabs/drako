@@ -23,7 +23,7 @@ Consolidate all MCP security primitives into a single DB-free package `drako.mcp
 
 ## Alternatives Considered
 
-- **Keep legacy `src/drako/mcp/local_server.py` (`2024-11-05` + SSE):** Obsolete protocol and coupled to retired SaaS backend (deleted per ADR-0006).
+- **Keep legacy `src/drako/mcp/local_server.py` (`2024-11-05` + SSE):** Superseded protocol revision and coupled to the removed remote client (ADR-0006).
 
 ## Consequences
 

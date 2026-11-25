@@ -13,24 +13,28 @@ from pathlib import Path
 
 import pytest
 
-from drako.cli.bom import AgentBOM, DetectedAgent, generate_bom
+from drako.cli.bom import AgentBOM, generate_bom
 from drako.cli.discovery import FrameworkInfo, ProjectMetadata
 from drako.cli.policies.base import Finding
-from drako.cli.scoring import calculate_score
+from drako.cli.policies.frameworks.autogen import (
+    FW_AUTOGEN_001,
+    FW_AUTOGEN_002,
+)
 from drako.cli.policies.frameworks.crewai import (
-    FW_CREWAI_001, FW_CREWAI_002, FW_CREWAI_003,
+    FW_CREWAI_001,
+    FW_CREWAI_002,
+    FW_CREWAI_003,
 )
 from drako.cli.policies.frameworks.langgraph import (
-    FW_LANGGRAPH_001, FW_LANGGRAPH_002,
-)
-from drako.cli.policies.frameworks.autogen import (
-    FW_AUTOGEN_001, FW_AUTOGEN_002,
-)
-from drako.cli.policies.frameworks.semantic_kernel import (
-    FW_SK_001, FW_SK_002,
+    FW_LANGGRAPH_001,
+    FW_LANGGRAPH_002,
 )
 from drako.cli.policies.frameworks.pydantic_ai import FW_PYDANTIC_001
-
+from drako.cli.policies.frameworks.semantic_kernel import (
+    FW_SK_001,
+    FW_SK_002,
+)
+from drako.cli.scoring import calculate_score
 
 # ---------------------------------------------------------------------------
 # Helpers

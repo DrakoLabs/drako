@@ -1,12 +1,11 @@
 """Tests for the Rich terminal report."""
-import pytest
 from pathlib import Path
 
-from drako.cli.discovery import collect_project_files, detect_frameworks
 from drako.cli.bom import generate_bom
+from drako.cli.discovery import collect_project_files, detect_frameworks
 from drako.cli.policies import evaluate_all_policies
-from drako.cli.scoring import calculate_score, score_to_grade
 from drako.cli.report import render_report_to_string
+from drako.cli.scoring import calculate_score, score_to_grade
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

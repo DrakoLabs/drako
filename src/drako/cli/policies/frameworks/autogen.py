@@ -46,9 +46,12 @@ def _file_has_validation(tree: ast.AST) -> bool:
     """Check AST for output validation patterns."""
     for node in ast.walk(tree):
         # method calls: agent.register_reply(...)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if node.func.attr in _VALIDATION_PATTERNS:
-                return True
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in _VALIDATION_PATTERNS
+        ):
+            return True
         # keyword arguments: is_termination_msg=...
         if isinstance(node, ast.keyword) and node.arg in _VALIDATION_PATTERNS:
             return True
@@ -148,7 +151,7 @@ class FW_AUTOGEN_001(FrameworkPolicy):
                                 if key.value in ("use_docker", "docker"):
                                     has_docker = True
                         # Also check for executor key
-                        for key, val in zip(kw.value.keys, kw.value.values):
+                        for key, val in zip(kw.value.keys, kw.value.values, strict=False):
                             if isinstance(key, ast.Constant) and key.value == "executor":
                                 exec_name = _get_call_name(val) if isinstance(val, ast.Call) else None
                                 if exec_name == "DockerCommandLineCodeExecutor":

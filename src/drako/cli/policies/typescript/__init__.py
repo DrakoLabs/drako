@@ -8,11 +8,11 @@ AST analysis.  Rules cover the same categories as Python rules
 from __future__ import annotations
 
 from drako.cli.policies.base import BasePolicy
-from drako.cli.policies.typescript.security import TS_SECURITY_POLICIES
-from drako.cli.policies.typescript.governance import TS_GOVERNANCE_POLICIES
-from drako.cli.policies.typescript.determinism import TS_DETERMINISM_POLICIES
 from drako.cli.policies.typescript.compliance import TS_COMPLIANCE_POLICIES
+from drako.cli.policies.typescript.determinism import TS_DETERMINISM_POLICIES
+from drako.cli.policies.typescript.governance import TS_GOVERNANCE_POLICIES
 from drako.cli.policies.typescript.operational import TS_OPERATIONAL_POLICIES
+from drako.cli.policies.typescript.security import TS_SECURITY_POLICIES
 
 TS_POLICIES: list[BasePolicy] = (
     TS_SECURITY_POLICIES

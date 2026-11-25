@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-import pytest
-
 from drako.advisories import (
     Advisory,
-    load_advisories,
-    match_advisory,
-    match_advisories_bulk,
-    get_ioc_hashes,
     compute_pattern_hash,
+    get_ioc_hashes,
+    load_advisories,
+    match_advisories_bulk,
+    match_advisory,
 )
 from drako.cli.policies.base import Finding
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -56,7 +53,7 @@ class TestLoadAdvisories:
     def test_advisory_has_required_fields(self):
         advisories = load_advisories()
         for adv in advisories:
-            assert adv.id, f"Advisory missing id"
+            assert adv.id, "Advisory missing id"
             assert adv.title, f"Advisory {adv.id} missing title"
             assert adv.category, f"Advisory {adv.id} missing category"
             assert 1 <= adv.severity <= 10, f"Advisory {adv.id} severity out of range: {adv.severity}"

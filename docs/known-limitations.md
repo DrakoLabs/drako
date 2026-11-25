@@ -1,6 +1,6 @@
-# Known Limitations (Radical Honesty)
+# Known Limitations
 
-Drako follows an explicit engineering honesty rule: **never claim invulnerability, and document every boundary where control ends.**
+This document states where Drako's controls stop so teams can pair it with the right surrounding isolation.
 
 1. **Prompt Injection Is Not "Solved" (AgentDyn):** No static or runtime policy engine eliminates prompt injection in open-ended tasks. Drako provides **blast-radius containment** (origin-bound authority lattice, memory TTLs, irreversible consent gates) and **offline answerability** (Ed25519 receipts), not immunity from model manipulation.
 2. **Property-Tested, Never "Proven":** Non-malleability invariants (`tests/test_kernel_properties.py`) are verified via bounded Hypothesis property testing in CI — never claimed as formal unbounded theorem proofs.

@@ -17,10 +17,7 @@ _parser_init_attempted: bool = False
 
 def is_ts_file(rel_path: str) -> bool:
     """Return ``True`` if *rel_path* has a TypeScript/JavaScript extension."""
-    for ext in _TS_EXTENSIONS:
-        if rel_path.endswith(ext):
-            return True
-    return False
+    return any(rel_path.endswith(ext) for ext in _TS_EXTENSIONS)
 
 
 def get_parser() -> TSParser | None:

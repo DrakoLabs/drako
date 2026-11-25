@@ -11,8 +11,8 @@ def ts_available() -> bool:
     if _AVAILABLE is None:
         try:
             import tree_sitter  # noqa: F401
-            import tree_sitter_typescript  # noqa: F401
             import tree_sitter_javascript  # noqa: F401
+            import tree_sitter_typescript  # noqa: F401
 
             _AVAILABLE = True
         except ImportError:

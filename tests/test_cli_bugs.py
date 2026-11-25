@@ -127,7 +127,6 @@ class TestDiffFilter:
     def test_diff_filters_findings(self, tmp_path, monkeypatch):
         """--diff should filter findings to only changed files."""
         # We mock subprocess.run to simulate git diff output
-        import subprocess
         from unittest.mock import MagicMock
 
         mock_git = MagicMock()

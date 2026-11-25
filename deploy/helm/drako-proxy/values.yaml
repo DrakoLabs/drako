@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: drako/proxy
-  tag: "2.0.0"
+  repository: ghcr.io/drakolabs/drako-proxy
+  tag: "4.0.0a1"
   pullPolicy: IfNotPresent
 
 nameOverride: ""
@@ -13,16 +13,16 @@ service:
   port: 8990
 
 config:
-  # API key for Drako platform (or use existingSecret)
-  apiKey: ""
-  # Name of existing Kubernetes secret containing the API key
+  # Bearer token protecting /status and /audit evidence endpoints (or use existingSecret)
+  proxyToken: ""
+  # Name of existing Kubernetes secret containing the proxy token
   existingSecret: ""
   # Key name within the existing secret
-  existingSecretKey: "DRAKO_API_KEY"
-  # Drako platform endpoint
-  endpoint: "https://api.getdrako.com"
-  # Governance level: autopilot | balanced | strict | custom
-  governanceLevel: "autopilot"
+  existingSecretKey: "DRAKO_PROXY_TOKEN"
+  # Bind address inside the container
+  bindHost: "0.0.0.0"
+  # Path to mounted .drako.yaml inside container
+  configPath: "/app/.drako.yaml"
 
 resources:
   requests:
@@ -60,5 +60,9 @@ readinessProbe:
   periodSeconds: 5
 
 # Custom .drako.yaml content (optional)
-# If set, creates a ConfigMap with this content
+# If set, mounted at /app/.drako.yaml via ConfigMap
 drakoConfig: ""
+
+# Custom drako-policy.yaml ACS policy profile (optional)
+# If set, mounted at /app/drako-policy.yaml via ConfigMap
+drakoPolicy: ""

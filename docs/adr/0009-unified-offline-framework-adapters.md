@@ -1,11 +1,11 @@
-# ADR-0009: Unified Offline Framework Adapters Replacing SaaS Middleware
+# ADR-0009: Unified Offline Framework Adapters
 
 - **Status:** Accepted
 - **Date:** 2026-11-24
 
 ## Context
 
-In v3, `src/drako/middleware/` contained six framework wrappers (`base`, `crewai`, `langgraph`, `autogen`, `maf`, `openai_agents`) tightly coupled to `DrakoClient` HTTP calls against the retired SaaS backend. Meanwhile, the September 2026 Authority Kernel only shipped a single adapter (`kernel/adapters/langgraph.py`), leaving modern Q4 2026 production frameworks — **OpenAI Agents SDK**, **Microsoft Agent Framework (GA)**, **Claude Agent SDK**, and **Google ADK** — without an offline kernel integration. Upstream AutoGen was absorbed into Microsoft Agent Framework.
+In v3, `src/drako/middleware/` wrapped frameworks around remote HTTP policy calls (`DrakoClient`). For v4.0's local-first Authority Kernel, runtime enforcement needs a single offline adapter surface covering current production frameworks — **LangGraph**, **OpenAI Agents SDK**, **Microsoft Agent Framework (GA)**, **Claude Agent SDK**, **Google ADK**, and **CrewAI** — with uniform receipts and fail-closed semantics. Upstream AutoGen was absorbed into Microsoft Agent Framework.
 
 ## Decision
 
@@ -22,7 +22,7 @@ In v3, `src/drako/middleware/` contained six framework wrappers (`base`, `crewai
 
 ## Alternatives Considered
 
-- **Keep `middleware/` with a mock `DrakoClient`:** Preserves ~1,200 LOC of dead SaaS abstractions (`agent_did`, `check_ioc_sync`) instead of speaking the Authority Kernel directly.
+- **Keep `middleware/` with a local mock client:** Preserves legacy remote-client abstractions instead of speaking directly to the local Authority Kernel.
 
 ## Consequences
 

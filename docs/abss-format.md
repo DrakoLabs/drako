@@ -84,7 +84,7 @@ hash = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 Found a new agent vulnerability? Submit via GitHub issue using the advisory YAML template above.
 
 1. Fork the repository
-2. Create a new YAML file in `sdk/src/drako/data/advisories/`
+2. Create a new YAML file in `src/drako/data/advisories/`
 3. Follow the schema above
 4. Submit a pull request with:
    - The advisory YAML file

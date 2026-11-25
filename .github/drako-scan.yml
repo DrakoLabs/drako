@@ -1,32 +1,32 @@
-# Drako Governance Scan — GitHub Action template
+# Drako Governance Scan — GitHub Action template (100% offline, Apache-2.0)
 #
 # Copy this file to your repo at .github/workflows/drako-scan.yml
-# to run governance scans on every push and pull request.
-#
-# Optional: set DRAKO_API_KEY as a repo secret for authenticated uploads
-# and a deterministic badge at:
-#   https://api.getdrako.com/api/v1/scans/badge/<your-project-name>
+# to run offline governance scans on every push and pull request.
 
 name: Drako Governance Scan
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
       - run: pip install drako
 
-      - name: Run Drako scan
-        run: drako scan . --format sarif --threshold 60 > results.sarif
+      - name: Run Drako scan (SARIF)
+        run: drako scan . --format sarif --fail-on critical > results.sarif
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
         if: always()

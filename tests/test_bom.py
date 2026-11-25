@@ -1,15 +1,14 @@
 """Tests for the BOM (Bill of Materials) generation module."""
-import pytest
 from pathlib import Path
 
-from drako.cli.discovery import collect_project_files, detect_frameworks
 from drako.cli.bom import (
-    generate_bom,
     _extract_agents_ast,
-    _extract_tools_ast,
     _extract_models_ast,
     _extract_prompts_ast,
+    _extract_tools_ast,
+    generate_bom,
 )
+from drako.cli.discovery import collect_project_files, detect_frameworks
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

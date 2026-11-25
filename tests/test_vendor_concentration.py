@@ -1,12 +1,16 @@
 """Tests for Vendor Concentration Risk (VCR) policy rules."""
 from pathlib import Path
 
-from drako.cli.discovery import ProjectMetadata, FrameworkInfo
-from drako.cli.bom import generate_bom, AgentBOM
+from drako.cli.bom import AgentBOM, generate_bom
+from drako.cli.discovery import FrameworkInfo, ProjectMetadata
 from drako.cli.policies.vendor_concentration import (
-    VCR001, VCR002, VCR003,
-    _detect_model_vendors, _detect_framework_vendors,
-    _detect_cloud_vendors, _detect_governance_vendors,
+    VCR001,
+    VCR002,
+    VCR003,
+    _detect_cloud_vendors,
+    _detect_framework_vendors,
+    _detect_governance_vendors,
+    _detect_model_vendors,
 )
 
 

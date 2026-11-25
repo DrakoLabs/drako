@@ -17,8 +17,7 @@ from drako.desktop.discovery import (
     _parse_vscode,
     discover_agents,
 )
-from drako.desktop.mcp_rules import MCPFinding, evaluate_mcp_rules
-
+from drako.desktop.mcp_rules import evaluate_mcp_rules
 
 # ---------------------------------------------------------------------------
 # Helpers

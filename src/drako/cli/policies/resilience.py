@@ -60,7 +60,7 @@ class RES001(BasePolicy):
             "fallback", "failover", "retry_with", "backup_",
             "safe_default", "graceful_degradation",
         ]
-        for path, content in metadata.source_files.items():
+        for _path, content in metadata.source_files.items():
             for pat in fallback_patterns:
                 if pat in content.lower():
                     has_fallback_code = True
@@ -113,7 +113,7 @@ class RES002(BasePolicy):
         ]
 
         has_state_preservation = False
-        for path, content in metadata.source_files.items():
+        for _path, content in metadata.source_files.items():
             for pat in state_patterns:
                 if pat in content:
                     has_state_preservation = True

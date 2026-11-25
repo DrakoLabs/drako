@@ -5,7 +5,7 @@
 
 ## Context
 
-Drako v4.0 consolidates a previously split open-core architecture (a private SaaS monorepo plus a public CLI mirror) into a single, lean, local-first security kernel repository (`DrakoLabs/drako`). Without written decision records, security invariants, deliberate non-goals, and pruned surfaces get forgotten or silently re-introduced.
+Starting with v4.0, Drako ships as a self-contained, local-first security kernel (`DrakoLabs/drako`). Without written decision records, security invariants, deliberate non-goals, and architectural boundaries get forgotten or silently re-introduced.
 
 ## Decision
 
@@ -23,7 +23,7 @@ Once an ADR reaches `Accepted`, its historical text is not rewritten to hide pas
 ## Alternatives Considered
 
 - **Wiki or private notes only:** Splits architectural rationale away from code review and contributors.
-- **No formal process:** Led directly to documentation drift, duplicated implementations, and conflicting claims across v2–v3.
+- **No formal process:** Leaves architectural rationale implicit in commit history and harder to review as security surfaces grow.
 
 ## Consequences
 

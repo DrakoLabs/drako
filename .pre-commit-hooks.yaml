@@ -1,17 +1,24 @@
-# Drako pre-commit hook definition
+# Drako pre-commit hook definitions (100% offline, Apache-2.0)
 #
-# Users add this to their .pre-commit-config.yaml:
+# Add to your .pre-commit-config.yaml:
 #
 #   repos:
-#     - repo: https://github.com/angelnicolasc/drako
-#       rev: v0.1.0
+#     - repo: https://github.com/DrakoLabs/drako
+#       rev: v4.0.0a1
 #       hooks:
 #         - id: drako-scan
+#         - id: drako-skills
 
 - id: drako-scan
   name: Drako Governance Scan
   entry: drako scan . --fail-on critical
   language: python
-  additional_dependencies: ["drako"]
+  pass_filenames: false
+  always_run: true
+
+- id: drako-skills
+  name: Drako Instruction & Skill File Scan (INST-001..005)
+  entry: drako desktop skills . --fail-on high
+  language: python
   pass_filenames: false
   always_run: true

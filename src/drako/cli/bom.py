@@ -304,19 +304,25 @@ def _analyze_function_body(func_node: ast.FunctionDef, tool: DetectedTool) -> No
                 tool.has_filesystem_access = True
 
             # Network access
-            if isinstance(node.func, ast.Attribute):
-                if isinstance(node.func.value, ast.Name) and node.func.value.id in _NETWORK_MODULES:
-                    tool.has_network_access = True
+            if (
+                isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id in _NETWORK_MODULES
+            ):
+                tool.has_network_access = True
             if func_name in _NETWORK_MODULES:
                 tool.has_network_access = True
 
             # Code execution
             if func_name in _CODE_EXEC_CALLS:
                 tool.has_code_execution = True
-            if isinstance(node.func, ast.Attribute):
-                if node.func.attr in _CODE_EXEC_ATTRS:
-                    if isinstance(node.func.value, ast.Name) and node.func.value.id in _CODE_EXEC_MODULES:
-                        tool.has_code_execution = True
+            if (
+                isinstance(node.func, ast.Attribute)
+                and node.func.attr in _CODE_EXEC_ATTRS
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id in _CODE_EXEC_MODULES
+            ):
+                tool.has_code_execution = True
 
         # Import inside function body
         if isinstance(node, (ast.Import, ast.ImportFrom)):

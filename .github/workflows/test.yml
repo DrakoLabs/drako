@@ -74,6 +74,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]" pip-audit
       - name: Ruff lint
-        run: ruff check src/drako/kernel src/drako/mcp_guard src/drako/a2a src/drako/adapters src/drako/guard.py src/drako/desktop/instruction_rules.py
+        run: ruff check src/ tests/
       - name: Dependency vulnerability audit
         run: pip-audit --desc on || true

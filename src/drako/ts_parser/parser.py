@@ -8,9 +8,9 @@ tree-sitter internals.
 from __future__ import annotations
 
 import threading
+from collections.abc import Generator
 from dataclasses import dataclass, field
 from pathlib import PurePosixPath
-from typing import Generator
 
 try:
     import tree_sitter_javascript as _ts_js

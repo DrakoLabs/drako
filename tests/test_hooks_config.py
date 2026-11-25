@@ -1,7 +1,6 @@
 """Tests for HooksConfig and HookEntryConfig Pydantic models."""
-import pytest
 
-from drako.config import HookEntryConfig, HooksConfig, DrakoConfig
+from drako.config import DrakoConfig, HookEntryConfig, HooksConfig
 
 
 class TestHookEntryConfig:

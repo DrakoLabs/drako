@@ -802,22 +802,27 @@ hitl:
 ### ODD-001: No operational boundary definition
 
 **Severity:** CRITICAL (-15 points, cap -60)
-**Standard:** NIST AI RMF GV-1.1, Drako best practice
+**Standard:** NIST AI RMF GV-1.1, OWASP Agentic Top 10
 
-No Operational Design Domain (ODD) defined. Agents operate without defined boundaries for where, when, and how they can act. ODD enforcement requires the Drako platform.
+No Operational Design Domain (ODD) or local ACS policy profile defined. Agents operate without declared boundaries for which tools and side-effect classes they may invoke.
 
 **Vulnerable:**
 ```python
 # ruleid: ODD-001
-# No ODD defined — agent can do anything, anywhere, anytime
+# No drako-policy.yaml or .drako.yaml kernel boundary defined
 agent = Agent(role="researcher", tools=[search, write, delete])
 ```
 
 **Correct:**
 ```yaml
 # ok: ODD-001
-# Define ODD via Drako dashboard (Pro plan)
-# Restrict: permitted tools, time windows, allowed data sources
+# drako-policy.yaml (generated locally via `drako init`)
+spec_pin: AGENT-HOOKS-0.1
+default_effect: deny
+tools:
+  search:
+    id: tool:search
+    effect: allow
 ```
 
 ---
@@ -1026,8 +1031,15 @@ agent = Agent(role="researcher", tools=[search])
 **Correct:**
 ```yaml
 # ok: ID-002
-# Configure managed identities via Drako dashboard
-# Each agent gets a unique DID with auto-rotating credentials
+# Declare per-agent identities in .drako.yaml and sign Agent Cards offline:
+#   drako kernel keygen --out-dir .drako/keys
+#   drako a2a sign agent-card.json --key .drako/keys/op.key
+a2a:
+  mode: enforce
+  require_signed_cards: true
+agents:
+  researcher:
+    source: agents/researcher.py
 ```
 
 ---
@@ -1081,12 +1093,17 @@ crew = Crew(agents=[researcher, writer, reviewer], tasks=tasks)
 ```yaml
 # ok: MULTI-001
 # .drako.yaml
-topology:
-  enabled: true
-  conflict_detection:
-    resource_contention: true
-    contradictory_actions: true
-    cascade_amplification: true
+a2a:
+  mode: enforce
+  require_signed_cards: true
+  channels:
+    - from: researcher
+      to: writer
+      allowed_message_types: [task_result]
+  worm_detection:
+    enabled: true
+    max_propagation_depth: 3
+    circular_reference_block: true
 ```
 
 ---
@@ -1136,10 +1153,15 @@ agent_b = Agent(role="writer_b", tools=[write_file])
 ```yaml
 # ok: MULTI-003
 # .drako.yaml
-topology:
+a2a:
+  mode: enforce
+  channels:
+    - from: writer_a
+      to: writer_b
+      allowed_message_types: [write_request]
+loop_breaker:
   enabled: true
-  conflict_detection:
-    resource_contention: true
+  trip_threshold: 10
 ```
 
 ---
@@ -1149,28 +1171,26 @@ topology:
 **Severity:** MEDIUM (-3 points, cap -20)
 **Standard:** NIST AI RMF MS-2.5, Drako best practice
 
-No chaos testing or fault injection configured. Without testing how agents behave under failure conditions, you cannot validate resilience or discover cascading failure paths.
+No resilience or stress testing configured. Without verifying how agents behave under failure and adversarial stress, governance controls remain untested.
 
 **Vulnerable:**
 ```
 # ruleid: MULTI-004
-# No chaos, fault_inject, or resilience_test configuration anywhere
+# No resilience test, loop_breaker, or benchmark configuration
 ```
 
 **Correct:**
 ```yaml
 # ok: MULTI-004
+# Run offline adversarial/latency stress tests:
+#   drako kernel bench --iterations 500
 # .drako.yaml
-chaos:
-  experiments:
-    - name: tool-deny-search
-      target_tool: web_search
-      fault_type: tool_deny
-      duration_seconds: 60
-  safety:
-    max_blast_radius: 1
-    auto_rollback_on_failure: true
-    require_approval: true
+loop_breaker:
+  enabled: true
+  trip_threshold: 10
+  window_seconds: 300.0
+fallback:
+  mode: enforce
 ```
 
 ---
@@ -1270,49 +1290,53 @@ hooks:
 **Severity:** HIGH (-8 points, cap -40)
 **Standard:** EU AI Act Art. 12, NIST AI RMF GV-4.1
 
-No Drako platform connection for policy versioning. Without versioning, policy changes are untracked — you cannot audit which rules were active when an incident occurred.
+No pinned policy specification or kernel version configured. Without a pinned spec (`AGENT-HOOKS-0.1`) in `.drako.yaml` / `drako-policy.yaml`, receipts cannot bind decisions to an immutable policy version.
 
 **Vulnerable:**
 ```yaml
 # ruleid: CV-001
-# .drako.yaml without endpoint or api_key_env
-tenant_id: my-org
-# No platform connection — policies are local-only
+# .drako.yaml without kernel / spec_pin
+project_id: my-org
 ```
 
 **Correct:**
 ```yaml
 # ok: CV-001
-tenant_id: my-org
-api_key_env: DRAKO_API_KEY
-endpoint: https://api.useagentmesh.com
-# Run: drako push — creates immutable policy snapshot
+version: "4.0"
+project_id: my-org
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
+  default_effect: deny
+# Validate locally: drako validate .drako.yaml
 ```
 
 ---
 
-### CV-002: Audit logs without policy version reference
+### CV-002: Audit logs without cryptographic policy binding
 
 **Severity:** MEDIUM (-3 points, cap -20)
 **Standard:** EU AI Act Art. 12, Drako best practice
 
-Audit logging is configured but no platform connection exists. Audit entries cannot reference which policy version was active at the time of the action.
+Audit logging is configured without cryptographic receipt binding (`cryptographic: true` / `receipt_store:` / `spec_pin:`), leaving audit logs unverified offline.
 
 **Vulnerable:**
 ```yaml
 # ruleid: CV-002
 audit:
   enabled: true
-# No api_key_env or endpoint — audit logs are orphaned from policy versions
+# No cryptographic receipt binding
 ```
 
 **Correct:**
 ```yaml
 # ok: CV-002
+version: "4.0"
+kernel:
+  spec_pin: AGENT-HOOKS-0.1
 audit:
   enabled: true
-api_key_env: DRAKO_API_KEY
-endpoint: https://api.useagentmesh.com
+  cryptographic: true
+  receipt_store: .drako/receipts.jsonl
 ```
 
 ---
@@ -1478,12 +1502,10 @@ crew = Crew(agents=[agent_a, agent_b], tasks=tasks)
 **Correct:**
 ```yaml
 # ok: A2A-001
-# .drako.yaml
+# .drako.yaml (enforce RFC 7515 EdDSA JWS signed Agent Cards)
 a2a:
   mode: enforce
-  auth:
-    method: did_exchange
-    auto_rotate: true
+  require_signed_cards: true
 ```
 
 ---

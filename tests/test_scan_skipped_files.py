@@ -30,8 +30,9 @@ def test_clean_project_skips_nothing(tmp_path):
 def test_helper_matches_scan(tmp_path):
     (tmp_path / "broken.py").write_text(BROKEN)
     result = run_scan(str(tmp_path))
-    from drako.cli.discovery import collect_project_files
     from pathlib import Path
+
+    from drako.cli.discovery import collect_project_files
 
     meta = collect_project_files(Path(str(tmp_path)).resolve())
     assert find_unparseable_files(meta.file_contents) == result.skipped_files

@@ -34,10 +34,7 @@ def fingerprint(finding: Finding) -> str:
     rule_id = finding.policy_id
     file_path = (finding.file_path or "").replace("\\", "/")
     snippet = finding.code_snippet
-    if snippet is not None:
-        snippet = "".join(snippet.split())  # strip all whitespace
-    else:
-        snippet = finding.message
+    snippet = "".join(snippet.split()) if snippet is not None else finding.message
 
     raw = f"{rule_id}|{file_path}|{snippet}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()

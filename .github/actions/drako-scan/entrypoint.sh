@@ -18,12 +18,12 @@ SCAN_JSON="/tmp/scan.json"
 SARIF_FILE="/tmp/scan.sarif"
 
 # ---------------------------------------------------------------------------
-# 1. Build scan command
+# 1. Build scan command (safe bash array, no eval)
 # ---------------------------------------------------------------------------
-SCAN_CMD="drako scan ${SCAN_PATH} --format json"
+SCAN_ARGS=(scan "${SCAN_PATH}" --format json)
 
 if [ "${USE_BENCHMARK}" = "true" ]; then
-    SCAN_CMD="${SCAN_CMD} --benchmark"
+    SCAN_ARGS+=(--benchmark)
 fi
 
 if [ "${USE_BASELINE}" = "true" ] && [ -f "${SCAN_PATH}/.drako/.baseline.json" ]; then
@@ -36,14 +36,14 @@ fi
 # ---------------------------------------------------------------------------
 echo "::group::Running Drako scan"
 set +e
-eval "${SCAN_CMD}" > "${SCAN_JSON}" 2>/dev/null
+drako "${SCAN_ARGS[@]}" > "${SCAN_JSON}" 2>/dev/null
 SCAN_EXIT=$?
 set -e
 echo "::endgroup::"
 
 # Validate that we got valid JSON
 if ! jq empty "${SCAN_JSON}" 2>/dev/null; then
-    echo "::error::Drako scan did not produce valid JSON output"
+    echo "::error::Drako scan did not produce valid JSON output (exit ${SCAN_EXIT})"
     exit 2
 fi
 
@@ -74,9 +74,8 @@ echo "::notice::Drako Score: ${SCORE}/100 (${GRADE}) | Findings: ${TOTAL} (${CRI
 # ---------------------------------------------------------------------------
 if [ "${UPLOAD_SARIF}" = "true" ]; then
     echo "::group::Generating SARIF"
-    SARIF_CMD="drako scan ${SCAN_PATH} --format sarif"
     set +e
-    eval "${SARIF_CMD}" > "${SARIF_FILE}" 2>/dev/null
+    drako scan "${SCAN_PATH}" --format sarif > "${SARIF_FILE}" 2>/dev/null
     set -e
 
     if jq empty "${SARIF_FILE}" 2>/dev/null; then

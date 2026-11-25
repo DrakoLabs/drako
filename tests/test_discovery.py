@@ -1,13 +1,11 @@
 """Tests for the discovery module (framework & dependency detection)."""
-import pytest
 from pathlib import Path
 
 from drako.cli.discovery import (
+    _parse_pyproject_toml,
+    _parse_requirements_txt,
     collect_project_files,
     detect_frameworks,
-    _parse_requirements_txt,
-    _parse_pyproject_toml,
-    ProjectMetadata,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"

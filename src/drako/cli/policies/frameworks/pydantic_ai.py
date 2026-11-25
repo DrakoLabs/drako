@@ -37,10 +37,9 @@ def _get_return_type_name(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str |
         return ret.id
     if isinstance(ret, ast.Attribute):
         return ret.attr
-    if isinstance(ret, ast.Subscript):
+    if isinstance(ret, ast.Subscript) and isinstance(ret.value, ast.Name):
         # e.g. Optional[str], dict[str, Any]
-        if isinstance(ret.value, ast.Name):
-            return ret.value.id
+        return ret.value.id
     return None
 
 
@@ -95,10 +94,13 @@ class FW_PYDANTIC_001(FrameworkPolicy):
                     if isinstance(dec, ast.Attribute) and dec.attr == "tool":
                         is_agent_tool = True
                         break
-                    if isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute):
-                        if dec.func.attr == "tool":
-                            is_agent_tool = True
-                            break
+                    if (
+                        isinstance(dec, ast.Call)
+                        and isinstance(dec.func, ast.Attribute)
+                        and dec.func.attr == "tool"
+                    ):
+                        is_agent_tool = True
+                        break
 
                 if not is_agent_tool:
                     continue

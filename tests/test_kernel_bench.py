@@ -8,9 +8,6 @@ the Safety Index. Run: pytest sdk/tests/test_kernel_bench.py
 
 from __future__ import annotations
 
-import pytest
-
-from drako.adapters.langgraph import govern_with_remodify
 from drako.kernel.authority import Label, TrustLevel
 from drako.kernel.envelope import Proposal
 from drako.kernel.host import Host, HostConfig

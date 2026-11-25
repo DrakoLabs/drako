@@ -1,5 +1,4 @@
 """Tests for the scanner orchestrator."""
-import pytest
 from pathlib import Path
 
 from drako.cli.scanner import run_scan

@@ -8,7 +8,6 @@ without requiring the user to run scan and init in the same process.
 from __future__ import annotations
 
 import json
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
