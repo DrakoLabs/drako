@@ -1,8 +1,9 @@
 # ok: CV-001
-# .drako.yaml with platform connection for policy versioning
-# .drako.yaml:
-#   api_key_env: DRAKO_API_KEY
-#   endpoint: https://api.getdrako.com
+# Local-first v4 .drako.yaml pinned to AGENT-HOOKS-0.1:
+#   version: "4.0"
+#   kernel:
+#     spec_pin: AGENT-HOOKS-0.1
+#     default_effect: deny
 from crewai import Agent
 
 agent = Agent(name="assistant", role="Helper")

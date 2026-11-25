@@ -16,19 +16,27 @@ _LOGGING_PATTERNS = [
     "audit_log", "audit_trail", "with_compliance", "drako",
     "GovernanceMiddleware", "ComplianceMiddleware", "log_action",
     "structlog", "logging.getLogger",
+    "build_host", "wrap_agent", "wrap_crewai",
+    "wrap_langgraph", "wrap_openai_agent", "wrap_maf_agent",
+    "wrap_claude_agent", "wrap_adk_agent", "AuthorityKernel", "ReceiptStore",
 ]
+
+_GUARD_CALL_RE = re.compile(r"(?:\b(?:guard|govern)\s*\(|@(?:drako\.)?(?:guard|govern)\b)")
 
 # Patterns indicating human oversight
 _OVERSIGHT_PATTERNS = [
     "human_in_the_loop", "hitl", "require_approval", "human_approval",
     "ask_human", "confirm_action", "manual_review", "human_oversight",
-    "supervisor", "review_queue",
+    "supervisor", "review_queue", "approval_required",
+    "ConsentToken", "sign_consent_token", "verify_consent_token",
+    "drako.guard", "build_host",
 ]
 
 # Patterns indicating HITL checkpoint configuration
 _HITL_CONFIG_PATTERNS = [
     "hitl:", "hitl_checkpoint", "approval_required", "pending_approval",
     "human_gate", "escalation_policy", "require_human_approval",
+    "irreversible: consent",
 ]
 
 # Tool names suggesting high-risk side-effects
@@ -42,6 +50,14 @@ _SIDE_EFFECT_TOOL_PATTERNS = re.compile(
 def _content_has_pattern(all_content: str, patterns: list[str]) -> bool:
     lower = all_content.lower()
     return any(p.lower() in lower for p in patterns)
+
+
+def _drako_config_text(metadata: ProjectMetadata) -> str:
+    return "\n".join(
+        content
+        for name, content in metadata.config_files.items()
+        if name in (".drako.yaml", "drako.yaml", "drako-policy.yaml")
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -65,10 +81,19 @@ class COM001(BasePolicy):
         if not all_content.strip():
             return []
 
-        if not _content_has_pattern(all_content, _LOGGING_PATTERNS):
+        cfg = _drako_config_text(metadata).lower()
+        if "receipt_store:" in cfg or ("audit:" in cfg and "enabled: true" in cfg):
+            return []
+
+        if not _content_has_pattern(all_content, _LOGGING_PATTERNS) and not _GUARD_CALL_RE.search(all_content):
             return [self._finding(
                 message="EU AI Act Article 12 requires automatic logging of AI system activity. No logging infrastructure detected.",
-                fix_snippet='from drako import with_compliance\n\n# Drako middleware provides EU AI Act compliant\n# audit logging automatically\ncrew = with_compliance(my_crew)\n# All agent actions, decisions, and tool calls are logged',
+                fix_snippet=(
+                    "from drako import guard\n\n"
+                    "# Record tamper-evident Ed25519 receipts locally (EU AI Act Art. 12):\n"
+                    'safe_agent = guard(my_agent, allow=["search_*"], receipts=".drako/receipts.jsonl")\n'
+                    "# Generate compliance evidence bundle: drako comply generate --all"
+                ),
             )]
 
         return []
@@ -98,10 +123,22 @@ class COM002(BasePolicy):
         if not all_content.strip():
             return []
 
+        cfg = _drako_config_text(metadata).lower()
+        if "irreversible: consent" in cfg or (
+            "hitl:" in cfg and "mode: enforce" in cfg
+        ):
+            return []
+
         if not _content_has_pattern(all_content, _OVERSIGHT_PATTERNS):
             return [self._finding(
                 message="EU AI Act Article 14 requires human oversight measures. No human-in-the-loop mechanism detected.",
-                fix_snippet='# Add human oversight for high-risk AI operations\nfrom drako import with_compliance\n\ncrew = with_compliance(my_crew, config_path=".drako.yaml")\n# Configure HITL policies in .drako.yaml:\n# governance:\n#   require_approval:\n#     - write_file\n#     - send_email\n#     - database_write',
+                fix_snippet=(
+                    "from drako import guard\n\n"
+                    "# Require operator ConsentToken for irreversible actions (EU AI Act Art. 14):\n"
+                    'safe_agent = guard(my_agent, approval_required=["write_file", "send_email"])\n'
+                    "# Or set `tiers.irreversible: consent` in drako-policy.yaml and run:\n"
+                    "#   drako comply generate --all"
+                ),
             )]
 
         return []

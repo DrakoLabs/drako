@@ -1,8 +1,7 @@
 """Operational Design Domain (ODD) policy rules (ODD-001 through ODD-004).
 
 Detects the ABSENCE of operational boundaries — agents operating without
-defined constraints. These rules always fire in offline scan because ODD
-enforcement requires the Drako platform (PRO tier).
+defined local authority constraints (drako-policy.yaml / .drako.yaml).
 
 Category: "Operational"
 """
@@ -10,7 +9,6 @@ Category: "Operational"
 from __future__ import annotations
 
 import ast
-import re
 from typing import TYPE_CHECKING
 
 from drako.cli.policies.base import BasePolicy, Finding
@@ -24,7 +22,7 @@ if TYPE_CHECKING:
 _TOOL_ALLOWLIST_PATTERNS = [
     "permitted_tools", "allowed_tools", "tool_whitelist", "tool_allowlist",
     "tools_allowed", "tool_filter", "restrict_tools", "approved_tools",
-    "available_tools", "tool_access_control",
+    "available_tools", "tool_access_control", "drako.guard", "build_host",
 ]
 
 # Patterns indicating spend / cost / token caps
@@ -38,7 +36,8 @@ _SPEND_CAP_PATTERNS = [
 _TIME_CONSTRAINT_PATTERNS = [
     "timeout", "max_iterations", "max_steps", "time_limit",
     "max_execution_time", "deadline", "max_retries", "step_limit",
-    "max_turns", "max_rounds", "iteration_limit",
+    "max_turns", "max_rounds", "iteration_limit", "loop_breaker",
+    "LoopBreaker",
 ]
 
 
@@ -46,6 +45,52 @@ def _content_has_pattern(all_content: str, patterns: list[str]) -> bool:
     """Check if any pattern exists in the combined content."""
     lower = all_content.lower()
     return any(p.lower() in lower for p in patterns)
+
+
+def _drako_config_text(metadata: ProjectMetadata) -> str:
+    """Return combined text of local .drako.yaml / drako.yaml config files."""
+    parts = [
+        content
+        for name, content in metadata.config_files.items()
+        if name in (".drako.yaml", "drako.yaml")
+    ]
+    return "\n".join(parts)
+
+
+def _acs_profile_text(metadata: ProjectMetadata) -> str:
+    """Return text of local drako-policy.yaml if present."""
+    return metadata.config_files.get("drako-policy.yaml", "")
+
+
+def _has_local_odd(metadata: ProjectMetadata) -> bool:
+    """Return True if a local ACS policy profile or .drako.yaml boundary exists."""
+    profile = _acs_profile_text(metadata)
+    if profile and ("tools:" in profile or "default_effect:" in profile):
+        return True
+    cfg = _drako_config_text(metadata)
+    return bool(cfg and ("kernel:" in cfg or "odd:" in cfg))
+
+
+def _has_local_spend_cap(metadata: ProjectMetadata) -> bool:
+    """Return True if .drako.yaml declares finops budgets or magnitude limits."""
+    cfg = _drako_config_text(metadata)
+    if not cfg:
+        return False
+    lower = cfg.lower()
+    if "magnitude:" in lower:
+        return True
+    return "finops:" in lower and any(
+        k in lower for k in ("budgets:", "daily_usd:", "weekly_usd:", "monthly_usd:")
+    )
+
+
+def _has_local_time_or_loop_bounds(metadata: ProjectMetadata) -> bool:
+    """Return True if .drako.yaml declares loop_breaker or circuit_breaker."""
+    cfg = _drako_config_text(metadata)
+    if not cfg:
+        return False
+    lower = cfg.lower()
+    return "loop_breaker:" in lower or "circuit_breaker:" in lower
 
 
 def _agent_init_has_keyword(content: str, keywords: set[str]) -> bool:
@@ -88,9 +133,10 @@ class ODD001(BasePolicy):
     finding_type = "recommendation"
 
     def evaluate(self, bom: AgentBOM, metadata: ProjectMetadata) -> list[Finding]:
-        # ODD requires the Drako platform — offline scan ALWAYS fires
-        # because there is no way to define/verify ODD without the SaaS.
         if not bom.agents:
+            return []
+
+        if _has_local_odd(metadata):
             return []
 
         agent_names = ", ".join(a.name for a in bom.agents[:5])
@@ -101,8 +147,19 @@ class ODD001(BasePolicy):
             message=(
                 f"No Operational Design Domain (ODD) defined for {count} agent(s): "
                 f"{agent_names}{suffix}. Agents operate without declared boundaries. "
-                f"Define permitted tools, spend limits, and operational constraints "
-                f"via the Drako dashboard (requires Pro plan)."
+                f"Run `drako init` to generate a local ACS policy profile "
+                f"(`drako-policy.yaml`) and `.drako.yaml` boundary configuration."
+            ),
+            fix_snippet=(
+                "# Initialize local fail-closed boundaries:\n"
+                "#   drako init\n"
+                "# Or configure drako-policy.yaml directly:\n"
+                "spec_pin: AGENT-HOOKS-0.1\n"
+                "default_effect: deny\n"
+                "tools:\n"
+                "  search_docs:\n"
+                "    id: tool:search_docs\n"
+                "    effect: allow"
             ),
         )]
 
@@ -127,6 +184,14 @@ class ODD002(BasePolicy):
         if not agents_with_tools:
             return []
 
+        profile = _acs_profile_text(metadata)
+        if profile and "tools:" in profile and "default_effect: deny" in profile:
+            return []
+
+        cfg = _drako_config_text(metadata)
+        if cfg and "permitted_tools" in cfg:
+            return []
+
         all_content = "\n".join(
             c for p, c in metadata.file_contents.items() if p.endswith(".py")
         )
@@ -144,7 +209,8 @@ class ODD002(BasePolicy):
                 message=(
                     f'Agent "{agent.name}" has {len(agent.tools)} tool(s) '
                     f"({tool_list}{suffix}) without a tool allowlist. "
-                    f"Define permitted_tools in an ODD to restrict access."
+                    f"Restrict access with `drako.guard(agent, allow=[...])` "
+                    f"or a fail-closed `drako-policy.yaml` profile."
                 ),
                 file_path=agent.file_path,
                 line_number=agent.line_number,
@@ -172,6 +238,9 @@ class ODD003(BasePolicy):
         if not bom.agents:
             return []
 
+        if _has_local_spend_cap(metadata):
+            return []
+
         all_content = "\n".join(
             c for p, c in metadata.file_contents.items() if p.endswith(".py")
         )
@@ -186,8 +255,15 @@ class ODD003(BasePolicy):
             message=(
                 f"No spend cap detected across {len(bom.agents)} agent(s). "
                 f"Without max_tokens, budget, or cost limits, agents can "
-                f"consume unlimited resources. Define magnitude limits "
-                f"via the Drako dashboard (requires Pro plan)."
+                f"consume unlimited resources. Configure spend budgets in "
+                f"`.drako.yaml` (`finops.budgets`) or set `max_tokens` in code."
+            ),
+            fix_snippet=(
+                "# Configure spend caps in .drako.yaml:\n"
+                "finops:\n"
+                "  budgets:\n"
+                "    daily_usd: 25.00\n"
+                "    monthly_usd: 500.00"
             ),
         )]
 
@@ -211,6 +287,9 @@ class ODD004(BasePolicy):
         if not bom.agents:
             return []
 
+        if _has_local_time_or_loop_bounds(metadata):
+            return []
+
         all_content = "\n".join(
             c for p, c in metadata.file_contents.items() if p.endswith(".py")
         )
@@ -223,9 +302,16 @@ class ODD004(BasePolicy):
         return [self._finding(
             message=(
                 f"No time constraints detected across {len(bom.agents)} agent(s). "
-                f"Without timeout, max_iterations, or step limits, agents can "
-                f"run indefinitely. Define operational time bounds "
-                f"via the Drako dashboard (requires Pro plan)."
+                f"Without timeout, max_iterations, or loop bounds, agents can "
+                f"run indefinitely. Configure `loop_breaker` or `circuit_breaker` "
+                f"in `.drako.yaml`, or set `max_iterations` / `timeout` in code."
+            ),
+            fix_snippet=(
+                "# Configure loop and time bounds in .drako.yaml:\n"
+                "loop_breaker:\n"
+                "  enabled: true\n"
+                "  trip_threshold: 10\n"
+                "  window_seconds: 300.0"
             ),
         )]
 

@@ -1,6 +1,7 @@
-"""Safe: MAF Agent with tools governed by Drako middleware."""
+"""Safe: MAF Agent with tools governed by Drako v4 adapter."""
 from agent_framework import Agent
-from drako.middleware.maf import with_maf_compliance
+from drako import build_host
+from drako.adapters.maf import wrap_maf_agent
 
 
 async def get_weather(city: str) -> str:
@@ -18,4 +19,5 @@ agent = Agent(
     middleware=[logging_middleware],
 )
 
-governed = with_maf_compliance(agent)
+host = build_host(allow=["get_weather"])
+governed = wrap_maf_agent(agent, host)

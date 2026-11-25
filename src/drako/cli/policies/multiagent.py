@@ -1,9 +1,9 @@
-"""Multi-Agent Topology policy rules — Sprint 5.
+"""Multi-Agent Topology and Resilience policy rules (MULTI-001 through MULTI-004).
 
 MULTI-001: Multi-agent system without topology monitoring
 MULTI-002: Circular agent dependency detected
 MULTI-003: Shared resource without contention protection
-MULTI-004: No chaos testing configured
+MULTI-004: No resilience / benchmark testing configured
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 _TOPOLOGY_PATTERNS = re.compile(
     r"(?:topology|agent.*monitor|fleet.*health|"
     r"agent.*graph|communication.*graph|"
-    r"drako.*topology|observability)",
+    r"drako.*topology|observability|worm_detection|a2a:\s*\n\s*mode:\s*enforce)",
     re.IGNORECASE,
 )
 
@@ -58,20 +58,22 @@ class MULTI001(BasePolicy):
         return [self._finding(
             message=(
                 f"Multi-agent system with {len(bom.agents)} agents has no "
-                f"topology monitoring or observability configured. Cannot "
-                f"detect conflicts, cascading failures, or circular dependencies."
+                f"inter-agent channel governance or observability configured. "
+                f"Cannot detect conflicts, cascading failures, or circular dependencies."
             ),
             fix_snippet=(
-                "# Add topology monitoring in .drako.yaml:\n"
-                "topology:\n"
-                "  enabled: true\n"
-                "  conflict_detection:\n"
-                "    resource_contention: true\n"
-                "    contradictory_actions: true\n"
-                "    cascade_amplification: true\n"
-                "  alert_on:\n"
-                "    - circular_dependency\n"
-                "    - resource_contention"
+                "# Configure A2A channels and worm/loop detection in .drako.yaml:\n"
+                "a2a:\n"
+                "  mode: enforce\n"
+                "  require_signed_cards: true\n"
+                "  channels:\n"
+                "    - from: researcher\n"
+                "      to: writer\n"
+                "      allowed_message_types: [task_result]\n"
+                "  worm_detection:\n"
+                "    enabled: true\n"
+                "    max_propagation_depth: 3\n"
+                "    circular_reference_block: true"
             ),
         )]
 
@@ -234,11 +236,16 @@ class MULTI003(BasePolicy):
                         f"concurrent writes can cause data corruption."
                     ),
                     fix_snippet=(
-                        "# Enable resource contention detection:\n"
-                        "topology:\n"
+                        "# Isolate shared write tools with explicit A2A channels and loop protection:\n"
+                        "a2a:\n"
+                        "  mode: enforce\n"
+                        "  channels:\n"
+                        "    - from: writer_agent\n"
+                        "      to: reviewer_agent\n"
+                        "      allowed_message_types: [write_request]\n"
+                        "loop_breaker:\n"
                         "  enabled: true\n"
-                        "  conflict_detection:\n"
-                        "    resource_contention: true"
+                        "  trip_threshold: 10"
                     ),
                 ))
         return findings
@@ -251,7 +258,7 @@ class MULTI003(BasePolicy):
 _CHAOS_PATTERNS = re.compile(
     r"(?:chaos|fault.inject|resilience.test|"
     r"circuit.breaker.test|failure.inject|"
-    r"drako.*chaos|chaos_experiment)",
+    r"drako.*chaos|chaos_experiment|kernel.*bench|loop_breaker)",
     re.IGNORECASE,
 )
 
@@ -278,23 +285,20 @@ class MULTI004(BasePolicy):
 
         return [self._finding(
             message=(
-                "No resilience or chaos testing detected. Without chaos "
-                "engineering, you cannot verify that governance controls "
-                "(circuit breakers, fallbacks, HITL) actually work under stress."
+                "No resilience or stress testing detected. Verify governance "
+                "controls (loop breaker, fallbacks, authority checks) offline "
+                "using `drako kernel bench` and `loop_breaker:` in `.drako.yaml`."
             ),
             fix_snippet=(
-                "# Add chaos engineering in .drako.yaml:\n"
-                "chaos:\n"
-                "  experiments:\n"
-                "    - name: db-tool-failure\n"
-                "      description: Test resilience when database tool fails\n"
-                "      target_tool: database_query\n"
-                "      fault_type: tool_deny\n"
-                "      duration_seconds: 60\n"
-                "  safety:\n"
-                "    max_blast_radius: 1\n"
-                "    auto_rollback_on_failure: true\n"
-                "    require_approval: true"
+                "# Run offline adversarial/latency stress tests:\n"
+                "#   drako kernel bench --iterations 500\n"
+                "# Configure loop_breaker and fallback in .drako.yaml:\n"
+                "loop_breaker:\n"
+                "  enabled: true\n"
+                "  trip_threshold: 10\n"
+                "  window_seconds: 300.0\n"
+                "fallback:\n"
+                "  mode: enforce"
             ),
         )]
 

@@ -30,7 +30,8 @@ _RATE_LIMIT_PATTERNS = [
     "max_iterations", "max_steps", "rate_limit", "max_actions",
     "max_actions_per_minute", "max_requests", "throttle",
     "max_retries", "step_limit", "max_turns", "max_rounds",
-    "iteration_limit", "requests_per_minute",
+    "iteration_limit", "requests_per_minute", "loop_breaker",
+    "LoopBreaker",
 ]
 
 # Tool names that imply DB / file data access
@@ -54,6 +55,45 @@ def _content_has_pattern(all_content: str, patterns: list[str]) -> bool:
     return any(p.lower() in lower for p in patterns)
 
 
+def _drako_config_text(metadata: ProjectMetadata) -> str:
+    """Return combined text of local .drako.yaml / drako.yaml config files."""
+    parts = [
+        content
+        for name, content in metadata.config_files.items()
+        if name in (".drako.yaml", "drako.yaml")
+    ]
+    return "\n".join(parts)
+
+
+def _has_config_budgets(metadata: ProjectMetadata) -> bool:
+    cfg = _drako_config_text(metadata).lower()
+    if not cfg:
+        return False
+    if "magnitude:" in cfg:
+        return True
+    return "finops:" in cfg and any(
+        k in cfg for k in ("budgets:", "daily_usd:", "weekly_usd:", "monthly_usd:")
+    )
+
+
+def _has_config_rate_bounds(metadata: ProjectMetadata) -> bool:
+    cfg = _drako_config_text(metadata).lower()
+    if not cfg:
+        return False
+    return any(k in cfg for k in ("loop_breaker:", "circuit_breaker:", "rate_limit:"))
+
+
+def _has_config_data_controls(metadata: ProjectMetadata) -> bool:
+    cfg = _drako_config_text(metadata).lower()
+    profile = metadata.config_files.get("drako-policy.yaml", "").lower()
+    combined = f"{cfg}\n{profile}"
+    if not combined.strip():
+        return False
+    if _content_has_pattern(combined, _CLASSIFICATION_PATTERNS):
+        return True
+    return "dlp:" in cfg and "mode: enforce" in cfg
+
+
 # ---------------------------------------------------------------------------
 # MAG-001: No spend cap defined  (CRITICAL)
 # ---------------------------------------------------------------------------
@@ -73,6 +113,9 @@ class MAG001(BasePolicy):
         if not bom.agents:
             return []
 
+        if _has_config_budgets(metadata):
+            return []
+
         all_content = "\n".join(
             c for p, c in metadata.file_contents.items() if p.endswith(".py")
         )
@@ -84,8 +127,15 @@ class MAG001(BasePolicy):
             message=(
                 f"No spend cap detected across {len(bom.agents)} agent(s). "
                 f"Without budget, cost, or token limits, agents can consume "
-                f"unlimited financial resources. Define magnitude limits "
-                f"via the Drako dashboard (requires Pro plan)."
+                f"unlimited financial resources. Configure spend caps in "
+                f"`.drako.yaml` (`finops.budgets`) or set `max_tokens` in code."
+            ),
+            fix_snippet=(
+                "# Configure spend budgets in .drako.yaml:\n"
+                "finops:\n"
+                "  budgets:\n"
+                "    daily_usd: 50.00\n"
+                "    monthly_usd: 500.00"
             ),
         )]
 
@@ -109,6 +159,9 @@ class MAG002(BasePolicy):
         if not bom.agents:
             return []
 
+        if _has_config_rate_bounds(metadata):
+            return []
+
         all_content = "\n".join(
             c for p, c in metadata.file_contents.items() if p.endswith(".py")
         )
@@ -119,9 +172,16 @@ class MAG002(BasePolicy):
         return [self._finding(
             message=(
                 f"No rate limit detected across {len(bom.agents)} agent(s). "
-                f"Without max_iterations, max_steps, or rate limiting, agents "
-                f"can execute unlimited actions. Define magnitude limits "
-                f"via the Drako dashboard (requires Pro plan)."
+                f"Without max_iterations, max_steps, or loop bounds, agents "
+                f"can execute unlimited actions. Configure `loop_breaker` or "
+                f"`circuit_breaker` in `.drako.yaml`, or add rate limits in code."
+            ),
+            fix_snippet=(
+                "# Configure loop protection in .drako.yaml:\n"
+                "loop_breaker:\n"
+                "  enabled: true\n"
+                "  trip_threshold: 10\n"
+                "  window_seconds: 300.0"
             ),
         )]
 
@@ -158,6 +218,9 @@ class MAG003(BasePolicy):
         if not has_data_tools:
             return []
 
+        if _has_config_data_controls(metadata):
+            return []
+
         # Check if classification / clearance is defined
         all_content = "\n".join(
             c for p, c in metadata.file_contents.items() if p.endswith(".py")
@@ -168,10 +231,16 @@ class MAG003(BasePolicy):
 
         return [self._finding(
             message=(
-                f"Agent(s) access data sources (DB/files) without a sensitivity "
-                f"classification or clearance level defined. Without scope limits, "
-                f"agents may access data above their authorization. Define scope "
-                f"magnitude limits via the Drako dashboard (requires Pro plan)."
+                "Agent(s) access data sources (DB/files) without a sensitivity "
+                "classification or clearance level defined. Without scope limits, "
+                "agents may access data above their authorization. Enable "
+                "`dlp.mode: enforce` in `.drako.yaml` and restrict data tools "
+                "in `drako-policy.yaml`."
+            ),
+            fix_snippet=(
+                "# Enforce DLP and least-privilege tool rules in .drako.yaml:\n"
+                "dlp:\n"
+                "  mode: enforce"
             ),
         )]
 

@@ -46,6 +46,27 @@ def _content_has_pattern(all_content: str, patterns: list[str]) -> bool:
     return any(p.lower() in lower for p in patterns)
 
 
+def _has_local_identity_config(metadata: ProjectMetadata) -> bool:
+    """Return True if local .drako.yaml declares agent identities or signed A2A cards."""
+    cfg = "\n".join(
+        content
+        for name, content in metadata.config_files.items()
+        if name in (".drako.yaml", "drako.yaml")
+    )
+    if cfg:
+        lower = cfg.lower()
+        if "agents:" in lower or "require_signed_cards: true" in lower:
+            return True
+    for name, content in metadata.config_files.items():
+        if (
+            name.endswith(".json")
+            and ("agent-card" in name.lower() or name.lower() == "agent.json")
+            and '"signatures"' in content
+        ):
+            return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # ID-001: Static credentials in agent code  (CRITICAL)
 # ---------------------------------------------------------------------------
@@ -75,10 +96,15 @@ class ID001(BasePolicy):
         return [self._finding(
             message=(
                 f"Static credentials detected in agent code across "
-                f"{len(bom.agents)} agent(s). Hardcoded API keys, tokens, "
-                f"or secrets should be replaced with managed identities. "
-                f"Use Drako Identity Management for auto-rotating "
-                f"credentials (requires Pro plan)."
+                f"{len(bom.agents)} agent(s). Replace hardcoded API keys, tokens, "
+                f"or secrets with environment variables or a secret manager, and "
+                f"provision per-agent Ed25519 keys with `drako kernel keygen`."
+            ),
+            fix_snippet=(
+                "import os\n\n"
+                'api_key = os.environ["AGENT_API_KEY"]\n'
+                "# Provision per-agent Ed25519 keys offline:\n"
+                "#   drako kernel keygen --out .drako/keys"
             ),
         )]
 
@@ -102,6 +128,9 @@ class ID002(BasePolicy):
         if not bom.agents:
             return []
 
+        if _has_local_identity_config(metadata):
+            return []
+
         all_content = "\n".join(
             c for p, c in metadata.file_contents.items() if p.endswith(".py")
         )
@@ -112,10 +141,17 @@ class ID002(BasePolicy):
         return [self._finding(
             message=(
                 f"No identity definition detected across {len(bom.agents)} "
-                f"agent(s). Without identity configuration (credentials, "
-                f"auth, DID), agents cannot be uniquely identified or "
-                f"authenticated. Define managed identities via the "
-                f"Drako dashboard (requires Pro plan)."
+                f"agent(s). Declare per-agent identities in `.drako.yaml` "
+                f"(`agents:` and `a2a.require_signed_cards: true`) and sign "
+                f"A2A Agent Cards with `drako kernel keygen` and `drako a2a sign`."
+            ),
+            fix_snippet=(
+                "# Declare agent identities in .drako.yaml and sign Agent Cards:\n"
+                "#   drako kernel keygen --out .drako/keys\n"
+                "#   drako a2a sign agent-card.json --key .drako/keys/private.pem\n"
+                "a2a:\n"
+                "  mode: enforce\n"
+                "  require_signed_cards: true"
             ),
         )]
 
@@ -163,10 +199,16 @@ class ID003(BasePolicy):
         return [self._finding(
             message=(
                 f"Credential variables appear to be shared across multiple "
-                f"files: {', '.join(shared[:5])}. Each agent should have "
-                f"unique, independently managed credentials. Use Drako "
-                f"Identity Management to provision per-agent identities "
-                f"(requires Pro plan)."
+                f"files: {', '.join(shared[:5])}. Assign distinct environment "
+                f"variables or secret-manager entries per agent, and sign "
+                f"per-agent Ed25519 identities via `drako kernel keygen` and "
+                f"`drako a2a sign`."
+            ),
+            fix_snippet=(
+                "# Use isolated per-agent credentials and Ed25519 keys:\n"
+                "import os\n\n"
+                'researcher_key = os.environ["RESEARCHER_API_KEY"]\n'
+                'writer_key = os.environ["WRITER_API_KEY"]'
             ),
         )]
 

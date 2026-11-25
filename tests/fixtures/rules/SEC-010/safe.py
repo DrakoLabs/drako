@@ -1,15 +1,14 @@
 # ok: SEC-010
-# Prompt injection defense is configured AND USED. U-5 (2026-09-04):
-# suppression requires an actual defense CALL (AST) — a bare import,
+# Prompt injection defense is configured AND USED via AST call — a bare import,
 # a comment mentioning "guardrails", or a plain `input_validation = True`
-# assignment does NOT silence this rule (that was the substring bypass).
+# assignment does NOT silence this rule.
 from crewai import Agent
-from drako import with_compliance
+from drako import guard
 
 agent = Agent(
     name="assistant",
     system_prompt="You are a helpful assistant that answers questions.",
 )
 
-# Defense in use: the agent runs wrapped in injection-detection middleware.
-crew = with_compliance(agent, config_path=".drako.yaml")
+# Defense in use: the agent runs wrapped in Drako's local Authority Kernel.
+safe_agent = guard(agent, allow=["search_*"])

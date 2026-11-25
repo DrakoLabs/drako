@@ -82,18 +82,22 @@ class SEC001(BasePolicy):
                         elif isinstance(target, ast.Attribute):
                             var_name = target.attr
 
-                        if var_name and _SECRET_VAR_NAMES.search(var_name):
-                            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
-                                val = node.value.value
-                                if len(val) >= 8 and not val.startswith(("os.environ", "os.getenv", "{")):
-                                    line_content = lines[node.lineno - 1].strip() if node.lineno <= len(lines) else ""
-                                    findings.append(self._finding(
-                                        f'Hardcoded secret in variable "{var_name}"',
-                                        file_path=rel_path,
-                                        line_number=node.lineno,
-                                        code_snippet=line_content,
-                                        fix_snippet=f'import os\n{var_name} = os.environ["{var_name.upper()}"]',
-                                    ))
+                        if (
+                            var_name
+                            and _SECRET_VAR_NAMES.search(var_name)
+                            and isinstance(node.value, ast.Constant)
+                            and isinstance(node.value.value, str)
+                        ):
+                            val = node.value.value
+                            if len(val) >= 8 and not val.startswith(("os.environ", "os.getenv", "{")):
+                                line_content = lines[node.lineno - 1].strip() if node.lineno <= len(lines) else ""
+                                findings.append(self._finding(
+                                    f'Hardcoded secret in variable "{var_name}"',
+                                    file_path=rel_path,
+                                    line_number=node.lineno,
+                                    code_snippet=line_content,
+                                    fix_snippet=f'import os\n{var_name} = os.environ["{var_name.upper()}"]',
+                                ))
 
             # Also check for raw API key patterns in the source
             for i, line in enumerate(lines, 1):
@@ -327,10 +331,12 @@ class SEC005(BasePolicy):
                 func_name = None
                 if isinstance(node.func, ast.Name):
                     func_name = node.func.id
-                elif isinstance(node.func, ast.Attribute):
-                    if isinstance(node.func.value, ast.Name):
-                        if node.func.value.id in ("os", "subprocess"):
-                            func_name = f"{node.func.value.id}.{node.func.attr}"
+                elif (
+                    isinstance(node.func, ast.Attribute)
+                    and isinstance(node.func.value, ast.Name)
+                    and node.func.value.id in ("os", "subprocess")
+                ):
+                    func_name = f"{node.func.value.id}.{node.func.attr}"
 
                 if func_name in ("exec", "eval"):
                     # Skip if already reported as a tool
@@ -668,12 +674,13 @@ _INJECTION_DEFENSE_PATTERNS = [
     "input_validation", "sanitize_prompt", "injection_detection",
     "instruction_hierarchy", "system_boundary", "with_compliance",
     "PromptInjectionDetector", "ContentFilter",
+    "guard", "govern", "build_host", "wrap_agent", "wrap_crewai",
+    "wrap_langgraph", "wrap_openai_agent", "wrap_maf_agent",
+    "wrap_claude_agent", "wrap_adk_agent", "MemoryGate", "AuthorityKernel",
 ]
 
-# NOTE (P1-4/U-5, 2026-09-04): suppression is by AST USE (calls_defense),
-# never by substring — a bare `import drako` (or any import alone) silences
-# nothing. The earlier _calls_drako_governance helper was folded into
-# calls_defense (single implementation) and removed.
+# Suppression is by AST USE (calls_defense), never by substring — a bare
+# `import drako` (or any import alone) silences nothing.
 
 
 def _norm(name: str) -> str:
@@ -681,11 +688,11 @@ def _norm(name: str) -> str:
 
 
 def calls_defense(content: str) -> bool:
-    """True iff the code USES an injection defense (U-5, 2026-09-04).
+    """True iff the code USES an injection defense via AST Call or decorator.
 
-    Suppression is by AST Call (or decorator application) for EVERY pattern
-    in _INJECTION_DEFENSE_PATTERNS — a bare import never silences. Decorators
-    count (@guard counts as use; the function IS wrapped at import).
+    Suppression requires an actual AST Call (or decorator application) matching
+    an entry in _INJECTION_DEFENSE_PATTERNS — a bare import never silences.
+    Decorators count (@guard counts as use; the function IS wrapped at import).
     """
     try:
         tree = ast.parse(content)
@@ -708,7 +715,7 @@ def calls_defense(content: str) -> bool:
                 names = [".".join(reversed(parts))]
             else:
                 continue
-            if any(p and (p in _norm(n) or _norm(n) in p) for n in names for p in patterns):
+            if any(p and p in _norm(n) for n in names for p in patterns):
                 return True
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             for dec in node.decorator_list:
@@ -720,7 +727,7 @@ def calls_defense(content: str) -> bool:
                     continue  # handled as Call above
                 else:
                     continue
-                if any(p and (p in _norm(n) or _norm(n) in p) for n in dnames for p in patterns):
+                if any(p and p in _norm(n) for n in dnames for p in patterns):
                     return True
     return False
 
@@ -744,8 +751,7 @@ class SEC010(BasePolicy):
         if not "".join(py_files.values()).strip():
             return []
 
-        # U-5 (2026-09-04): suppression by AST USE for the whole pattern list.
-        # Bare imports (incl. `import drako` alone) never silence.
+        # Suppression requires an actual AST Call / decorator (bare imports never silence).
         if any(calls_defense(c) for c in py_files.values()):
             return []
 
@@ -753,11 +759,10 @@ class SEC010(BasePolicy):
             "No prompt injection defense detected in the project. "
             "Agents processing external data are vulnerable to indirect prompt injection.",
             fix_snippet=(
-                "from drako import with_compliance\n\n"
-                '# Add injection detection middleware\n'
-                'crew = with_compliance(my_crew, config_path=".drako.yaml")\n'
-                "# Or install standalone guardrails:\n"
-                "# pip install drako && drako init"
+                "from drako import guard\n\n"
+                "# Wrap your agent with deterministic taint-lattice authority checks:\n"
+                'safe_agent = guard(my_agent, allow=["search_*"], deny=["delete_*"])\n'
+                "# Or initialize a full local profile: drako init"
             ),
         )]
 
